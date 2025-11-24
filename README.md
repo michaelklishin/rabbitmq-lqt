@@ -3,9 +3,15 @@
 RabbitMQ Log Querying Tools (RLQT), as the name suggests, are a set of tools designed for parsing and annotating
 RabbitMQ log files for more efficient analysis.
 
+This tool is intended for local use, including offline or air gapped environments. Its inputs are RabbitMQ log files
+and its annotated data store is entirely local.
+
+
 ## Project Maturity
 
-This tool is is young and is largely a work in progress.
+This tool is is young and should be considered an emerging project
+that will evolve over time, for example, by adding more annotators and
+improving the querying capabilities.
 
 
 ## Usage
@@ -102,6 +108,12 @@ and three 1M log files can be parsed and annotated in less than two minutes.
 Note that as the number of implemented annotations grows, the annotation process will inevitably become slower
 because annotation includes an inherent O(n) operation (all annotators must be tried/traversed).
 
+
+## Subprojects
+
+ * `crates/rlqt-lib` is a library that implements the parser and annotators
+ * `crates/rlqt-cli` is the `rabbitmq-lqt` command line tool
+ * `crates/rlqt-ui` is a Web UI
 
 
 ## License
