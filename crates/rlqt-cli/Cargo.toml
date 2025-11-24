@@ -1,0 +1,33 @@
+[package]
+name = "rlqt-cli"
+version = "0.9.0"
+edition = "2024"
+
+[[bin]]
+name = "rabbitmq-lqt"
+path = "src/main.rs"
+
+[dependencies]
+rlqt-lib = { path = "../rlqt-lib" }
+clap = { workspace = true }
+sysexits = { workspace = true }
+tabled = { workspace = true }
+tokio = { workspace = true }
+thiserror = { workspace = true }
+log = { workspace = true }
+fern = { workspace = true }
+chrono = { workspace = true }
+chrono-english = { workspace = true }
+sea-orm = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+terminal_size = { workspace = true }
+owo-colors = { workspace = true }
+futures = { workspace = true }
+rayon = { workspace = true }
+indicatif = { workspace = true }
+
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3.0"
+tempfile = "3.0"

@@ -1,0 +1,83 @@
+// Copyright (C) 2025-2026 Michael S. Klishin and Contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#![allow(dead_code)]
+
+use assert_cmd::assert::Assert;
+use assert_cmd::cargo::cargo_bin_cmd;
+use predicates::prelude::predicate;
+use predicates::str::ContainsPredicate;
+use std::error::Error;
+use std::ffi::OsStr;
+use std::path::PathBuf;
+
+#[allow(dead_code)]
+pub fn fixture_log_path() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join("rabbit@sunnyside.log")
+}
+
+#[allow(dead_code)]
+pub fn fixture_directory_path() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+}
+
+#[allow(dead_code)]
+pub fn fixture_log_path_hare() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join("hare@sunnyside.log")
+}
+
+#[allow(dead_code)]
+pub fn parse_log_to_db(log_path: &str, db_path: &str) -> Result<(), Box<dyn Error>> {
+    cargo_bin_cmd!("rabbitmq-lqt")
+        .args([
+            "logs",
+            "parse",
+            "--input-log-file-path",
+            log_path,
+            "--output-db-file-path",
+            db_path,
+            "--silent",
+        ])
+        .assert()
+        .success();
+    Ok(())
+}
+
+pub fn run_succeeds<I, S>(args: I) -> Assert
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<OsStr>,
+{
+    cargo_bin_cmd!("rabbitmq-lqt").args(args).assert().success()
+}
+
+pub fn run_fails<I, S>(args: I) -> Assert
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<OsStr>,
+{
+    cargo_bin_cmd!("rabbitmq-lqt").args(args).assert().failure()
+}
+
+pub fn output_includes(content: &str) -> ContainsPredicate {
+    predicate::str::contains(content)
+}

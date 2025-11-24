@@ -1,0 +1,32 @@
+[package]
+name = "rlqt-ui"
+version = "0.2.0"
+edition = "2024"
+
+[lib]
+name = "rlqt_ui"
+path = "src/lib.rs"
+
+[[bin]]
+name = "rlqt-ui"
+path = "src/main.rs"
+
+[dependencies]
+rlqt-lib = { path = "../rlqt-lib" }
+clap = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sea-orm = { workspace = true }
+log = { workspace = true }
+fern = { workspace = true }
+chrono = { workspace = true }
+chrono-english = { workspace = true }
+thiserror = { workspace = true }
+
+axum = { version = "0.8", features = ["macros"] }
+tower = { version = "0.5", features = ["full"] }
+tower-http = { version = "0.6", features = ["fs", "trace", "cors"] }
+
+[dev-dependencies]
+tempfile = "3.0"

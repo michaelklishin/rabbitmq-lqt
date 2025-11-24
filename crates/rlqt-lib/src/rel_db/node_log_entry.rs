@@ -1,0 +1,336 @@
+// Copyright (C) 2025-2026 Michael S. Klishin and Contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+use crate::entry_metadata::labels::LABEL_NAMES;
+use crate::parser::ParsedLogEntry;
+use sea_orm::entity::prelude::*;
+use sea_orm::sea_query::Expr;
+use sea_orm::{ActiveValue, Condition, QueryOrder, QuerySelect, TransactionTrait};
+use serde::{Deserialize, Serialize};
+use serde_json::{Map, Value, to_value};
+
+pub type NodeLogEntry = Entity;
+
+/// Default maximum number of entries returned by filtering queries.
+/// Can be overridden by specifying an explicit limit in the query context.
+const DEFAULT_MAX_QUERY_LIMIT: u64 = 10_000;
+
+/// Number of entries to insert in a single database transaction.
+/// Batching provides a 10-15% entry insertion speedup.
+///
+/// Values higher hit the law of diminishing returns.
+const DB_INSERT_BATCH_SIZE: usize = 2000;
+
+/// Query context for filtering log entries
+#[derive(Debug, Default, Clone)]
+pub struct QueryContext {
+    pub(crate) since_time: Option<DateTimeUtc>,
+    pub(crate) to_time: Option<DateTimeUtc>,
+    pub(crate) severity: Option<String>,
+    pub(crate) erlang_pid: Option<String>,
+    pub(crate) node: Option<String>,
+    pub(crate) subsystem: Option<String>,
+    pub(crate) labels: Vec<String>,
+    pub(crate) matching_all_labels: bool,
+    pub(crate) limit: Option<u64>,
+    pub(crate) has_resolution_or_discussion_url: bool,
+    pub(crate) has_doc_url: bool,
+}
+
+impl QueryContext {
+    #[must_use]
+    pub fn since(mut self, time: DateTimeUtc) -> Self {
+        self.since_time = Some(time);
+        self
+    }
+
+    #[must_use]
+    pub fn to(mut self, time: DateTimeUtc) -> Self {
+        self.to_time = Some(time);
+        self
+    }
+
+    #[must_use]
+    pub fn severity(mut self, sev: impl Into<String>) -> Self {
+        self.severity = Some(sev.into());
+        self
+    }
+
+    #[must_use]
+    pub fn erlang_pid(mut self, pid: impl Into<String>) -> Self {
+        self.erlang_pid = Some(pid.into());
+        self
+    }
+
+    #[must_use]
+    pub fn node(mut self, n: impl Into<String>) -> Self {
+        self.node = Some(n.into());
+        self
+    }
+
+    #[must_use]
+    pub fn subsystem(mut self, sub: impl Into<String>) -> Self {
+        self.subsystem = Some(sub.into());
+        self
+    }
+
+    #[must_use]
+    pub fn labels(mut self, labels: Vec<String>) -> Self {
+        self.labels = labels;
+        self
+    }
+
+    #[must_use]
+    pub fn add_label(mut self, label: impl Into<String>) -> Self {
+        self.labels.push(label.into());
+        self
+    }
+
+    #[must_use]
+    pub fn matching_all_labels(mut self, match_all: bool) -> Self {
+        self.matching_all_labels = match_all;
+        self
+    }
+
+    #[must_use]
+    pub fn limit(mut self, l: u64) -> Self {
+        self.limit = Some(l);
+        self
+    }
+
+    #[must_use]
+    pub fn has_resolution_or_discussion_url(mut self, has: bool) -> Self {
+        self.has_resolution_or_discussion_url = has;
+        self
+    }
+
+    #[must_use]
+    pub fn has_doc_url(mut self, has: bool) -> Self {
+        self.has_doc_url = has;
+        self
+    }
+}
+
+/// A RabbitMQ log entry stored in the database
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
+#[sea_orm(table_name = "node_log_entries")]
+pub struct Model {
+    /// Unique numerical ID (primary key)
+    #[sea_orm(primary_key, auto_increment = true)]
+    pub id: i64,
+
+    /// Node name
+    #[sea_orm(indexed)]
+    pub node: String,
+
+    /// Timestamp of the log entry
+    #[sea_orm(indexed)]
+    pub timestamp: DateTimeUtc,
+
+    /// Log severity level (debug, info, notice, warning, error, critical)
+    #[sea_orm(indexed)]
+    pub severity: String,
+
+    /// Erlang PID (e.g., "<0.208.0>")
+    #[sea_orm(indexed)]
+    pub erlang_pid: String,
+
+    /// Subsystem identifier
+    #[sea_orm(indexed)]
+    pub subsystem_id: Option<i16>,
+
+    /// Log message content (can be multiline)
+    pub message: String,
+
+    /// Labels attached to this log entry (stored as JSONB)
+    #[sea_orm(column_type = "JsonBinary")]
+    pub labels: Json,
+
+    /// ID of related resolution or discussion URL
+    pub resolution_or_discussion_url_id: Option<i16>,
+
+    /// ID of relevant documentation URL
+    pub doc_url_id: Option<i16>,
+}
+
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {}
+
+impl ActiveModelBehavior for ActiveModel {}
+
+impl Model {
+    /// Check if this log entry is multiline
+    #[inline]
+    pub fn is_multiline(&self) -> bool {
+        self.message.contains('\n')
+    }
+
+    /// Format labels as a newline-separated list of set labels
+    #[inline]
+    pub fn format_labels(&self) -> String {
+        if let Some(obj) = self.labels.as_object() {
+            LABEL_NAMES
+                .iter()
+                .filter(|&label| obj.get(*label).and_then(|v| v.as_bool()).unwrap_or(false))
+                .copied()
+                .collect::<Vec<_>>()
+                .join("\n")
+        } else {
+            String::new()
+        }
+    }
+}
+
+impl ActiveModel {
+    fn from_parsed(entry: &ParsedLogEntry, node: &str) -> Self {
+        let labels_json = to_value(entry.labels).unwrap_or_else(|_| Value::Object(Map::new()));
+
+        let id_value = if let Some(explicit_id) = entry.explicit_id {
+            ActiveValue::Set(explicit_id)
+        } else {
+            ActiveValue::NotSet
+        };
+
+        Self {
+            id: id_value,
+            node: ActiveValue::Set(node.to_string()),
+            timestamp: ActiveValue::Set(entry.timestamp),
+            severity: ActiveValue::Set(entry.severity.to_string()),
+            erlang_pid: ActiveValue::Set(entry.process_id.clone()),
+            subsystem_id: ActiveValue::Set(entry.subsystem_id),
+            message: ActiveValue::Set(entry.message.clone()),
+            labels: ActiveValue::Set(labels_json),
+            resolution_or_discussion_url_id: ActiveValue::Set(
+                entry.resolution_or_discussion_url_id,
+            ),
+            doc_url_id: ActiveValue::Set(entry.doc_url_id),
+        }
+    }
+}
+
+impl Entity {
+    /// Count all log entries
+    pub async fn count_all(db: &DatabaseConnection) -> Result<u64, DbErr> {
+        Self::find().count(db).await
+    }
+
+    /// Query log entries with optional filters
+    ///
+    /// Default limit is 10,000 entries to prevent memory exhaustion.
+    /// Specify a limit explicitly to override this.
+    pub async fn query(db: &DatabaseConnection, ctx: &QueryContext) -> Result<Vec<Model>, DbErr> {
+        let mut query = Self::find();
+
+        if let Some(since) = ctx.since_time {
+            query = query.filter(Column::Timestamp.gte(since));
+        }
+
+        if let Some(to) = ctx.to_time {
+            query = query.filter(Column::Timestamp.lte(to));
+        }
+
+        if let Some(ref sev) = ctx.severity {
+            query = query.filter(Column::Severity.eq(sev));
+        }
+
+        if let Some(ref pid) = ctx.erlang_pid {
+            query = query.filter(Column::ErlangPid.eq(pid));
+        }
+
+        if let Some(ref n) = ctx.node {
+            query = query.filter(Column::Node.eq(n));
+        }
+
+        if let Some(ref sub) = ctx.subsystem
+            && let Ok(subsystem) = sub.parse::<crate::entry_metadata::subsystems::Subsystem>()
+        {
+            query = query.filter(Column::SubsystemId.eq(subsystem.to_id()));
+        }
+
+        if !ctx.labels.is_empty() {
+            let mut label_condition = if ctx.matching_all_labels {
+                Condition::all()
+            } else {
+                Condition::any()
+            };
+            for label in &ctx.labels {
+                if LABEL_NAMES.contains(&label.as_str()) {
+                    let json_path = format!("$.{}", label);
+                    label_condition = label_condition.add(
+                        Expr::cust_with_values("json_extract(labels, ?)", [json_path]).eq(true),
+                    );
+                }
+            }
+            query = query.filter(label_condition);
+        }
+
+        if ctx.has_resolution_or_discussion_url {
+            query = query.filter(Column::ResolutionOrDiscussionUrlId.is_not_null());
+        }
+
+        if ctx.has_doc_url {
+            query = query.filter(Column::DocUrlId.is_not_null());
+        }
+
+        query = query.order_by_asc(Column::Timestamp);
+
+        let effective_limit = ctx.limit.unwrap_or(DEFAULT_MAX_QUERY_LIMIT);
+        query = query.limit(effective_limit);
+
+        query.all(db).await
+    }
+
+    async fn insert_batch(db: &DatabaseConnection, entries: Vec<ActiveModel>) -> Result<(), DbErr> {
+        if entries.is_empty() {
+            return Ok(());
+        }
+
+        let txn = db.begin().await?;
+        Entity::insert_many(entries).exec(&txn).await?;
+        txn.commit().await?;
+        Ok(())
+    }
+
+    pub async fn insert_parsed_entries(
+        db: &DatabaseConnection,
+        entries: &[ParsedLogEntry],
+        node: &str,
+    ) -> Result<(), DbErr> {
+        let active_models: Vec<ActiveModel> = entries
+            .iter()
+            .map(|entry| ActiveModel::from_parsed(entry, node))
+            .collect();
+        Self::insert_batch(db, active_models).await
+    }
+
+    pub async fn insert_parsed_entries_bulk(
+        db: &DatabaseConnection,
+        entries: &[ParsedLogEntry],
+        node: &str,
+    ) -> Result<(), DbErr> {
+        if entries.is_empty() {
+            return Ok(());
+        }
+
+        let txn = db.begin().await?;
+        for chunk in entries.chunks(DB_INSERT_BATCH_SIZE) {
+            let active_models: Vec<ActiveModel> = chunk
+                .iter()
+                .map(|entry| ActiveModel::from_parsed(entry, node))
+                .collect();
+            Entity::insert_many(active_models).exec(&txn).await?;
+        }
+        txn.commit().await?;
+        Ok(())
+    }
+}
