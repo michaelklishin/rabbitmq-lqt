@@ -20,7 +20,7 @@ rm -rf $release_dir
 mkdir $release_dir
 
 print $'Building on Windows in ($src)...'
-cargo rustc -q --bin $binary --target $target --release
+cargo rustc -q --package rlqt-cli --bin $binary --target $target --release
 
 #
 # Release packaging

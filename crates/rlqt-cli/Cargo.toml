@@ -5,6 +5,10 @@ edition.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+description = "CLI tool for parsing, annotating, and querying RabbitMQ log files"
 
 [[bin]]
 name = "rabbitmq-lqt"

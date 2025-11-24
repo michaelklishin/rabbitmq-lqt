@@ -82,5 +82,5 @@ ls $release_dir | print
 echo $'artifact=($artifact_filename)' | save --append $env.GITHUB_OUTPUT
 
 def 'build-with-cargo' [] {
-  cargo rustc --bin $binary --target $target --release
+  cargo rustc --package rlqt-cli --bin $binary --target $target --release
 }
