@@ -15,7 +15,7 @@ name = "rabbitmq-lqt"
 path = "src/main.rs"
 
 [dependencies]
-rlqt-lib = { version = "0.10.0" }
+rlqt-lib = { version = "0.11.0", path = "../rlqt-lib" }
 clap = { workspace = true }
 sysexits = { workspace = true }
 tabled = { workspace = true }

@@ -3,7 +3,7 @@ members = ["crates/rlqt-lib", "crates/rlqt-cli", "crates/rlqt-ui"]
 resolver = "2"
 
 [workspace.package]
-version = "0.10.0"
+version = "0.11.0"
 edition = "2024"
 license = "MPL-2.0"
 authors = ["Michael S. Klishin and Contributors"]
