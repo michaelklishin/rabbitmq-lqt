@@ -14,6 +14,11 @@ that will evolve over time, for example, by adding more annotators and
 improving the querying capabilities.
 
 
+## Binary Releases
+
+Binary releases are available [on the Releases page](https://github.com/michaelklishin/rabbitmq-lqt/releases).
+
+
 ## Usage
 
 ### CLI Interface Help
