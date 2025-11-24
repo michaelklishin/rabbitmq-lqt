@@ -29,6 +29,17 @@ jobs:
         with:
           components: rustfmt, clippy
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build frontend
+        run: |
+          cd crates/rlqt-ui/frontend
+          npm install
+          npm run build
+
       - name: Lint (clippy)
         run: cargo clippy --all
 
@@ -54,6 +65,17 @@ jobs:
           toolchain: ${{ matrix.rust-version }}
 
       - uses: taiki-e/install-action@nextest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build frontend
+        run: |
+          cd crates/rlqt-ui/frontend
+          npm install
+          npm run build
 
       - name: Run tests
         run: RUST_BACKTRACE=1 NEXTEST_RETRIES=2 cargo nextest run --workspace --no-fail-fast --all-features
