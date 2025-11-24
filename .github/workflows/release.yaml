@@ -1,0 +1,165 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+    - 'v\d\.\d+\.\d+'
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and Archive
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        include:
+          # macOS, aarch64
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            target_rustflags: ''
+          # Windoze, x86-64
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            target_rustflags: ''
+          # Linux, x86-64
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-22.04
+            target_rustflags: ''
+          # Linux, aarch64
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-24.04-arm
+            target_rustflags: ''
+
+    permissions:
+      id-token: write
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchains
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+
+      - name: Install Nu Shell
+        uses: hustcer/setup-nu@v3
+        with:
+          version: '0.100'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build a rabbitmq-lqt release archive on macOS
+        id: release-build-macos
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: nu ./scripts/release-macos.nu
+        env:
+          OS: ${{ matrix.os }}
+          TARGET: ${{ matrix.target }}
+          TARGET_RUSTFLAGS: ${{ matrix.target_rustflags }}
+          SRC: ${{ github.workspace }}
+      - name: Store macOS build artifact
+        id: upload-macos-artifact
+        if: ${{ matrix.os == 'macos-latest' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}"
+          path: "${{ github.workspace }}/target/${{ matrix.target }}/release/rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}"
+          retention-days: 2
+
+      - name: Build a rabbitmq-lqt release archive on x86-64 Linux
+        id: release-build-amd64-linux
+        if: ${{ matrix.os == 'ubuntu-24.04' || matrix.os == 'ubuntu-22.04' }}
+        run: nu ./scripts/release-linux.nu
+        env:
+          OS: ${{ matrix.os }}
+          TARGET: ${{ matrix.target }}
+          TARGET_RUSTFLAGS: ${{ matrix.target_rustflags }}
+          SRC: ${{ github.workspace }}
+      - name: Store x86-64 Linux build artifact
+        id: upload-amd64-linux-artifact
+        if: ${{ matrix.os == 'ubuntu-24.04' || matrix.os == 'ubuntu-22.04' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}"
+          path: "${{ github.workspace }}/target/${{ matrix.target }}/release/rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}"
+          retention-days: 2
+
+      - name: Build a rabbitmq-lqt release archive on aarch64 Linux
+        id: release-build-aarch64-linux
+        if: ${{ matrix.os == 'ubuntu-24.04-arm' }}
+        run: nu ./scripts/release-linux.nu
+        env:
+          OS: ${{ matrix.os }}
+          TARGET: ${{ matrix.target }}
+          TARGET_RUSTFLAGS: ${{ matrix.target_rustflags }}
+          SRC: ${{ github.workspace }}
+      - name: Store aarch64 Linux build artifact
+        id: upload-aarch64-linux-artifact
+        if: ${{ matrix.os == 'ubuntu-24.04-arm' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}"
+          path: "${{ github.workspace }}/target/${{ matrix.target }}/release/rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}"
+          retention-days: 2
+
+      - name: Build a rabbitmq-lqt release archive on Windows
+        id: release-build-windows
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: nu ./scripts/release-windows.nu
+        env:
+          OS: ${{ matrix.os }}
+          TARGET: ${{ matrix.target }}
+          TARGET_RUSTFLAGS: ${{ matrix.target_rustflags }}
+          SRC: ${{ github.workspace }}
+      - name: Store Windows build artifact
+        id: upload-windows-artifact
+        if: ${{ matrix.os == 'windows-latest' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}.exe"
+          path: "${{ github.workspace }}/target/${{ matrix.target }}/release/rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}.exe"
+          retention-days: 2
+
+  create_gh_release:
+    needs: [release]
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Fetch macOS archive
+      uses: actions/download-artifact@v4
+      with:
+        name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-aarch64-apple-darwin"
+        path: ./artifacts
+    - name: Fetch amd64 Linux archive
+      uses: actions/download-artifact@v4
+      with:
+        name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-x86_64-unknown-linux-gnu"
+        path: ./artifacts
+    - name: Fetch aarch64 Linux archive
+      uses: actions/download-artifact@v4
+      with:
+        name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-aarch64-unknown-linux-gnu"
+        path: ./artifacts
+    - name: Fetch Windows archive
+      uses: actions/download-artifact@v4
+      with:
+        name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-x86_64-pc-windows-msvc.exe"
+        path: ./artifacts
+    - name: Publish rabbitmq-lqt release archive
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v${{ vars.NEXT_RELEASE_VERSION }}
+        draft: false
+        files: ./artifacts/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

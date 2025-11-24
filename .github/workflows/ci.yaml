@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    paths:
+      - ".github/workflows/ci.yaml"
+      - "crates/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+  pull_request: {}
+
+env:
+  RUSTFLAGS: -D warnings
+  CARGO_TERM_COLOR: always
+
+jobs:
+  lint:
+    name: Lint
+    strategy:
+      matrix:
+        runner:
+          - "ubuntu-22.04"
+          - "ubuntu-24.04"
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Lint (clippy)
+        run: cargo clippy --all
+
+      - name: Lint (rustfmt)
+        run: cargo fmt --all --check
+
+  build:
+    strategy:
+      matrix:
+        rust-version:
+          - stable
+          - beta
+        runner:
+          - "ubuntu-22.04"
+          - "ubuntu-24.04"
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.rust-version }}
+
+      - uses: taiki-e/install-action@nextest
+
+      - name: Run tests
+        run: RUST_BACKTRACE=1 NEXTEST_RETRIES=2 cargo nextest run --workspace --no-fail-fast --all-features
