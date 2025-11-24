@@ -51,7 +51,7 @@ rm -f /tmp/log_set_abc.rlqt
 
 rabbitmq-lqt logs parse --input-log-file-path /path/to/rabbit@node1.log \
                         --input-log-file-path /path/to/rabbit@node2.log \
-                        --input-log-file-path /path/to/rabbit@node2.log \
+                        --input-log-file-path /path/to/rabbit@node3.log \
                         --output-db-file-path /tmp/log_set_abc.rlqt
 ```
 
