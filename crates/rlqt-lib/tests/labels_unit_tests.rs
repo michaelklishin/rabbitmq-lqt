@@ -606,10 +606,14 @@ fn test_mixed_case_patterns() {
 #[test]
 fn test_real_rabbitmq_log_fixture_annotation() {
     // Parse the real RabbitMQ log fixture
-    let fixture_path = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../rlqt-cli/tests/fixtures/rabbit@sunnyside.log"
-    );
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let fixture_path = std::path::Path::new(manifest_dir)
+        .parent()
+        .unwrap()
+        .join("rlqt-cli")
+        .join("tests")
+        .join("fixtures")
+        .join("rabbit@sunnyside.log");
 
     let file =
         File::open(fixture_path).expect("Failed to open fixture log, ensure path is correct");
