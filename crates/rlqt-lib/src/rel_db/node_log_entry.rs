@@ -14,7 +14,7 @@
 use crate::entry_metadata::labels::LABEL_NAMES;
 use crate::parser::ParsedLogEntry;
 use sea_orm::entity::prelude::*;
-use sea_orm::sea_query::Expr;
+use sea_orm::sea_query::{Expr, ExprTrait};
 use sea_orm::{ActiveValue, Condition, QueryOrder, QuerySelect, TransactionTrait};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, to_value};

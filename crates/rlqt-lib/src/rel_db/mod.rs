@@ -31,22 +31,18 @@ pub async fn create_database(db_path: &Path) -> Result<DatabaseConnection, DbErr
     db.execute_unprepared("PRAGMA cache_size=10000;").await?;
     db.execute_unprepared("PRAGMA temp_store=MEMORY;").await?;
 
-    let backend = db.get_database_backend();
     let schema = Schema::new(sea_orm::DatabaseBackend::Sqlite);
 
     let create_table_stmt = schema.create_table_from_entity(node_log_entry::Entity);
-    db.execute(backend.build(&create_table_stmt)).await?;
+    db.execute(&create_table_stmt).await?;
 
     let create_metadata_table_stmt = schema.create_table_from_entity(file_metadata::Entity);
-    db.execute(backend.build(&create_metadata_table_stmt))
-        .await?;
+    db.execute(&create_metadata_table_stmt).await?;
 
     Ok(db)
 }
 
 pub async fn post_insertion_operations(db: &DatabaseConnection) -> Result<(), DbErr> {
-    let backend = db.get_database_backend();
-
     let indexes = [
         (
             "idx_node_log_entries_node",
@@ -151,7 +147,7 @@ pub async fn post_insertion_operations(db: &DatabaseConnection) -> Result<(), Db
             idx = idx.col(col).to_owned();
         }
 
-        db.execute(backend.build(&idx)).await?;
+        db.execute(&idx).await?;
     }
 
     for idx_sql in json_indices {
@@ -176,7 +172,7 @@ pub async fn post_insertion_operations(db: &DatabaseConnection) -> Result<(), Db
             idx = idx.col(col).to_owned();
         }
 
-        db.execute(backend.build(&idx)).await?;
+        db.execute(&idx).await?;
     }
 
     db.execute_unprepared("ANALYZE;").await?;

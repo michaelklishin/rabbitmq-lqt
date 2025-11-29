@@ -33,7 +33,7 @@ indicatif = "0.17"
 num_enum = "0.7"
 strum = { version = "0.26", features = ["derive"] }
 
-sea-orm = { version = "1.1", features = ["runtime-tokio-rustls", "sqlx-sqlite", "macros"] }
+sea-orm = { version = "2.0.0-rc", features = ["runtime-tokio-rustls", "sqlx-sqlite", "macros"] }
 tokio = { version = "1.0", features = ["full"] }
 futures = "0.3"
 criterion = { version = "0.5", features = ["async_tokio"] }

@@ -22,7 +22,6 @@ use std::error::Error;
 use std::ffi::OsStr;
 use std::path::PathBuf;
 
-#[allow(dead_code)]
 pub fn fixture_log_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
@@ -30,14 +29,12 @@ pub fn fixture_log_path() -> PathBuf {
         .join("rabbit@sunnyside.log")
 }
 
-#[allow(dead_code)]
 pub fn fixture_directory_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
         .join("fixtures")
 }
 
-#[allow(dead_code)]
 pub fn fixture_log_path_hare() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
@@ -45,7 +42,6 @@ pub fn fixture_log_path_hare() -> PathBuf {
         .join("hare@sunnyside.log")
 }
 
-#[allow(dead_code)]
 pub fn parse_log_to_db(log_path: &str, db_path: &str) -> Result<(), Box<dyn Error>> {
     cargo_bin_cmd!("rabbitmq-lqt")
         .args([
