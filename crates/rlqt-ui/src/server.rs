@@ -100,7 +100,10 @@ fn create_router(state: AppState) -> Router {
         .nest("/api", api_routes)
         .nest_service(
             "/assets",
-            tower_http::services::ServeDir::new("crates/rlqt-ui/frontend/dist/assets"),
+            tower_http::services::ServeDir::new(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/frontend/dist/assets"
+            )),
         )
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
