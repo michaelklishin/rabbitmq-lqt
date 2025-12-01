@@ -159,15 +159,18 @@ impl LabelAnnotator for ElectionsAnnotator {
     }
 }
 
-static QUEUE_PATTERN: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"queue\s+'[^']+'\s+in\s+vhost").unwrap());
+static QUEUE_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"queue\s+'[^']+'\s+in\s+vhost").expect("QUEUE_PATTERN is a valid regex")
+});
 
 static AUTO_DELETE_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"all of its consumers \(\d+\) were on a channel that was closed").unwrap()
+    Regex::new(r"all of its consumers \(\d+\) were on a channel that was closed")
+        .expect("AUTO_DELETE_PATTERN is a valid regex")
 });
 
 static EXCLUSIVE_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"because its declaring connection <\d+\.\d+\.\d+> was closed").unwrap()
+    Regex::new(r"because its declaring connection <\d+\.\d+\.\d+> was closed")
+        .expect("EXCLUSIVE_PATTERN is a valid regex")
 });
 
 #[derive(Debug)]
@@ -357,8 +360,10 @@ impl LabelAnnotator for ShovelsAnnotator {
     }
 }
 
-static CLOSING_CONNECTION_PATTERN: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"closing connection <\d+\.\d+\.\d+>").unwrap());
+static CLOSING_CONNECTION_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"closing connection <\d+\.\d+\.\d+>")
+        .expect("CLOSING_CONNECTION_PATTERN is a valid regex")
+});
 
 #[derive(Debug)]
 pub struct CqStoresAnnotator;

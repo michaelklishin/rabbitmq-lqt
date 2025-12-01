@@ -1,0 +1,5 @@
+[profile.default]
+default-filter = "all()"
+retries = 2
+failure-output = "final"
+fail-fast = false

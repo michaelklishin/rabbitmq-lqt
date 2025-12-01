@@ -23,10 +23,9 @@ use crate::parser::ParsedLogEntry;
 use crate::rel_db::file_metadata;
 use chrono::{DateTime, Utc};
 use nom::{
-    IResult,
+    IResult, Parser,
     bytes::complete::{tag, take_until},
     character::complete::multispace0,
-    sequence::tuple,
 };
 use sea_orm::prelude::Json;
 use serde_json::Value;
@@ -110,16 +109,17 @@ fn json_from_hashset(set: &HashSet<String>) -> Json {
 }
 
 fn parse_rabbitmq_version(input: &str) -> IResult<&str, &str> {
-    let (rest, (_, version, _)) = tuple((
+    let (rest, (_, version, _)) = (
         tag("Starting RabbitMQ "),
         take_until(" on Erlang"),
         multispace0,
-    ))(input)?;
+    )
+        .parse(input)?;
     Ok((rest, version))
 }
 
 fn parse_erlang_version(input: &str) -> IResult<&str, &str> {
-    let (rest, _) = tag("on Erlang ")(input)?;
+    let (rest, _) = tag("on Erlang ").parse(input)?;
     let remaining = rest.trim();
     let version = if let Some(newline_pos) = remaining.find('\n') {
         &remaining[..newline_pos]

@@ -366,7 +366,7 @@ async fn parse_logs(args: &ArgMatches) -> Result<()> {
         }
         next_id += parsed_entries.len() as i64;
 
-        NodeLogEntry::insert_parsed_entries_bulk(&db, &parsed_entries, &node_name).await?;
+        NodeLogEntry::insert_parsed_entries(&db, &parsed_entries, &node_name).await?;
 
         let file_path_str = log_path.to_string_lossy().to_string();
         let file_metadata = extract_file_metadata(

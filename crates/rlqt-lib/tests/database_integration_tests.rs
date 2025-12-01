@@ -782,3 +782,52 @@ async fn test_end_to_end_unlabelled_annotation() {
     assert_eq!(results.len(), 1, "Should find 1 access_control entry");
     assert_eq!(results[0].labels.get("unlabelled"), None);
 }
+
+#[tokio::test]
+async fn test_bulk_insert_with_chunking() {
+    let temp_db = NamedTempFile::new().unwrap();
+    let db = create_database(temp_db.path()).await.unwrap();
+
+    let base_time = Utc::now();
+    let entry_count = 4500;
+    let entries: Vec<ParsedLogEntry> = (0..entry_count)
+        .map(|i| ParsedLogEntry {
+            sequence_id: i,
+            explicit_id: Some(i as i64 + 1),
+            timestamp: base_time + chrono::Duration::seconds(i as i64),
+            severity: if i % 3 == 0 {
+                Severity::Info
+            } else if i % 3 == 1 {
+                Severity::Warning
+            } else {
+                Severity::Error
+            },
+            process_id: format!("<0.{}.0>", i % 100),
+            message: format!("Test message {}", i),
+            message_lowercased: format!("test message {}", i),
+            subsystem_id: None,
+            labels: LogEntryLabels::default(),
+            resolution_or_discussion_url_id: None,
+            doc_url_id: None,
+        })
+        .collect();
+
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
+        .await
+        .unwrap();
+
+    let count = NodeLogEntry::count_all(&db).await.unwrap();
+    assert_eq!(count, entry_count as u64);
+
+    let ctx = QueryContext::default().severity("info");
+    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    assert_eq!(results.len(), 1500);
+
+    let ctx = QueryContext::default().severity("warning");
+    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    assert_eq!(results.len(), 1500);
+
+    let ctx = QueryContext::default().severity("error");
+    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    assert_eq!(results.len(), 1500);
+}

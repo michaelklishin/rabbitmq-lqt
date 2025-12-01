@@ -15,13 +15,13 @@ use crate::entry_metadata::labels::LogEntryLabels;
 use crate::{Result, Severity};
 use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
 use nom::{
-    Err as NomErr, IResult,
+    Err as NomErr, IResult, Parser,
     branch::alt,
     bytes::complete::tag,
     character::complete::{char, digit1, space1},
     combinator::{map_res, recognize},
     error::{Error as NomError, ErrorKind},
-    sequence::{delimited, tuple},
+    sequence::delimited,
 };
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -68,10 +68,9 @@ impl ParsedLogEntry {
         self.message.push('\n');
         self.message.push_str(content);
 
+        self.message_lowercased.reserve(1 + content.len());
         self.message_lowercased.push('\n');
-        for c in content.chars() {
-            self.message_lowercased.extend(c.to_lowercase());
-        }
+        self.message_lowercased.push_str(&content.to_lowercase());
     }
 }
 
@@ -158,11 +157,11 @@ pub fn count_log_lines(path: &Path) -> Result<usize> {
 /// Format: "2025-10-27 11:23:27.566558-07:00 [notice] <0.208.0> Message"
 fn parse_log_entry(input: &str) -> IResult<&str, ParsedLogEntry> {
     let (input, timestamp) = parse_timestamp(input)?;
-    let (input, _) = space1(input)?;
+    let (input, _) = space1.parse(input)?;
     let (input, severity) = parse_severity(input)?;
-    let (input, _) = space1(input)?;
+    let (input, _) = space1.parse(input)?;
     let (input, process_id) = parse_process_id(input)?;
-    let (input, _) = char(' ')(input)?;
+    let (input, _) = char(' ').parse(input)?;
     let trimmed_message = input.trim_end();
     let message = trimmed_message.to_string();
     let message_lowercased = trimmed_message.to_lowercase();
@@ -186,30 +185,30 @@ fn parse_log_entry(input: &str) -> IResult<&str, ParsedLogEntry> {
 }
 
 fn parse_date(input: &str) -> IResult<&str, (i32, u32, u32)> {
-    let (input, year) = map_res(digit1, |s: &str| s.parse::<i32>())(input)?;
-    let (input, _) = char('-')(input)?;
-    let (input, month) = map_res(digit1, |s: &str| s.parse::<u32>())(input)?;
-    let (input, _) = char('-')(input)?;
-    let (input, day) = map_res(digit1, |s: &str| s.parse::<u32>())(input)?;
+    let (input, year) = map_res(digit1, |s: &str| s.parse::<i32>()).parse(input)?;
+    let (input, _) = char('-').parse(input)?;
+    let (input, month) = map_res(digit1, |s: &str| s.parse::<u32>()).parse(input)?;
+    let (input, _) = char('-').parse(input)?;
+    let (input, day) = map_res(digit1, |s: &str| s.parse::<u32>()).parse(input)?;
     Ok((input, (year, month, day)))
 }
 
 fn parse_time(input: &str) -> IResult<&str, (u32, u32, u32, u32)> {
-    let (input, hour) = map_res(digit1, |s: &str| s.parse::<u32>())(input)?;
-    let (input, _) = char(':')(input)?;
-    let (input, minute) = map_res(digit1, |s: &str| s.parse::<u32>())(input)?;
-    let (input, _) = char(':')(input)?;
-    let (input, second) = map_res(digit1, |s: &str| s.parse::<u32>())(input)?;
-    let (input, _) = char('.')(input)?;
-    let (input, microseconds) = map_res(digit1, |s: &str| s.parse::<u32>())(input)?;
+    let (input, hour) = map_res(digit1, |s: &str| s.parse::<u32>()).parse(input)?;
+    let (input, _) = char(':').parse(input)?;
+    let (input, minute) = map_res(digit1, |s: &str| s.parse::<u32>()).parse(input)?;
+    let (input, _) = char(':').parse(input)?;
+    let (input, second) = map_res(digit1, |s: &str| s.parse::<u32>()).parse(input)?;
+    let (input, _) = char('.').parse(input)?;
+    let (input, microseconds) = map_res(digit1, |s: &str| s.parse::<u32>()).parse(input)?;
     Ok((input, (hour, minute, second, microseconds)))
 }
 
 fn parse_timezone(input: &str) -> IResult<&str, i32> {
-    let (input, tz_sign) = alt((char('+'), char('-')))(input)?;
-    let (input, tz_hour) = map_res(digit1, |s: &str| s.parse::<i32>())(input)?;
-    let (input, _) = char(':')(input)?;
-    let (input, tz_minute) = map_res(digit1, |s: &str| s.parse::<i32>())(input)?;
+    let (input, tz_sign) = alt((char('+'), char('-'))).parse(input)?;
+    let (input, tz_hour) = map_res(digit1, |s: &str| s.parse::<i32>()).parse(input)?;
+    let (input, _) = char(':').parse(input)?;
+    let (input, tz_minute) = map_res(digit1, |s: &str| s.parse::<i32>()).parse(input)?;
     let tz_offset_seconds = (tz_hour * 3600 + tz_minute * 60) * if tz_sign == '-' { -1 } else { 1 };
     Ok((input, tz_offset_seconds))
 }
@@ -245,7 +244,7 @@ fn build_datetime(
 
 fn parse_timestamp(input: &str) -> IResult<&str, DateTime<Utc>> {
     let (input, date) = parse_date(input)?;
-    let (input, _) = space1(input)?;
+    let (input, _) = space1.parse(input)?;
     let (input, time) = parse_time(input)?;
     let (input, tz_offset) = parse_timezone(input)?;
     let datetime = build_datetime(date, time, tz_offset)
@@ -267,7 +266,8 @@ fn parse_severity(input: &str) -> IResult<&str, Severity> {
             tag("critical"),
         )),
         char(']'),
-    )(input)?;
+    )
+    .parse(input)?;
 
     let severity = severity_str
         .parse::<Severity>()
@@ -281,9 +281,10 @@ fn parse_severity(input: &str) -> IResult<&str, Severity> {
 fn parse_process_id(input: &str) -> IResult<&str, String> {
     let (input, pid) = recognize(delimited(
         char('<'),
-        tuple((digit1, char('.'), digit1, char('.'), digit1)),
+        (digit1, char('.'), digit1, char('.'), digit1),
         char('>'),
-    ))(input)?;
+    ))
+    .parse(input)?;
 
     Ok((input, pid.to_string()))
 }

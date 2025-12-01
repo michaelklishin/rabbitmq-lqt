@@ -290,30 +290,7 @@ impl Entity {
         query.all(db).await
     }
 
-    async fn insert_batch(db: &DatabaseConnection, entries: Vec<ActiveModel>) -> Result<(), DbErr> {
-        if entries.is_empty() {
-            return Ok(());
-        }
-
-        let txn = db.begin().await?;
-        Entity::insert_many(entries).exec(&txn).await?;
-        txn.commit().await?;
-        Ok(())
-    }
-
     pub async fn insert_parsed_entries(
-        db: &DatabaseConnection,
-        entries: &[ParsedLogEntry],
-        node: &str,
-    ) -> Result<(), DbErr> {
-        let active_models: Vec<ActiveModel> = entries
-            .iter()
-            .map(|entry| ActiveModel::from_parsed(entry, node))
-            .collect();
-        Self::insert_batch(db, active_models).await
-    }
-
-    pub async fn insert_parsed_entries_bulk(
         db: &DatabaseConnection,
         entries: &[ParsedLogEntry],
         node: &str,

@@ -15,26 +15,22 @@
 use regex::Regex;
 use std::sync::LazyLock;
 
-pub static VIRTUAL_HOSTS_PATTERN: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"recovering \d+ queues of type").unwrap());
-
-pub static SHOVEL_IN_VHOST_PATTERN: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"shovel\s+'[^']+'\s+in\s+virtual\s+host").unwrap());
-
-pub static SHOVEL_CONNECTED_PATTERN: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"shovel\s+'[^']+'\s+connected").unwrap());
-
-pub static SHOVEL_TOPOLOGY_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"shovel\s+'[^']+'\s+has\s+finished\s+setting\s+up\s+its\s+topology").unwrap()
+pub static VIRTUAL_HOSTS_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"recovering \d+ queues of type").expect("VIRTUAL_HOSTS_PATTERN is a valid regex")
 });
 
-pub static SHOVEL_RECEIVED_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"shovel\s+(?:'[^']+'|<<[^>]+>>)\s+received\s+a\s+'[^']+'\s+from\s+the\s+server")
-        .unwrap()
+pub static SHOVEL_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(concat!(
+        r"shovel\s+(?:'[^']+'|<<[^>]+>>)\s+(?:",
+        r"in\s+virtual\s+host|",
+        r"connected|",
+        r"has\s+finished\s+setting\s+up\s+its\s+topology|",
+        r"received\s+a\s+'[^']+'\s+from\s+the\s+server|",
+        r"could not connect to source",
+        r")"
+    ))
+    .expect("SHOVEL_PATTERN is a valid regex")
 });
-
-pub static SHOVEL_CONNECT_ERROR_PATTERN: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"shovel\s+'[^']+'\s+could not connect to source").unwrap());
 
 pub fn matches_cq_storage(msg_lower: &str) -> bool {
     msg_lower.contains("message refcount")
@@ -60,11 +56,7 @@ pub fn matches_shovels(msg_lower: &str) -> bool {
         || msg_lower.contains("rabbit_shovel_worker")
         || msg_lower.contains("asked to start a dynamic shovel named")
         || msg_lower.contains("for component 'shovel'")
-        || SHOVEL_CONNECTED_PATTERN.is_match(msg_lower)
-        || SHOVEL_IN_VHOST_PATTERN.is_match(msg_lower)
-        || SHOVEL_TOPOLOGY_PATTERN.is_match(msg_lower)
-        || SHOVEL_RECEIVED_PATTERN.is_match(msg_lower)
-        || SHOVEL_CONNECT_ERROR_PATTERN.is_match(msg_lower)
+        || SHOVEL_PATTERN.is_match(msg_lower)
 }
 
 #[inline]

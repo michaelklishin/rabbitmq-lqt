@@ -129,7 +129,7 @@ fn bench_full_pipeline(c: &mut Criterion) {
 
                         entries.sort_by_key(|e| e.sequence_id);
 
-                        NodeLogEntry::insert_parsed_entries_bulk(&db, &entries, "rabbit@sunnyside")
+                        NodeLogEntry::insert_parsed_entries(&db, &entries, "rabbit@sunnyside")
                             .await
                             .unwrap();
 
