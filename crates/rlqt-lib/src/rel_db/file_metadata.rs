@@ -24,9 +24,11 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub file_path: String,
 
-    pub rabbitmq_version: Option<String>,
+    #[sea_orm(column_type = "JsonBinary")]
+    pub rabbitmq_versions: Json,
 
-    pub erlang_version: Option<String>,
+    #[sea_orm(column_type = "JsonBinary")]
+    pub erlang_versions: Json,
 
     pub tls_library: Option<String>,
 
@@ -64,8 +66,8 @@ impl Entity {
     pub async fn insert_metadata(db: &DatabaseConnection, metadata: Model) -> Result<(), DbErr> {
         let active_model = ActiveModel {
             file_path: ActiveValue::Set(metadata.file_path),
-            rabbitmq_version: ActiveValue::Set(metadata.rabbitmq_version),
-            erlang_version: ActiveValue::Set(metadata.erlang_version),
+            rabbitmq_versions: ActiveValue::Set(metadata.rabbitmq_versions),
+            erlang_versions: ActiveValue::Set(metadata.erlang_versions),
             tls_library: ActiveValue::Set(metadata.tls_library),
             oldest_entry_at: ActiveValue::Set(metadata.oldest_entry_at),
             most_recent_entry_at: ActiveValue::Set(metadata.most_recent_entry_at),

@@ -54,9 +54,18 @@ To parse and annotate a set of files, use `rabbitmq-lqt logs parse`
 ```shell
 rm -f /tmp/log_set_abc.rlqt
 
-rabbitmq-lqt logs parse --input-log-file-path /path/to/rabbit@node1.log \
-                        --input-log-file-path /path/to/rabbit@node2.log \
-                        --input-log-file-path /path/to/rabbit@node3.log \
+rabbitmq-lqt logs parse --input-log-dir-path /path/to/logs/* \
+                        --output-db-file-path /tmp/log_set_abc.rlqt
+```
+
+Individual files can be specified separately:
+
+```shell
+rm -f /tmp/log_set_abc.rlqt
+
+rabbitmq-lqt logs parse --input-log-file-path /path/to/logs/rabbit@node1.log \
+                        --input-log-file-path /path/to/logs/rabbit@node2.log \
+                        --input-log-file-path /path/to/logs/rabbit@node3.log \
                         --output-db-file-path /tmp/log_set_abc.rlqt
 ```
 

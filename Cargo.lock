@@ -1444,9 +1444,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.177"
+version = "0.2.178"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2874a2af47a2325c2001a6e6fad9b16a53b802102b528163885171cf92b15976"
+checksum = "37c93d8daa9d8a012fd8ab92f088405fb202ea0b6ab73ee2482ae66af4f42091"
 
 [[package]]
 name = "libm"
@@ -2256,6 +2256,7 @@ dependencies = [
  "predicates",
  "rayon",
  "rlqt-lib",
+ "rlqt-ui",
  "sea-orm",
  "serde",
  "serde_json",
@@ -2454,9 +2455,9 @@ dependencies = [
 
 [[package]]
 name = "sea-orm"
-version = "2.0.0-rc.19"
+version = "2.0.0-rc.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee6dda57d64724c4c3e2b39ce17ca5f4084561656a3518b65b26edc5b36e4607"
+checksum = "880cc0a64f1ee0320d7d6cd2b9290c27e89750669cfc5b6afdce1654755a2983"
 dependencies = [
  "async-stream",
  "async-trait",
@@ -2486,9 +2487,9 @@ dependencies = [
 
 [[package]]
 name = "sea-orm-macros"
-version = "2.0.0-rc.19"
+version = "2.0.0-rc.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e7674a565e093a4bfffbfd6d7fd79a5dc8d75463d442ffb44d0fc3a3dcce5a6"
+checksum = "8aae91cb86cf389da96119df71967ffb1b3caf1687303def77336f8dc9d33e78"
 dependencies = [
  "heck 0.5.0",
  "pluralizer",
@@ -3475,12 +3476,12 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 
 [[package]]
 name = "uuid"
-version = "1.18.1"
+version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f87b8aa10b915a06587d0dec516c282ff295b475d94abf425d62b57710070a2"
+checksum = "e2e054861b4bd027cd373e18e8d8d8e6548085000e41290d95ce0c373a654b4a"
 dependencies = [
  "js-sys",
- "serde",
+ "serde_core",
  "wasm-bindgen",
 ]
 

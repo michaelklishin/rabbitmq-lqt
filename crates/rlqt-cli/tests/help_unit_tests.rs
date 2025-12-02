@@ -52,7 +52,7 @@ fn show_logs_subcommand_help() -> Result<(), Box<dyn Error>> {
 #[test]
 fn show_parse_command_help() -> Result<(), Box<dyn Error>> {
     run_succeeds(["logs", "parse", "--help"])
-        .stdout(output_includes("Parse RabbitMQ log files"))
+        .stdout(output_includes("Parses and annotates RabbitMQ log files"))
         .stdout(output_includes("--input-log-file-path"))
         .stdout(output_includes("--output-db-file-path"));
 

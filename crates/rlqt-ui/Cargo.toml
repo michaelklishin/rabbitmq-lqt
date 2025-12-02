@@ -11,10 +11,6 @@ publish = false
 name = "rlqt_ui"
 path = "src/lib.rs"
 
-[[bin]]
-name = "rlqt-ui"
-path = "src/main.rs"
-
 [dependencies]
 rlqt-lib = { path = "../rlqt-lib" }
 clap = { workspace = true }

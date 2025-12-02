@@ -64,24 +64,27 @@ fn web_subcommands() -> Vec<Command> {
 
 fn logs_subcommands() -> Vec<Command> {
     let parse_cmd = Command::new("parse")
-        .about("Parse RabbitMQ log files into a SQLite database")
+        .about("Parses and annotates RabbitMQ log files")
         .arg(
             Arg::new("input_log_file_path")
                 .long("input-log-file-path")
                 .value_name("PATH")
                 .action(ArgAction::Append)
-                .help("Path to a RabbitMQ log file to parse (can be specified multiple times)"),
+                .num_args(1..)
+                .help("Path to an input RabbitMQ log file. Can be provided multiple times"),
         )
         .arg(
-            Arg::new("input_log_directory_path")
-                .long("input-log-directory-path")
+            Arg::new("input_log_dir_path")
+                .long("input-log-dir-path")
                 .short('d')
                 .value_name("DIRECTORY")
-                .help("Path to a directory containing RabbitMQ log files (*.log)"),
+                .action(ArgAction::Append)
+                .num_args(1..)
+                .help("Path(s) to a directory containing RabbitMQ log files (*.log)"),
         )
         .group(
-            clap::ArgGroup::new("input_source")
-                .args(["input_log_file_path", "input_log_directory_path"])
+            clap::ArgGroup::new("input_log_files")
+                .args(["input_log_file_path", "input_log_dir_path"])
                 .required(true)
                 .multiple(true),
         )

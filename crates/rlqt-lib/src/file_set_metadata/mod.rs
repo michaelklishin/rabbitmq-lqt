@@ -33,8 +33,8 @@ use std::collections::HashSet;
 
 #[derive(Debug, Clone, Default)]
 pub struct FileMetadataContext {
-    pub rabbitmq_version: Option<String>,
-    pub erlang_version: Option<String>,
+    pub rabbitmq_versions: Vec<String>,
+    pub erlang_versions: Vec<String>,
     pub tls_library: Option<String>,
     pub oldest_entry_at: Option<DateTime<Utc>>,
     pub most_recent_entry_at: Option<DateTime<Utc>>,
@@ -50,8 +50,8 @@ impl FileMetadataContext {
     pub fn to_model(&self, file_path: String) -> file_metadata::Model {
         file_metadata::Model {
             file_path,
-            rabbitmq_version: self.rabbitmq_version.clone(),
-            erlang_version: self.erlang_version.clone(),
+            rabbitmq_versions: json_from_vec(&self.rabbitmq_versions),
+            erlang_versions: json_from_vec(&self.erlang_versions),
             tls_library: self.tls_library.clone(),
             oldest_entry_at: self.oldest_entry_at,
             most_recent_entry_at: self.most_recent_entry_at,
@@ -106,6 +106,10 @@ fn json_from_hashset(set: &HashSet<String>) -> Json {
     let mut vec: Vec<String> = set.iter().cloned().collect();
     vec.sort();
     Json::Array(vec.into_iter().map(Value::String).collect())
+}
+
+fn json_from_vec(vec: &[String]) -> Json {
+    Json::Array(vec.iter().cloned().map(Value::String).collect())
 }
 
 fn parse_rabbitmq_version(input: &str) -> IResult<&str, &str> {
@@ -201,8 +205,12 @@ pub fn extract_file_metadata(
 
     for entry in entries {
         if let Some((rmq_ver, erl_ver)) = parse_startup_banner_line(&entry.message) {
-            ctx.rabbitmq_version = rmq_ver;
-            ctx.erlang_version = erl_ver;
+            if let Some(v) = rmq_ver {
+                ctx.rabbitmq_versions.push(v);
+            }
+            if let Some(v) = erl_ver {
+                ctx.erlang_versions.push(v);
+            }
         }
 
         if let Some(tls_lib) = parse_tls_library_line(&entry.message) {

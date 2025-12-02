@@ -239,9 +239,11 @@ async fn parse_logs(args: &ArgMatches) -> Result<()> {
         log_paths.extend(file_paths.map(PathBuf::from));
     }
 
-    if let Some(dir_path) = args.get_one::<String>("input_log_directory_path") {
-        let dir_paths = collect_log_files_from_directory(dir_path)?;
-        log_paths.extend(dir_paths);
+    if let Some(dir_paths) = args.get_many::<String>("input_log_dir_path") {
+        for dir_path in dir_paths {
+            let files = collect_log_files_from_directory(dir_path)?;
+            log_paths.extend(files);
+        }
     }
 
     log_paths = deduplicate_paths(log_paths);

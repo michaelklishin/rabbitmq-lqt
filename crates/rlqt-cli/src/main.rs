@@ -18,8 +18,8 @@ mod errors;
 mod output;
 
 use std::io::stderr;
-use std::path::Path;
-use std::process::{Command, exit};
+use std::path::PathBuf;
+use std::process::exit;
 
 #[tokio::main]
 async fn main() {
@@ -33,6 +33,8 @@ async fn main() {
     }
 }
 
+const BIN_NAME: &str = env!("CARGO_BIN_NAME");
+
 async fn dispatch_command(cli: &clap::ArgMatches) -> sysexits::ExitCode {
     match cli.subcommand() {
         Some(("logs", logs_args)) => match logs_args.subcommand() {
@@ -40,84 +42,55 @@ async fn dispatch_command(cli: &clap::ArgMatches) -> sysexits::ExitCode {
             Some(("query", args)) => commands::handle_query_command(args).await,
             Some(("overview", args)) => commands::handle_overview_command(args).await,
             _ => {
-                eprintln!("Unknown logs subcommand. Try 'rlq logs --help' for available commands.");
+                eprintln!(
+                    "Unknown logs subcommand. Try '{} logs --help' for available commands.",
+                    BIN_NAME
+                );
                 log::error!("Unknown logs subcommand");
                 sysexits::ExitCode::Usage
             }
         },
         Some(("web", web_args)) => match web_args.subcommand() {
-            Some(("serve", args)) => handle_web_serve_command(args),
+            Some(("serve", args)) => handle_web_serve_command(args).await,
             _ => {
-                eprintln!("Unknown web subcommand. Try 'rlq web --help' for available commands.");
+                eprintln!(
+                    "Unknown web subcommand. Try '{} web --help' for available commands.",
+                    BIN_NAME
+                );
                 log::error!("Unknown web subcommand");
                 sysexits::ExitCode::Usage
             }
         },
         _ => {
-            eprintln!("Unknown command group. Try 'rlq --help' for available commands.");
+            eprintln!(
+                "Unknown command group. Try '{} --help' for available commands.",
+                BIN_NAME
+            );
             log::error!("Unknown command group");
             sysexits::ExitCode::Usage
         }
     }
 }
 
-fn handle_web_serve_command(args: &clap::ArgMatches) -> sysexits::ExitCode {
-    let db_path = args
+async fn handle_web_serve_command(args: &clap::ArgMatches) -> sysexits::ExitCode {
+    let db_path: PathBuf = args
         .get_one::<String>("input_db_file_path")
-        .expect("input_db_file_path is required");
+        .expect("input_db_file_path is required")
+        .into();
     let host = args
         .get_one::<String>("host")
         .expect("host has a default value");
-    let port = args
+    let port: u16 = args
         .get_one::<String>("port")
-        .expect("port has a default value");
+        .expect("port has a default value")
+        .parse()
+        .expect("port must be a valid number");
 
-    let db_path_buf = Path::new(db_path);
-    if !db_path_buf.exists() {
-        eprintln!("Database file does not exist: {}", db_path);
-        log::error!("Database file does not exist: {}", db_path);
-        return sysexits::ExitCode::NoInput;
-    }
-
-    if !db_path_buf.is_file() {
-        eprintln!("Database path is not a file: {}", db_path);
-        log::error!("Database path is not a file: {}", db_path);
-        return sysexits::ExitCode::NoInput;
-    }
-
-    let rlqt_ui_binary = if cfg!(debug_assertions) {
-        "target/debug/rlqt-ui"
-    } else {
-        "target/release/rlqt-ui"
-    };
-
-    log::info!("Starting web server using {}", rlqt_ui_binary);
-
-    let status = Command::new(rlqt_ui_binary)
-        .arg("web")
-        .arg("serve")
-        .arg("--input-db-file-path")
-        .arg(db_path)
-        .arg("--host")
-        .arg(host)
-        .arg("--port")
-        .arg(port)
-        .status();
-
-    match status {
-        Ok(exit_status) => {
-            if exit_status.success() {
-                sysexits::ExitCode::Ok
-            } else {
-                log::error!("Web server exited with status: {}", exit_status);
-                sysexits::ExitCode::Software
-            }
-        }
+    match rlqt_ui::run_server(&db_path, host, port).await {
+        Ok(()) => sysexits::ExitCode::Ok,
         Err(e) => {
-            eprintln!("Failed to start HTTP server: {}", e);
-            eprintln!("\nMake sure the rlqt-ui binary is built:\n  cargo build --package rlqt-ui");
-            log::error!("Failed to start HTTP server: {}", e);
-            sysexits::ExitCode::Software
+            log::error!("Web UI startup error: {}", e);
+            sysexits::ExitCode::DataErr
         }
     }
 }

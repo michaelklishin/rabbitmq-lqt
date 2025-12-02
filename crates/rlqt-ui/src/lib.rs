@@ -16,3 +16,6 @@ pub mod api;
 pub mod cli;
 pub mod errors;
 pub mod server;
+
+pub use errors::ServerError;
+pub use server::run_server;

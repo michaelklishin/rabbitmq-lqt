@@ -45,8 +45,8 @@ async fn insert_file_metadata(
 ) {
     let model = file_metadata::Model {
         file_path: file_path.to_string(),
-        rabbitmq_version: Some("4.2.0".to_string()),
-        erlang_version: Some("27.3.4.3".to_string()),
+        rabbitmq_versions: Value::Array(vec![Value::String("4.2.0".to_string())]),
+        erlang_versions: Value::Array(vec![Value::String("27.3.4.3".to_string())]),
         tls_library: Some("OpenSSL".to_string()),
         oldest_entry_at: Some(Utc::now()),
         most_recent_entry_at: Some(Utc::now()),
@@ -350,8 +350,12 @@ async fn test_get_file_metadata_returns_all_files() {
 
     let file1 = &files[0];
     assert_eq!(file1["file_path"], "/logs/rabbit@node1.log");
-    assert_eq!(file1["rabbitmq_version"], "4.2.0");
-    assert_eq!(file1["erlang_version"], "27.3.4.3");
+    let rmq_versions = file1["rabbitmq_versions"].as_array().unwrap();
+    assert_eq!(rmq_versions.len(), 1);
+    assert_eq!(rmq_versions[0], "4.2.0");
+    let erl_versions = file1["erlang_versions"].as_array().unwrap();
+    assert_eq!(erl_versions.len(), 1);
+    assert_eq!(erl_versions[0], "27.3.4.3");
     assert_eq!(file1["tls_library"], "OpenSSL");
 
     let nodes = file1["nodes"].as_array().unwrap();

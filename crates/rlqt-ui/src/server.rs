@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use crate::api::{logs, metadata};
+use crate::errors::ServerError;
 use axum::Router;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
@@ -20,7 +21,8 @@ use axum::routing::get;
 use clap::ArgMatches;
 use rlqt_lib::open_database;
 use sea_orm::DatabaseConnection;
-use std::path::PathBuf;
+use std::io::{Error as IoError, ErrorKind};
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
@@ -30,7 +32,7 @@ pub struct AppState {
     pub db: Arc<DatabaseConnection>,
 }
 
-pub async fn handle_serve_command(args: &ArgMatches) -> i32 {
+pub async fn handle_serve_command(args: &ArgMatches) -> Result<(), ServerError> {
     let db_path: PathBuf = args
         .get_one::<String>("input_db_file_path")
         .expect("input_db_file_path is required")
@@ -40,51 +42,42 @@ pub async fn handle_serve_command(args: &ArgMatches) -> i32 {
         .get_one::<String>("host")
         .expect("host has a default value");
 
-    let port = args
+    let port: u16 = args
         .get_one::<String>("port")
-        .expect("port has a default value");
+        .expect("port has a default value")
+        .parse()
+        .expect("port must be a valid number");
 
+    run_server(&db_path, host, port).await
+}
+
+pub async fn run_server(db_path: &Path, host: &str, port: u16) -> Result<(), ServerError> {
     if !db_path.exists() {
-        log::error!("Database file does not exist: {}", db_path.display());
-        eprintln!("Database file does not exist: {}", db_path.display());
-        return 1;
+        return Err(ServerError::Io(IoError::new(
+            ErrorKind::NotFound,
+            format!("Database file does not exist: {}", db_path.display()),
+        )));
     }
 
     if !db_path.is_file() {
-        log::error!("Database path is not a file: {}", db_path.display());
-        eprintln!("Database path is not a file: {}", db_path.display());
-        return 1;
+        return Err(ServerError::Io(IoError::new(
+            ErrorKind::InvalidInput,
+            format!("Database path is not a file: {}", db_path.display()),
+        )));
     }
 
-    let db = match open_database(&db_path).await {
-        Ok(db) => db,
-        Err(e) => {
-            log::error!("Failed to open database: {}", e);
-            return 1;
-        }
-    };
-
+    let db = open_database(db_path).await?;
     let state = AppState { db: Arc::new(db) };
-
     let app = create_router(state);
 
     let addr = format!("{}:{}", host, port);
-    let listener = match tokio::net::TcpListener::bind(&addr).await {
-        Ok(listener) => listener,
-        Err(e) => {
-            log::error!("Failed to bind to {}: {}", addr, e);
-            return 1;
-        }
-    };
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
 
     log::info!("Server listening on http://{}", addr);
 
-    if let Err(e) = axum::serve(listener, app).await {
-        log::error!("Server error: {}", e);
-        return 1;
-    }
+    axum::serve(listener, app).await?;
 
-    0
+    Ok(())
 }
 
 fn create_router(state: AppState) -> Router {

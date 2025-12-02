@@ -49,8 +49,10 @@ fn test_extract_rabbitmq_version_from_startup_banner() {
 
     let metadata = extract_file_metadata(&[entry], "/tmp/test.log".to_string(), "rabbit@node1", 1);
 
-    assert_eq!(metadata.rabbitmq_version, Some("4.2.0".to_string()));
-    assert_eq!(metadata.erlang_version, Some("27.3.4.3".to_string()));
+    let rmq_versions: Vec<String> = from_value(metadata.rabbitmq_versions).unwrap();
+    let erl_versions: Vec<String> = from_value(metadata.erlang_versions).unwrap();
+    assert_eq!(rmq_versions, vec!["4.2.0"]);
+    assert_eq!(erl_versions, vec!["27.3.4.3"]);
 }
 
 #[test]
@@ -63,8 +65,10 @@ fn test_extract_erlang_version_from_startup_banner() {
 
     let metadata = extract_file_metadata(&[entry], "/tmp/test.log".to_string(), "rabbit@node1", 1);
 
-    assert_eq!(metadata.rabbitmq_version, Some("3.13.0".to_string()));
-    assert_eq!(metadata.erlang_version, Some("26.2.1".to_string()));
+    let rmq_versions: Vec<String> = from_value(metadata.rabbitmq_versions).unwrap();
+    let erl_versions: Vec<String> = from_value(metadata.erlang_versions).unwrap();
+    assert_eq!(rmq_versions, vec!["3.13.0"]);
+    assert_eq!(erl_versions, vec!["26.2.1"]);
 }
 
 #[test]
@@ -180,8 +184,10 @@ fn test_handles_missing_startup_banner() {
 
     let metadata = extract_file_metadata(&[entry], "/tmp/test.log".to_string(), "rabbit@node1", 1);
 
-    assert_eq!(metadata.rabbitmq_version, None);
-    assert_eq!(metadata.erlang_version, None);
+    let rmq_versions: Vec<String> = from_value(metadata.rabbitmq_versions).unwrap();
+    let erl_versions: Vec<String> = from_value(metadata.erlang_versions).unwrap();
+    assert!(rmq_versions.is_empty());
+    assert!(erl_versions.is_empty());
 }
 
 #[test]
@@ -212,7 +218,7 @@ fn test_handles_empty_entries() {
 }
 
 #[test]
-fn test_multiple_startup_banners_uses_last() {
+fn test_multiple_startup_banners_collects_all_versions() {
     let entry1 = create_test_entry(
         "Starting RabbitMQ 3.12.0 on Erlang 25.0",
         None,
@@ -231,8 +237,10 @@ fn test_multiple_startup_banners_uses_last() {
         2,
     );
 
-    assert_eq!(metadata.rabbitmq_version, Some("4.2.0".to_string()));
-    assert_eq!(metadata.erlang_version, Some("27.3.4.3".to_string()));
+    let rmq_versions: Vec<String> = from_value(metadata.rabbitmq_versions).unwrap();
+    let erl_versions: Vec<String> = from_value(metadata.erlang_versions).unwrap();
+    assert_eq!(rmq_versions, vec!["3.12.0", "4.2.0"]);
+    assert_eq!(erl_versions, vec!["25.0", "27.3.4.3"]);
 }
 
 #[test]
@@ -285,8 +293,10 @@ fn test_partial_startup_banner_only_rabbitmq() {
 
     let metadata = extract_file_metadata(&[entry], "/tmp/test.log".to_string(), "rabbit@node1", 1);
 
-    assert_eq!(metadata.rabbitmq_version, None);
-    assert_eq!(metadata.erlang_version, None);
+    let rmq_versions: Vec<String> = from_value(metadata.rabbitmq_versions).unwrap();
+    let erl_versions: Vec<String> = from_value(metadata.erlang_versions).unwrap();
+    assert!(rmq_versions.is_empty());
+    assert!(erl_versions.is_empty());
 }
 
 #[test]
@@ -372,8 +382,10 @@ fn test_extract_version_with_leading_whitespace() {
 
     let metadata = extract_file_metadata(&[entry], "/tmp/test.log".to_string(), "rabbit@node1", 1);
 
-    assert_eq!(metadata.rabbitmq_version, Some("4.2.0".to_string()));
-    assert_eq!(metadata.erlang_version, Some("27.3.4.2 [jit]".to_string()));
+    let rmq_versions: Vec<String> = from_value(metadata.rabbitmq_versions).unwrap();
+    let erl_versions: Vec<String> = from_value(metadata.erlang_versions).unwrap();
+    assert_eq!(rmq_versions, vec!["4.2.0"]);
+    assert_eq!(erl_versions, vec!["27.3.4.2 [jit]"]);
 }
 
 #[test]

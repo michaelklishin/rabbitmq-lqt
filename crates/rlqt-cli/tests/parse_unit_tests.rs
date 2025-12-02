@@ -14,6 +14,7 @@
 
 use predicates::prelude::*;
 use std::error::Error;
+use std::fs;
 use std::fs::metadata;
 use tempfile::NamedTempFile;
 
@@ -102,7 +103,7 @@ fn parse_log_directory_creates_database() -> Result<(), Box<dyn Error>> {
     run_succeeds([
         "logs",
         "parse",
-        "--input-log-directory-path",
+        "--input-log-dir-path",
         dir_path.to_str().unwrap(),
         "--output-db-file-path",
         db_path,
@@ -125,7 +126,7 @@ fn parse_nonexistent_directory_fails() -> Result<(), Box<dyn Error>> {
     run_fails([
         "logs",
         "parse",
-        "--input-log-directory-path",
+        "--input-log-dir-path",
         "/nonexistent/directory",
         "--output-db-file-path",
         db_path,
@@ -144,7 +145,7 @@ fn parse_directory_with_no_log_files_fails() -> Result<(), Box<dyn Error>> {
     run_fails([
         "logs",
         "parse",
-        "--input-log-directory-path",
+        "--input-log-dir-path",
         empty_dir.path().to_str().unwrap(),
         "--output-db-file-path",
         db_path,
@@ -163,7 +164,7 @@ fn parse_file_as_directory_fails() -> Result<(), Box<dyn Error>> {
     run_fails([
         "logs",
         "parse",
-        "--input-log-directory-path",
+        "--input-log-dir-path",
         log_path.to_str().unwrap(),
         "--output-db-file-path",
         db_path,
@@ -185,7 +186,7 @@ fn parse_both_file_and_directory() -> Result<(), Box<dyn Error>> {
         "parse",
         "--input-log-file-path",
         log_path.to_str().unwrap(),
-        "--input-log-directory-path",
+        "--input-log-dir-path",
         dir_path.to_str().unwrap(),
         "--output-db-file-path",
         db_path,
@@ -233,7 +234,7 @@ fn parse_file_and_directory_containing_same_file_deduplicates() -> Result<(), Bo
         "parse",
         "--input-log-file-path",
         log_path.to_str().unwrap(),
-        "--input-log-directory-path",
+        "--input-log-dir-path",
         dir_path.to_str().unwrap(),
         "--output-db-file-path",
         db_path,
@@ -265,6 +266,55 @@ fn parse_multiple_distinct_files() -> Result<(), Box<dyn Error>> {
     assert!(db_file.path().exists());
     let file_metadata = metadata(db_file.path())?;
     assert!(file_metadata.len() > 0, "Database file should not be empty");
+
+    Ok(())
+}
+
+#[test]
+fn parse_multiple_directories() -> Result<(), Box<dyn Error>> {
+    let dir1 = tempfile::tempdir()?;
+    let dir2 = tempfile::tempdir()?;
+
+    fs::copy(fixture_log_path(), dir1.path().join("rabbit@node1.log"))?;
+    fs::copy(fixture_log_path_hare(), dir2.path().join("hare@node2.log"))?;
+
+    let db_file = NamedTempFile::new()?;
+    let db_path = db_file.path().to_str().unwrap();
+
+    run_succeeds([
+        "logs",
+        "parse",
+        "--input-log-dir-path",
+        dir1.path().to_str().unwrap(),
+        "--input-log-dir-path",
+        dir2.path().to_str().unwrap(),
+        "--output-db-file-path",
+        db_path,
+    ])
+    .stderr(output_includes("930 log entries"));
+
+    Ok(())
+}
+
+#[test]
+fn parse_multiple_directories_fails_if_one_is_invalid() -> Result<(), Box<dyn Error>> {
+    let dir1 = tempfile::tempdir()?;
+    fs::copy(fixture_log_path(), dir1.path().join("rabbit@node1.log"))?;
+
+    let db_file = NamedTempFile::new()?;
+    let db_path = db_file.path().to_str().unwrap();
+
+    run_fails([
+        "logs",
+        "parse",
+        "--input-log-dir-path",
+        dir1.path().to_str().unwrap(),
+        "--input-log-dir-path",
+        "/nonexistent/directory",
+        "--output-db-file-path",
+        db_path,
+    ])
+    .stderr(output_includes("Directory not found").or(output_includes("not found")));
 
     Ok(())
 }

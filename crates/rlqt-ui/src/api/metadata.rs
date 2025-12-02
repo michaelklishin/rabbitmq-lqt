@@ -129,8 +129,8 @@ pub async fn get_stats(State(state): State<AppState>) -> Result<Json<StatsRespon
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FileMetadataResponse {
     pub file_path: String,
-    pub rabbitmq_version: Option<String>,
-    pub erlang_version: Option<String>,
+    pub rabbitmq_versions: Vec<String>,
+    pub erlang_versions: Vec<String>,
     pub tls_library: Option<String>,
     pub oldest_entry_at: Option<String>,
     pub most_recent_entry_at: Option<String>,
@@ -146,8 +146,8 @@ impl From<rlqt_lib::rel_db::file_metadata::Model> for FileMetadataResponse {
     fn from(model: rlqt_lib::rel_db::file_metadata::Model) -> Self {
         Self {
             file_path: model.file_path,
-            rabbitmq_version: model.rabbitmq_version,
-            erlang_version: model.erlang_version,
+            rabbitmq_versions: json_to_vec(&model.rabbitmq_versions),
+            erlang_versions: json_to_vec(&model.erlang_versions),
             tls_library: model.tls_library,
             oldest_entry_at: model.oldest_entry_at.map(|dt| dt.to_rfc3339()),
             most_recent_entry_at: model.most_recent_entry_at.map(|dt| dt.to_rfc3339()),

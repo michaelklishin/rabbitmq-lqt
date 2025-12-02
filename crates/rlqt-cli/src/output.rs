@@ -255,12 +255,14 @@ pub fn display_file_metadata(
 
         println!("File: {}", metadata.file_path);
 
-        if let Some(rmq_ver) = &metadata.rabbitmq_version {
-            println!("  RabbitMQ Version: {}", rmq_ver);
+        let rmq_versions = json_to_list(&metadata.rabbitmq_versions);
+        if !rmq_versions.is_empty() {
+            println!("  RabbitMQ Versions: {}", rmq_versions.join(", "));
         }
 
-        if let Some(erl_ver) = &metadata.erlang_version {
-            println!("  Erlang Version: {}", erl_ver);
+        let erl_versions = json_to_list(&metadata.erlang_versions);
+        if !erl_versions.is_empty() {
+            println!("  Erlang Versions: {}", erl_versions.join(", "));
         }
 
         if let Some(tls_lib) = &metadata.tls_library {
