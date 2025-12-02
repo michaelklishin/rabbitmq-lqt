@@ -52,6 +52,11 @@ jobs:
           toolchain: stable
           targets: ${{ matrix.target }}
 
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Install Nu Shell
         uses: hustcer/setup-nu@v3
         with:
