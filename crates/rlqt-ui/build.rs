@@ -17,6 +17,17 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
+fn npm_command() -> Command {
+    if cfg!(windows) {
+        // On Windows, npm is a script
+        let mut cmd = Command::new("cmd");
+        cmd.args(["/C", "npm"]);
+        cmd
+    } else {
+        Command::new("npm")
+    }
+}
+
 fn watch_directory(dir: &Path) {
     if !dir.exists() {
         return;
@@ -68,7 +79,7 @@ fn main() {
     );
 
     if !frontend_dir.join("node_modules").exists() {
-        let status = Command::new("npm")
+        let status = npm_command()
             .current_dir(&frontend_dir)
             .arg("install")
             .status()
@@ -79,7 +90,7 @@ fn main() {
         }
     }
 
-    let status = Command::new("npm")
+    let status = npm_command()
         .current_dir(&frontend_dir)
         .args(["run", "build"])
         .status()
