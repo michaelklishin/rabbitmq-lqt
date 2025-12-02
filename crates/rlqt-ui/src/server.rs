@@ -15,10 +15,12 @@
 use crate::api::{logs, metadata};
 use crate::errors::ServerError;
 use axum::Router;
+use axum::extract::Path as AxumPath;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::get;
 use clap::ArgMatches;
+use include_dir::{Dir, include_dir};
 use rlqt_lib::open_database;
 use sea_orm::DatabaseConnection;
 use std::io::{Error as IoError, ErrorKind};
@@ -26,6 +28,8 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
+
+static ASSETS_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/frontend/dist/assets");
 
 #[derive(Clone)]
 pub struct AppState {
@@ -91,13 +95,7 @@ fn create_router(state: AppState) -> Router {
     Router::new()
         .route("/", get(root_handler))
         .nest("/api", api_routes)
-        .nest_service(
-            "/assets",
-            tower_http::services::ServeDir::new(concat!(
-                env!("CARGO_MANIFEST_DIR"),
-                "/frontend/dist/assets"
-            )),
-        )
+        .route("/assets/{*path}", get(assets_handler))
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
 }
@@ -121,4 +119,35 @@ async fn root_handler() -> impl IntoResponse {
         [("content-type", "text/html")],
         include_str!("../frontend/dist/index.html"),
     )
+}
+
+async fn assets_handler(AxumPath(path): AxumPath<String>) -> impl IntoResponse {
+    let content_type = if path.ends_with(".js") {
+        "application/javascript"
+    } else if path.ends_with(".css") {
+        "text/css"
+    } else if path.ends_with(".woff2") {
+        "font/woff2"
+    } else if path.ends_with(".woff") {
+        "font/woff"
+    } else if path.ends_with(".svg") {
+        "image/svg+xml"
+    } else if path.ends_with(".png") {
+        "image/png"
+    } else {
+        "application/octet-stream"
+    };
+
+    match ASSETS_DIR.get_file(&path) {
+        Some(file) => (
+            StatusCode::OK,
+            [("content-type", content_type)],
+            file.contents().to_vec(),
+        ),
+        None => (
+            StatusCode::NOT_FOUND,
+            [("content-type", "text/plain")],
+            b"Not found".to_vec(),
+        ),
+    }
 }

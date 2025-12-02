@@ -26,7 +26,8 @@ thiserror = { workspace = true }
 
 axum = { version = "0.8", features = ["macros"] }
 tower = { version = "0.5", features = ["full"] }
-tower-http = { version = "0.6", features = ["fs", "trace", "cors"] }
+tower-http = { version = "0.6", features = ["trace", "cors"] }
+include_dir = "0.7"
 
 [dev-dependencies]
 tempfile = "3.0"

@@ -10,6 +10,7 @@ No changes yet.
 ### Bug Fixes
 
  * `web serve` failed when the tool wasn't run with `cargo run` (built from source)
+ * Web UI assets were not included into the release binary
 
 ### Enhancements
 
