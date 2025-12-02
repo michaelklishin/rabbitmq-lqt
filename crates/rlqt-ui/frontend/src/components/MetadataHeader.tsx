@@ -14,11 +14,7 @@ export function MetadataHeader({ fileMetadata, onViewFullMetadata }: MetadataHea
     return null
   }
 
-  const allVersions = new Set(
-    fileMetadata
-      .map((f) => f.rabbitmq_version)
-      .filter((v): v is string => v !== null)
-  )
+  const allVersions = new Set(fileMetadata.flatMap((f) => f.rabbitmq_versions))
 
   const allPlugins = Array.from(
     new Set(fileMetadata.flatMap((f) => f.enabled_plugins))

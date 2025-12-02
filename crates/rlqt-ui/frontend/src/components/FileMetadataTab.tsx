@@ -19,9 +19,11 @@ export function FileMetadataTab({ fileMetadata }: FileMetadataTabProps) {
     )
   }
 
+  const sortedMetadata = [...fileMetadata].sort((a, b) => b.total_entries - a.total_entries)
+
   return (
     <div className="space-y-6">
-      {fileMetadata.map((metadata, index) => (
+      {sortedMetadata.map((metadata, index) => (
         <div
           key={metadata.file_path}
           className="bg-white shadow-sm border border-gray-200 rounded-lg p-6"
@@ -33,17 +35,17 @@ export function FileMetadataTab({ fileMetadata }: FileMetadataTabProps) {
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {metadata.rabbitmq_version && (
+            {metadata.rabbitmq_versions.length > 0 && (
               <div>
                 <dt className="text-sm font-medium text-gray-500">RabbitMQ Version</dt>
-                <dd className="mt-1 text-sm text-gray-900">{metadata.rabbitmq_version}</dd>
+                <dd className="mt-1 text-sm text-gray-900">{[...new Set(metadata.rabbitmq_versions)].join(', ')}</dd>
               </div>
             )}
 
-            {metadata.erlang_version && (
+            {metadata.erlang_versions.length > 0 && (
               <div>
                 <dt className="text-sm font-medium text-gray-500">Erlang Version</dt>
-                <dd className="mt-1 text-sm text-gray-900">{metadata.erlang_version}</dd>
+                <dd className="mt-1 text-sm text-gray-900">{[...new Set(metadata.erlang_versions)].join(', ')}</dd>
               </div>
             )}
 

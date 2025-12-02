@@ -33,8 +33,8 @@ export interface StatsResponse {
 
 export interface FileMetadataResponse {
   file_path: string
-  rabbitmq_version: string | null
-  erlang_version: string | null
+  rabbitmq_versions: string[]
+  erlang_versions: string[]
   tls_library: string | null
   oldest_entry_at: string | null
   most_recent_entry_at: string | null

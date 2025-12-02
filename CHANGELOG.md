@@ -15,5 +15,6 @@ No changes yet.
 
  * `logs parse` now supports `--input-log-dir-path` which accepts a directory path instead of
    individual file paths
-* Web UI is now rebuilt (with `npm build`) by `cargo build`
+ * On the file set metadata page in the UI, the files are now sorted by their length
+ * Web UI is now rebuilt (with `npm build`) by `cargo build`
  * Dependency updates
