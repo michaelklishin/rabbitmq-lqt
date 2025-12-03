@@ -24,12 +24,14 @@ use rlqt_lib::{
     NodeLogEntry, QueryContext, create_database, open_database, parse_log_file,
     post_insertion_operations,
 };
+use rlqt_obfuscation::{LogObfuscator, ObfuscationStats};
 use std::collections::HashSet;
 use std::fs::File;
-use std::io::{BufReader, Error as IoError, ErrorKind};
+use std::io::{BufRead, BufReader, BufWriter, Error as IoError, ErrorKind, Write};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 use sysexits::ExitCode;
+use tabled::{Table, Tabled, settings::Style};
 
 const ERR_MSG_FILE_NOT_FOUND_HELP: &str = "Make sure:\n\
   • The file path(s) are correct\n\
@@ -69,6 +71,21 @@ pub async fn handle_overview_command(args: &ArgMatches) -> ExitCode {
         Ok(_) => ExitCode::Ok,
         Err(e) => {
             log::error!("Failed to show overview: {}", e);
+            ExitCode::Software
+        }
+    }
+}
+
+pub fn handle_obfuscate_command(args: &ArgMatches) -> ExitCode {
+    match obfuscate_log(args) {
+        Ok(_) => {
+            if !args.get_flag("silent") {
+                println!("Done");
+            }
+            ExitCode::Ok
+        }
+        Err(e) => {
+            log::error!("Failed to obfuscate log: {}", e);
             ExitCode::Software
         }
     }
@@ -539,4 +556,192 @@ async fn query_logs(args: &ArgMatches) -> Result<()> {
 
 fn parse_datetime_flexible(s: &str) -> Result<DateTime<Utc>> {
     rlqt_lib::datetime::parse_datetime_flexible(s).map_err(CommandRunError::DateTimeParse)
+}
+
+fn obfuscate_log(args: &ArgMatches) -> Result<()> {
+    let start_time = Instant::now();
+
+    let input_path: PathBuf = args
+        .get_one::<String>("input_log_file_path")
+        .expect("input_log_file_path is a required argument")
+        .into();
+
+    let output_path: PathBuf = args
+        .get_one::<String>("output_log_file_path")
+        .expect("output_log_file_path is a required argument")
+        .into();
+
+    if !input_path.exists() {
+        return Err(CommandRunError::Library(rlqt_lib::Error::Io(IoError::new(
+            ErrorKind::NotFound,
+            format!(
+                "Input log file not found: {}\n\n{}",
+                input_path.display(),
+                ERR_MSG_FILE_NOT_FOUND_HELP
+            ),
+        ))));
+    }
+
+    if let Some(parent) = output_path.parent()
+        && !parent.as_os_str().is_empty()
+        && !parent.exists()
+    {
+        return Err(CommandRunError::Library(rlqt_lib::Error::Io(IoError::new(
+            ErrorKind::NotFound,
+            format!(
+                "Parent directory does not exist: {}\n\n{}  {}",
+                parent.display(),
+                ERR_MSG_PARENT_DIR_HELP,
+                parent.display()
+            ),
+        ))));
+    }
+
+    let silent = args.get_flag("silent");
+
+    let progress = if !silent {
+        let pb = ProgressBar::new_spinner();
+        pb.set_style(
+            ProgressStyle::default_spinner()
+                .template("{spinner:.green} {msg}")
+                .unwrap()
+                .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]),
+        );
+        pb.set_message(format!("Obfuscating {}", input_path.display()));
+        pb.enable_steady_tick(Duration::from_millis(100));
+        Some(pb)
+    } else {
+        None
+    };
+
+    let input_file = File::open(&input_path).map_err(|e| {
+        CommandRunError::Library(rlqt_lib::Error::Io(IoError::new(
+            e.kind(),
+            format!(
+                "Failed to open input log file '{}': {}",
+                input_path.display(),
+                e
+            ),
+        )))
+    })?;
+    let reader = BufReader::new(input_file);
+
+    let output_file = File::create(&output_path).map_err(|e| {
+        CommandRunError::Library(rlqt_lib::Error::Io(IoError::new(
+            e.kind(),
+            format!(
+                "Failed to create output file '{}': {}",
+                output_path.display(),
+                e
+            ),
+        )))
+    })?;
+    let mut writer = BufWriter::new(output_file);
+
+    let mut obfuscator = LogObfuscator::new();
+    let mut line_count = 0usize;
+
+    for line_result in reader.lines() {
+        let line = line_result.map_err(|e| {
+            CommandRunError::Library(rlqt_lib::Error::Io(IoError::new(
+                e.kind(),
+                format!("Failed to read line {}: {}", line_count + 1, e),
+            )))
+        })?;
+
+        let obfuscated = obfuscator.obfuscate_line(&line);
+        writeln!(writer, "{}", obfuscated).map_err(|e| {
+            CommandRunError::Library(rlqt_lib::Error::Io(IoError::new(
+                e.kind(),
+                format!("Failed to write line {}: {}", line_count + 1, e),
+            )))
+        })?;
+
+        line_count += 1;
+    }
+
+    writer.flush().map_err(|e| {
+        CommandRunError::Library(rlqt_lib::Error::Io(IoError::new(
+            e.kind(),
+            format!("Failed to flush output file: {}", e),
+        )))
+    })?;
+
+    if let Some(pb) = progress {
+        pb.finish_and_clear();
+    }
+
+    let stats = obfuscator.stats();
+    let elapsed = start_time.elapsed();
+
+    if !silent {
+        let table =
+            build_obfuscation_stats_table(&input_path, &output_path, line_count, elapsed, stats);
+        println!("{}", table);
+    }
+
+    Ok(())
+}
+
+#[derive(Tabled)]
+struct ObfuscationStatsRow<'a> {
+    #[tabled(rename = "Metric")]
+    metric: &'a str,
+    #[tabled(rename = "Value")]
+    value: String,
+}
+
+fn build_obfuscation_stats_table(
+    input_path: &Path,
+    output_path: &Path,
+    line_count: usize,
+    elapsed: Duration,
+    stats: &ObfuscationStats,
+) -> Table {
+    let data = vec![
+        ObfuscationStatsRow {
+            metric: "Input file",
+            value: input_path.display().to_string(),
+        },
+        ObfuscationStatsRow {
+            metric: "Output file",
+            value: output_path.display().to_string(),
+        },
+        ObfuscationStatsRow {
+            metric: "Lines processed",
+            value: line_count.to_string(),
+        },
+        ObfuscationStatsRow {
+            metric: "Time elapsed",
+            value: format!("{:.2}s", elapsed.as_secs_f64()),
+        },
+        ObfuscationStatsRow {
+            metric: "Unique hostnames obfuscated",
+            value: stats.hostnames_obfuscated.to_string(),
+        },
+        ObfuscationStatsRow {
+            metric: "Unique directories obfuscated",
+            value: stats.directories_obfuscated.to_string(),
+        },
+        ObfuscationStatsRow {
+            metric: "Unique usernames obfuscated",
+            value: stats.usernames_obfuscated.to_string(),
+        },
+        ObfuscationStatsRow {
+            metric: "Unique virtual hosts obfuscated",
+            value: stats.vhosts_obfuscated.to_string(),
+        },
+        ObfuscationStatsRow {
+            metric: "Unique IPv4 addresses obfuscated",
+            value: stats.ipv4_addresses_obfuscated.to_string(),
+        },
+        ObfuscationStatsRow {
+            metric: "Unique IPv6 addresses obfuscated",
+            value: stats.ipv6_addresses_obfuscated.to_string(),
+        },
+    ];
+
+    let mut table = Table::new(data);
+    table.with(Style::rounded());
+    table
 }

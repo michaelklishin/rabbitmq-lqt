@@ -24,7 +24,6 @@ core execution parts, error handling, configuration, integration tests, and so o
  * the `core` module at `crates/rlqt-cli/src/core.rs` contains core business logic
  * the `errors` module at `crates/rlqt-cli/src/errors.rs` defines CLI tool errors
  * the `output` module at `crates/rlqt-cli/src/output.rs` handles formatting and display of query results
- * all `rabbitmq-lqt` tests are located in `crates/rlqt-cli/tests/`
 
 `rlqt-lib` provides the key building blocks used by `rlqt-cli`.
 
@@ -41,7 +40,20 @@ Key modules in the `rlqt-lib` crate are:
  * the `constants` module at `crates/rlqt-lib/src/constants.rs`: constant values used across the library
  * the `metadata` module at `crates/rlqt-lib/src/metadata/`: log entry annotations (classification, labelling)
  * the `rel_db` module at `crates/rlqt-lib/src/rel_db/`: relational database models and operations
- * all `rlqt-lib` tests are located in `crates/rlqt-lib/tests/`
+
+### The `rlqt-obfuscation` crate
+
+This crate obfuscates log file entries, namely:
+
+ * Usernames
+ * Node names, hostnames, IP addresses
+ * Virtual host names
+
+ It is exposed as a CLI command, `logs obfuscate`.
+
+ Thanks to this crate, real world files can be safely used for development
+ and even added as new fixture files.
+
 
 ## Key Concepts
 

@@ -103,6 +103,31 @@ fn logs_subcommands() -> Vec<Command> {
                 .help("Suppress output messages"),
         );
 
+    let obfuscate_cmd = Command::new("obfuscate")
+        .about("Obfuscates sensitive information in RabbitMQ log files")
+        .arg(
+            Arg::new("input_log_file_path")
+                .long("input-log-file-path")
+                .short('i')
+                .required(true)
+                .value_name("PATH")
+                .help("Path to the input RabbitMQ log file"),
+        )
+        .arg(
+            Arg::new("output_log_file_path")
+                .long("output-log-file-path")
+                .short('o')
+                .required(true)
+                .value_name("PATH")
+                .help("Path to the output obfuscated log file"),
+        )
+        .arg(
+            Arg::new("silent")
+                .long("silent")
+                .action(ArgAction::SetTrue)
+                .help("Suppress output messages"),
+        );
+
     let query_cmd = Command::new("query")
         .about("Query log entries from a SQLite database")
         .arg(
@@ -214,5 +239,5 @@ fn logs_subcommands() -> Vec<Command> {
                 .help("Disable colored output"),
         );
 
-    vec![parse_cmd, query_cmd, overview_cmd]
+    vec![parse_cmd, obfuscate_cmd, query_cmd, overview_cmd]
 }

@@ -28,7 +28,7 @@ tokio = { workspace = true }
 rayon = { workspace = true }
 
 [dev-dependencies]
-tempfile = "3.0"
+tempfile = "3"
 criterion = { workspace = true }
 proptest = { workspace = true }
 
