@@ -129,6 +129,12 @@ impl Annotator for RaftBasedAnnotator {
             || entry.message_lowercased.contains("ra_coordination")
             || entry.message_lowercased.contains("wal:")
             || entry.message_lowercased.contains("wal_")
+            || entry.message_lowercased.contains("ra_system_recover")
+            || entry.message_lowercased.contains("ra server")
+            || entry.message_lowercased.contains("stopping member")
+            || entry
+                .message_lowercased
+                .contains("metadata store member is caught up")
     }
 }
 
@@ -182,6 +188,7 @@ impl Annotator for QueuesAnnotator {
         QUEUE_PATTERN.is_match(msg_lower)
             || msg_lower.contains("finished rebuilding index")
             || msg_lower.contains("rebuilding message location index from")
+            || msg_lower.contains("priority queues enabled")
     }
 }
 
@@ -318,12 +325,47 @@ impl Annotator for ConnectionsAnnotator {
             || msg_lower.contains("handshake_timeout")
             || msg_lower.contains("failed to authenticate")
             || msg_lower.contains("connection_closed")
+            || msg_lower.starts_with("started tcp listener")
+            || msg_lower.starts_with("started tls")
+            || msg_lower.contains("epmd monitor")
     }
 }
 
 impl LabelAnnotator for ConnectionsAnnotator {
     fn annotate(&self, labels: &mut LogEntryLabels) {
         *labels |= LogEntryLabels::CONNECTIONS | LogEntryLabels::ACCESS_CONTROL;
+    }
+}
+
+#[derive(Debug)]
+pub struct ConnectionTrackingAnnotator;
+
+impl Annotator for ConnectionTrackingAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.contains("setting up a table for") && msg_lower.contains(" connection")
+    }
+}
+
+impl LabelAnnotator for ConnectionTrackingAnnotator {
+    fn annotate(&self, labels: &mut LogEntryLabels) {
+        *labels |= LogEntryLabels::CONNECTIONS;
+    }
+}
+
+#[derive(Debug)]
+pub struct ChannelTrackingAnnotator;
+
+impl Annotator for ChannelTrackingAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.contains("setting up a table for") && msg_lower.contains(" channel")
+    }
+}
+
+impl LabelAnnotator for ChannelTrackingAnnotator {
+    fn annotate(&self, labels: &mut LogEntryLabels) {
+        *labels |= LogEntryLabels::CHANNELS;
     }
 }
 
@@ -336,6 +378,14 @@ impl Annotator for AccessControlAnnotator {
         msg_lower.contains("asked to set permissions for user")
             || msg_lower.contains("successfully set permissions for user")
             || msg_lower.contains("sasl_not_supported")
+            || msg_lower.contains("failed authentication by backend")
+            || msg_lower.contains("failed to add user")
+            || msg_lower.contains("asked to create a new user")
+            || msg_lower.contains("asked to delete user")
+            || msg_lower.contains("created user")
+            || msg_lower.contains("deleted user")
+            || msg_lower.contains("asked to set user tags")
+            || msg_lower.contains("asked to clear permissions")
     }
 }
 
@@ -437,6 +487,8 @@ pub struct StreamsAnnotator;
 impl Annotator for StreamsAnnotator {
     fn does_match(&self, entry: &ParsedLogEntry) -> bool {
         entry.message_lowercased.contains("rabbit_stream")
+            || entry.message_lowercased.contains("stream tcp listener")
+            || entry.message_lowercased.contains("stream replicas")
     }
 }
 
@@ -452,6 +504,11 @@ pub struct LimitsAnnotator;
 impl Annotator for LimitsAnnotator {
     fn does_match(&self, entry: &ParsedLogEntry) -> bool {
         entry.message_lowercased.contains("file handles")
+            || entry.message_lowercased.contains("memory high watermark")
+            || entry.message_lowercased.contains("disk free limit")
+            || entry
+                .message_lowercased
+                .contains("enabling free disk space monitoring")
     }
 }
 
@@ -541,6 +598,149 @@ impl LabelAnnotator for StartupBannerAnnotator {
     }
 }
 
+#[derive(Debug)]
+pub struct ShutdownAnnotator;
+
+impl Annotator for ShutdownAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.starts_with("stopped tcp listener")
+            || msg_lower.starts_with("stopped tls")
+            || msg_lower.starts_with("stopped ssl")
+            || msg_lower.starts_with("stopped mqtt")
+            || msg_lower.starts_with("stopped stomp")
+    }
+}
+
+impl LabelAnnotator for ShutdownAnnotator {
+    fn annotate(&self, labels: &mut LogEntryLabels) {
+        *labels |= LogEntryLabels::SHUTDOWN;
+    }
+}
+
+#[derive(Debug)]
+pub struct DefinitionsAnnotator;
+
+impl Annotator for DefinitionsAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.contains("definition import")
+            || msg_lower.contains("asked to import definitions")
+            || (msg_lower.starts_with("importing") && msg_lower.contains("concurrently"))
+    }
+}
+
+impl LabelAnnotator for DefinitionsAnnotator {
+    fn annotate(&self, labels: &mut LogEntryLabels) {
+        *labels |= LogEntryLabels::DEFINITIONS;
+    }
+}
+
+#[derive(Debug)]
+pub struct FeatureFlagsLabelAnnotator;
+
+impl Annotator for FeatureFlagsLabelAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        entry.message_lowercased.starts_with("feature flag ")
+    }
+}
+
+impl LabelAnnotator for FeatureFlagsLabelAnnotator {
+    fn annotate(&self, labels: &mut LogEntryLabels) {
+        *labels |= LogEntryLabels::FEATURE_FLAGS;
+    }
+}
+
+#[derive(Debug)]
+pub struct StompAnnotator;
+
+impl Annotator for StompAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.contains("rabbit_stomp")
+            || msg_lower.contains("rabbit_web_stomp")
+            || msg_lower.starts_with("started stomp")
+            || msg_lower.starts_with("stopped stomp")
+    }
+}
+
+impl LabelAnnotator for StompAnnotator {
+    fn annotate(&self, labels: &mut LogEntryLabels) {
+        *labels |= LogEntryLabels::STOMP;
+    }
+}
+
+#[derive(Debug)]
+pub struct WebSocketsAnnotator;
+
+impl Annotator for WebSocketsAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.contains("rabbit_web_stomp") || msg_lower.contains("rabbit_web_mqtt")
+    }
+}
+
+impl LabelAnnotator for WebSocketsAnnotator {
+    fn annotate(&self, labels: &mut LogEntryLabels) {
+        *labels |= LogEntryLabels::WEBSOCKETS;
+    }
+}
+
+#[derive(Debug)]
+pub struct MqttAnnotator;
+
+impl Annotator for MqttAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.starts_with("started mqtt")
+            || msg_lower.starts_with("stopped mqtt")
+            || msg_lower.contains("rabbit_web_mqtt")
+    }
+}
+
+impl LabelAnnotator for MqttAnnotator {
+    fn annotate(&self, labels: &mut LogEntryLabels) {
+        *labels |= LogEntryLabels::MQTT;
+    }
+}
+
+static CLUSTERING_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^node \S+ (up|down)$").expect("CLUSTERING_PATTERN is a valid regex")
+});
+
+#[derive(Debug)]
+pub struct ClusteringAnnotator;
+
+impl Annotator for ClusteringAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        CLUSTERING_PATTERN.is_match(&entry.message_lowercased)
+    }
+}
+
+impl LabelAnnotator for ClusteringAnnotator {
+    fn annotate(&self, labels: &mut LogEntryLabels) {
+        *labels |= LogEntryLabels::CLUSTERING;
+    }
+}
+
+#[derive(Debug)]
+pub struct MetricsAnnotator;
+
+impl Annotator for MetricsAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.contains("statistics database")
+            || msg_lower.contains("management plugin:")
+            || msg_lower.contains("prometheus metrics:")
+    }
+}
+
+impl LabelAnnotator for MetricsAnnotator {
+    fn annotate(&self, labels: &mut LogEntryLabels) {
+        *labels |= LogEntryLabels::METRICS;
+    }
+}
+
 #[inline]
 pub fn annotate_labels(entry: &ParsedLogEntry) -> LogEntryLabels {
     const ANNOTATORS: &[&dyn LabelAnnotator] = &[
@@ -558,6 +758,8 @@ pub fn annotate_labels(entry: &ParsedLogEntry) -> LogEntryLabels {
         &FederationAnnotator,
         &VirtualHostsAnnotator,
         &ConnectionsAnnotator,
+        &ConnectionTrackingAnnotator,
+        &ChannelTrackingAnnotator,
         &AccessControlAnnotator,
         &ShovelsAnnotator,
         &CqStoresAnnotator,
@@ -571,6 +773,14 @@ pub fn annotate_labels(entry: &ParsedLogEntry) -> LogEntryLabels {
         &PluginsLabelAnnotator,
         &ExchangesAnnotator,
         &StartupBannerAnnotator,
+        &ShutdownAnnotator,
+        &DefinitionsAnnotator,
+        &FeatureFlagsLabelAnnotator,
+        &StompAnnotator,
+        &WebSocketsAnnotator,
+        &MqttAnnotator,
+        &ClusteringAnnotator,
+        &MetricsAnnotator,
     ];
 
     let mut labels = LogEntryLabels::default();

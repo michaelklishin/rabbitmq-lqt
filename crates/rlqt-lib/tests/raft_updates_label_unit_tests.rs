@@ -78,3 +78,53 @@ fn test_no_match_unrelated() {
     let labels = annotate_labels(&entry);
     assert!(!labels.contains(LogEntryLabels::RAFT));
 }
+
+#[test]
+fn test_ra_system_recover() {
+    let entry = create_test_entry(
+        "ra_system_recover: no server recovery configured",
+        Severity::Info,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::RAFT));
+}
+
+#[test]
+fn test_ra_server_exited() {
+    let entry = create_test_entry(
+        "Ra server {rabbitmq_metadata,rabbit@sunnyside} already exited",
+        Severity::Info,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::RAFT));
+}
+
+#[test]
+fn test_wait_for_ra_server() {
+    let entry = create_test_entry(
+        "Wait for Ra server {rabbitmq_metadata,rabbit@sunnyside} to exit in store \"rabbitmq_metadata\"",
+        Severity::Info,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::RAFT));
+}
+
+#[test]
+fn test_stopping_member() {
+    let entry = create_test_entry(
+        "Stopping member {rabbitmq_metadata,rabbit@sunnyside} in store \"rabbitmq_metadata\"",
+        Severity::Info,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::RAFT));
+}
+
+#[test]
+fn test_metadata_store_caught_up() {
+    let entry = create_test_entry(
+        "local Khepri-based RabbitMQ metadata store member is caught up to the Raft cluster leader",
+        Severity::Info,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::RAFT));
+}

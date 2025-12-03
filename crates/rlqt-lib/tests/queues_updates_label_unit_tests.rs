@@ -62,3 +62,13 @@ fn test_rebuilding_message_location_index_case_insensitive() {
     let labels = annotate_labels(&entry);
     assert!(labels.contains(LogEntryLabels::QUEUES));
 }
+
+#[test]
+fn test_priority_queues_enabled() {
+    let entry = create_test_entry(
+        "Priority queues enabled, real BQ is rabbit_variable_queue",
+        Severity::Info,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::QUEUES));
+}

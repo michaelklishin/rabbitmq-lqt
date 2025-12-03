@@ -46,6 +46,15 @@ pub const LABEL_PEER_DISCOVERY_CLASSIC: &str = "peer_discovery:classic";
 pub const LABEL_PLUGINS: &str = "plugins";
 pub const LABEL_EXCHANGES: &str = "exchanges";
 pub const LABEL_STARTUP_BANNER: &str = "startup_banner";
+pub const LABEL_CHANNELS: &str = "channels";
+pub const LABEL_SHUTDOWN: &str = "shutdown";
+pub const LABEL_DEFINITIONS: &str = "definitions";
+pub const LABEL_FEATURE_FLAGS: &str = "feature_flags";
+pub const LABEL_STOMP: &str = "stomp";
+pub const LABEL_WEBSOCKETS: &str = "websockets";
+pub const LABEL_MQTT: &str = "mqtt";
+pub const LABEL_CLUSTERING: &str = "clustering";
+pub const LABEL_METRICS: &str = "metrics";
 
 /// Array of all label names in the order they're defined
 pub const LABEL_NAMES: &[&str] = &[
@@ -77,6 +86,15 @@ pub const LABEL_NAMES: &[&str] = &[
     LABEL_PLUGINS,
     LABEL_EXCHANGES,
     LABEL_STARTUP_BANNER,
+    LABEL_CHANNELS,
+    LABEL_SHUTDOWN,
+    LABEL_DEFINITIONS,
+    LABEL_FEATURE_FLAGS,
+    LABEL_STOMP,
+    LABEL_WEBSOCKETS,
+    LABEL_MQTT,
+    LABEL_CLUSTERING,
+    LABEL_METRICS,
 ];
 
 bitflags! {
@@ -110,6 +128,15 @@ bitflags! {
         const PLUGINS             = 1 << 25;
         const EXCHANGES           = 1 << 26;
         const STARTUP_BANNER      = 1 << 27;
+        const CHANNELS            = 1 << 28;
+        const SHUTDOWN            = 1 << 29;
+        const DEFINITIONS         = 1 << 30;
+        const FEATURE_FLAGS       = 1 << 31;
+        const STOMP               = 1 << 32;
+        const WEBSOCKETS          = 1 << 33;
+        const MQTT                = 1 << 34;
+        const CLUSTERING          = 1 << 35;
+        const METRICS             = 1 << 36;
     }
 }
 
@@ -211,6 +238,33 @@ impl Serialize for LogEntryLabels {
         if self.contains(Self::STARTUP_BANNER) {
             map.serialize_entry(LABEL_STARTUP_BANNER, &true)?;
         }
+        if self.contains(Self::CHANNELS) {
+            map.serialize_entry(LABEL_CHANNELS, &true)?;
+        }
+        if self.contains(Self::SHUTDOWN) {
+            map.serialize_entry(LABEL_SHUTDOWN, &true)?;
+        }
+        if self.contains(Self::DEFINITIONS) {
+            map.serialize_entry(LABEL_DEFINITIONS, &true)?;
+        }
+        if self.contains(Self::FEATURE_FLAGS) {
+            map.serialize_entry(LABEL_FEATURE_FLAGS, &true)?;
+        }
+        if self.contains(Self::STOMP) {
+            map.serialize_entry(LABEL_STOMP, &true)?;
+        }
+        if self.contains(Self::WEBSOCKETS) {
+            map.serialize_entry(LABEL_WEBSOCKETS, &true)?;
+        }
+        if self.contains(Self::MQTT) {
+            map.serialize_entry(LABEL_MQTT, &true)?;
+        }
+        if self.contains(Self::CLUSTERING) {
+            map.serialize_entry(LABEL_CLUSTERING, &true)?;
+        }
+        if self.contains(Self::METRICS) {
+            map.serialize_entry(LABEL_METRICS, &true)?;
+        }
 
         map.end()
     }
@@ -274,6 +328,15 @@ impl<'de> Deserialize<'de> for LogEntryLabels {
                             LABEL_PLUGINS => labels |= LogEntryLabels::PLUGINS,
                             LABEL_EXCHANGES => labels |= LogEntryLabels::EXCHANGES,
                             LABEL_STARTUP_BANNER => labels |= LogEntryLabels::STARTUP_BANNER,
+                            LABEL_CHANNELS => labels |= LogEntryLabels::CHANNELS,
+                            LABEL_SHUTDOWN => labels |= LogEntryLabels::SHUTDOWN,
+                            LABEL_DEFINITIONS => labels |= LogEntryLabels::DEFINITIONS,
+                            LABEL_FEATURE_FLAGS => labels |= LogEntryLabels::FEATURE_FLAGS,
+                            LABEL_STOMP => labels |= LogEntryLabels::STOMP,
+                            LABEL_WEBSOCKETS => labels |= LogEntryLabels::WEBSOCKETS,
+                            LABEL_MQTT => labels |= LogEntryLabels::MQTT,
+                            LABEL_CLUSTERING => labels |= LogEntryLabels::CLUSTERING,
+                            LABEL_METRICS => labels |= LogEntryLabels::METRICS,
                             _ => {}
                         }
                     }

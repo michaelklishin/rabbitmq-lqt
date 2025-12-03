@@ -143,10 +143,10 @@ fn test_no_match_unrelated_message() {
 }
 
 #[test]
-fn test_no_match_shovel_incomplete_pattern() {
+fn test_shovel_prefix_pattern() {
     let entry = create_test_entry("Shovel 'my-shovel' status", Severity::Info);
     let annotator = ShovelPluginAnnotator;
-    assert!(!annotator.does_match(&entry));
+    assert!(annotator.does_match(&entry));
 }
 
 #[test]

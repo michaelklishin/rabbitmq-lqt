@@ -67,3 +67,43 @@ fn test_both_federation_and_queue_federation_labels() {
     assert!(labels.contains(LogEntryLabels::FEDERATION));
     assert!(labels.contains(LogEntryLabels::QUEUE_FEDERATION));
 }
+
+#[test]
+fn test_starting_pg_scope_queue_federation() {
+    let entry = create_test_entry(
+        "Starting pg scope rabbitmq_queue_federation_pg_scope",
+        Severity::Info,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::FEDERATION));
+}
+
+#[test]
+fn test_starting_pg_scope_exchange_federation() {
+    let entry = create_test_entry(
+        "Starting pg scope rabbitmq_exchange_federation_pg_scope",
+        Severity::Info,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::FEDERATION));
+}
+
+#[test]
+fn test_stopping_pg_scope_queue_federation() {
+    let entry = create_test_entry(
+        "Stopping pg scope rabbitmq_queue_federation_pg_scope",
+        Severity::Info,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::FEDERATION));
+}
+
+#[test]
+fn test_stopping_pg_scope_exchange_federation() {
+    let entry = create_test_entry(
+        "Stopping pg scope rabbitmq_exchange_federation_pg_scope",
+        Severity::Info,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::FEDERATION));
+}

@@ -43,6 +43,9 @@ impl Annotator for MetadataStoreAnnotator {
             || msg_lower.starts_with("mnesia->khepri data copy:")
             || msg_lower.starts_with("syncing mnesia->khepri")
             || msg_lower.starts_with("khepri-based")
+            || msg_lower.starts_with("starting khepri")
+            || msg_lower.starts_with("db: ")
+            || msg_lower.starts_with("starting mnesia")
     }
 }
 
@@ -80,6 +83,9 @@ impl Annotator for BootAnnotator {
             || msg_lower.starts_with("home dir")
             || msg_lower.contains("internal cluster id")
             || msg_lower.contains("boot state")
+            || msg_lower.starts_with("logging: configured log handlers")
+            || msg_lower.starts_with("fhc read buffering")
+            || msg_lower.starts_with("fhc write buffering")
     }
 }
 

@@ -124,6 +124,23 @@ fn test_shovel_received_case_insensitive() {
 }
 
 #[test]
+fn test_shovel_operating_mode() {
+    let entry = create_test_entry("Shovel: operating mode set to standard", Severity::Info);
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::SHOVELS));
+}
+
+#[test]
+fn test_asked_to_stop_dynamic_shovel() {
+    let entry = create_test_entry(
+        "Asked to stop a dynamic Shovel named 'test_basic_shovel' in virtual host 'rabbitmqadmin.shovel.modifications.test1'",
+        Severity::Info,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::SHOVELS));
+}
+
+#[test]
 fn test_no_match_unrelated() {
     let entry = create_test_entry("Queue created successfully", Severity::Info);
     let labels = annotate_labels(&entry);

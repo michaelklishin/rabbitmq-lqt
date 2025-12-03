@@ -83,6 +83,16 @@ fn test_virtual_hosts_annotator_matches_setting_segment_entry_count() {
 }
 
 #[test]
+fn test_virtual_hosts_annotator_matches_deletion_protection() {
+    let entry = create_test_entry(
+        "Enabling deletion protection for virtual host '/'",
+        Severity::Info,
+    );
+    let annotator = VirtualHostsAnnotator;
+    assert!(annotator.does_match(&entry));
+}
+
+#[test]
 fn test_virtual_hosts_annotator_no_match() {
     let entry = create_test_entry("Unrelated message", Severity::Info);
     let annotator = VirtualHostsAnnotator;
