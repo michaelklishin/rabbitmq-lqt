@@ -14,7 +14,7 @@
 
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use rlqt_obfuscation::LogObfuscator;
-use std::fs::{File, metadata};
+use std::fs::{File, metadata, read_dir};
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 
@@ -26,18 +26,18 @@ fn get_log_files() -> Vec<(String, PathBuf)> {
     let log_dir = get_log_dir();
     let mut files = Vec::new();
 
-    for name in &[
-        "fluffle@sunnyside.log",
-        "flopsy@sunnyside.log",
-        "hare@sunnyside.log",
-        "rabbit@sunnyside.log",
-    ] {
-        let path = log_dir.join(name);
-        if path.exists() {
-            files.push((name.to_string(), path));
+    if let Ok(entries) = read_dir(&log_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().is_some_and(|ext| ext == "log") {
+                if let Some(name) = path.file_name() {
+                    files.push((name.to_string_lossy().to_string(), path));
+                }
+            }
         }
     }
 
+    files.sort_by(|a, b| a.0.cmp(&b.0));
     files
 }
 
