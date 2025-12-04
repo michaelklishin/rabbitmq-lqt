@@ -50,12 +50,15 @@ fn test_subsystem_from_id_all_variants() {
     assert_eq!(Subsystem::from_id(14), Some(Subsystem::MqttPlugin));
     assert_eq!(Subsystem::from_id(15), Some(Subsystem::Policies));
     assert_eq!(Subsystem::from_id(16), Some(Subsystem::MaintenanceMode));
+    assert_eq!(Subsystem::from_id(17), Some(Subsystem::ErlangOtp));
+    assert_eq!(Subsystem::from_id(18), Some(Subsystem::Exchanges));
+    assert_eq!(Subsystem::from_id(19), Some(Subsystem::Channels));
 }
 
 #[test]
 fn test_subsystem_from_id_invalid() {
     assert_eq!(Subsystem::from_id(0), None);
-    assert_eq!(Subsystem::from_id(17), None);
+    assert_eq!(Subsystem::from_id(20), None);
     assert_eq!(Subsystem::from_id(-1), None);
     assert_eq!(Subsystem::from_id(100), None);
     assert_eq!(Subsystem::from_id(i16::MAX), None);
@@ -81,6 +84,9 @@ fn test_subsystem_round_trip_conversion() {
         Subsystem::MqttPlugin,
         Subsystem::Policies,
         Subsystem::MaintenanceMode,
+        Subsystem::ErlangOtp,
+        Subsystem::Exchanges,
+        Subsystem::Channels,
     ];
 
     for subsystem in subsystems {
@@ -115,6 +121,9 @@ fn test_subsystem_id_uniqueness() {
         Subsystem::MqttPlugin,
         Subsystem::Policies,
         Subsystem::MaintenanceMode,
+        Subsystem::ErlangOtp,
+        Subsystem::Exchanges,
+        Subsystem::Channels,
     ];
 
     let mut ids = Vec::new();
@@ -129,7 +138,7 @@ fn test_subsystem_id_uniqueness() {
         ids.push(id);
     }
 
-    assert_eq!(ids.len(), 16, "Expected 16 unique subsystem IDs");
+    assert_eq!(ids.len(), 19, "Expected 19 unique subsystem IDs");
 }
 
 #[test]
@@ -151,13 +160,16 @@ fn test_subsystem_id_range() {
         Subsystem::MqttPlugin,
         Subsystem::Policies,
         Subsystem::MaintenanceMode,
+        Subsystem::ErlangOtp,
+        Subsystem::Exchanges,
+        Subsystem::Channels,
     ];
 
     for subsystem in subsystems {
         let id = subsystem.to_id();
         assert!(
-            (1..=16).contains(&id),
-            "ID {} for {:?} is outside expected range [1, 16]",
+            (1..=19).contains(&id),
+            "ID {} for {:?} is outside expected range [1, 19]",
             id,
             subsystem
         );

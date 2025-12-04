@@ -65,6 +65,8 @@ pub const LABEL_CONSUMERS: &str = "consumers";
 pub const LABEL_DEPRECATED_FEATURES: &str = "deprecated_features";
 pub const LABEL_MAINTENANCE_MODE: &str = "maintenance_mode";
 pub const LABEL_KHEPRI: &str = "khepri";
+pub const LABEL_RUNTIME_PARAMETERS: &str = "runtime_parameters";
+pub const LABEL_HTTP: &str = "http";
 
 /// Array of all label names in the order they're defined
 pub const LABEL_NAMES: &[&str] = &[
@@ -115,6 +117,8 @@ pub const LABEL_NAMES: &[&str] = &[
     LABEL_DEPRECATED_FEATURES,
     LABEL_MAINTENANCE_MODE,
     LABEL_KHEPRI,
+    LABEL_RUNTIME_PARAMETERS,
+    LABEL_HTTP,
 ];
 
 bitflags! {
@@ -167,6 +171,8 @@ bitflags! {
         const DEPRECATED_FEATURES = 1 << 44;
         const MAINTENANCE_MODE    = 1 << 45;
         const KHEPRI              = 1 << 46;
+        const RUNTIME_PARAMETERS  = 1 << 47;
+        const HTTP                = 1 << 48;
     }
 }
 
@@ -325,6 +331,12 @@ impl Serialize for LogEntryLabels {
         if self.contains(Self::KHEPRI) {
             map.serialize_entry(LABEL_KHEPRI, &true)?;
         }
+        if self.contains(Self::RUNTIME_PARAMETERS) {
+            map.serialize_entry(LABEL_RUNTIME_PARAMETERS, &true)?;
+        }
+        if self.contains(Self::HTTP) {
+            map.serialize_entry(LABEL_HTTP, &true)?;
+        }
 
         map.end()
     }
@@ -409,6 +421,10 @@ impl<'de> Deserialize<'de> for LogEntryLabels {
                             }
                             LABEL_MAINTENANCE_MODE => labels |= LogEntryLabels::MAINTENANCE_MODE,
                             LABEL_KHEPRI => labels |= LogEntryLabels::KHEPRI,
+                            LABEL_RUNTIME_PARAMETERS => {
+                                labels |= LogEntryLabels::RUNTIME_PARAMETERS
+                            }
+                            LABEL_HTTP => labels |= LogEntryLabels::HTTP,
                             _ => {}
                         }
                     }

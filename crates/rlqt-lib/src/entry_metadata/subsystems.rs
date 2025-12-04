@@ -49,6 +49,9 @@ pub enum Subsystem {
     MqttPlugin = 14,
     Policies = 15,
     MaintenanceMode = 16,
+    ErlangOtp = 17,
+    Exchanges = 18,
+    Channels = 19,
 }
 
 impl Subsystem {

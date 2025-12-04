@@ -24,7 +24,7 @@ fn test_statistics_database() {
     let entry = create_test_entry("Statistics database started successfully", Severity::Info);
     let labels = annotate_labels(&entry);
     assert!(labels.contains(LogEntryLabels::METRICS));
-    assert!(!labels.contains(LogEntryLabels::PLUGINS));
+    assert!(labels.contains(LogEntryLabels::PLUGINS));
 }
 
 #[test]

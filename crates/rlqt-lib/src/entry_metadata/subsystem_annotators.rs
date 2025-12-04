@@ -51,6 +51,13 @@ impl Annotator for MetadataStoreAnnotator {
             || msg_lower.starts_with("waiting for mnesia tables")
             || msg_lower.contains("cannot query members in store")
             || msg_lower.starts_with("successfully synced tables")
+            || msg_lower.starts_with("adding this node")
+                && msg_lower.contains("to the remote node's cluster")
+            || msg_lower.starts_with("cluster for store \"rabbitmq_metadata\"")
+            || msg_lower.starts_with("detaching this node")
+                && msg_lower.contains("from its cluster")
+            || msg_lower.starts_with("deleting server rabbitmq_metadata")
+            || msg_lower.contains("mnesia_event got {inconsistent_database")
     }
 }
 
@@ -102,6 +109,9 @@ impl Annotator for BootAnnotator {
             || msg_lower.starts_with("webmachine_log_handler")
             || msg_lower.starts_with("files and directories found in node's data directory")
             || msg_lower.starts_with("prevent_startup_if_node_was_reset")
+            || msg_lower.starts_with("'networking' boot step skipped")
+            || msg_lower.starts_with("will use") && msg_lower.contains("processes for")
+            || msg_lower.starts_with("starting worker pool")
     }
 }
 
@@ -347,6 +357,55 @@ impl SubsystemAnnotator for MaintenanceModeAnnotator {
     }
 }
 
+#[derive(Debug)]
+pub struct ErlangOtpAnnotator;
+
+impl Annotator for ErlangOtpAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.contains("supervisor received unexpected message")
+    }
+}
+
+impl SubsystemAnnotator for ErlangOtpAnnotator {
+    fn annotate(&self, entry: &mut ParsedLogEntry) {
+        entry.subsystem_id = Some(Subsystem::ErlangOtp.to_id());
+    }
+}
+
+#[derive(Debug)]
+pub struct ExchangesAnnotator;
+
+impl Annotator for ExchangesAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.starts_with("consistent hashing exchange:")
+    }
+}
+
+impl SubsystemAnnotator for ExchangesAnnotator {
+    fn annotate(&self, entry: &mut ParsedLogEntry) {
+        entry.subsystem_id = Some(Subsystem::Exchanges.to_id());
+    }
+}
+
+#[derive(Debug)]
+pub struct ChannelsAnnotator;
+
+impl Annotator for ChannelsAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.contains("consumer") && msg_lower.contains("timed out")
+            || msg_lower.contains("consumer_timeout")
+    }
+}
+
+impl SubsystemAnnotator for ChannelsAnnotator {
+    fn annotate(&self, entry: &mut ParsedLogEntry) {
+        entry.subsystem_id = Some(Subsystem::Channels.to_id());
+    }
+}
+
 #[inline]
 pub fn annotate_subsystems(entry: &mut ParsedLogEntry) -> &mut ParsedLogEntry {
     const ANNOTATORS: &[&dyn SubsystemAnnotator] = &[
@@ -366,6 +425,9 @@ pub fn annotate_subsystems(entry: &mut ParsedLogEntry) -> &mut ParsedLogEntry {
         &FederationPluginAnnotator,
         &MqttPluginAnnotator,
         &PoliciesSubsystemAnnotator,
+        &ErlangOtpAnnotator,
+        &ExchangesAnnotator,
+        &ChannelsAnnotator,
     ];
 
     for annotator in ANNOTATORS {

@@ -733,8 +733,8 @@ fn test_real_rabbitmq_log_fixture_annotation() {
 fn test_label_names_count_matches_bitflags() {
     assert_eq!(
         LABEL_NAMES.len(),
-        47,
-        "LABEL_NAMES array has {} entries but should have 47. Update LABEL_NAMES when adding new label flags.",
+        49,
+        "LABEL_NAMES array has {} entries but should have 49. Update LABEL_NAMES when adding new label flags.",
         LABEL_NAMES.len()
     );
 }
