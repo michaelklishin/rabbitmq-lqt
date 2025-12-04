@@ -55,6 +55,13 @@ pub const LABEL_WEBSOCKETS: &str = "websockets";
 pub const LABEL_MQTT: &str = "mqtt";
 pub const LABEL_CLUSTERING: &str = "clustering";
 pub const LABEL_METRICS: &str = "metrics";
+pub const LABEL_TLS: &str = "tls";
+pub const LABEL_QUORUM_QUEUES: &str = "quorum_queues";
+pub const LABEL_NETWORKING: &str = "networking";
+pub const LABEL_CLASSIC_QUEUES: &str = "classic_queues";
+pub const LABEL_POLICIES: &str = "policies";
+pub const LABEL_TIMEOUTS: &str = "timeouts";
+pub const LABEL_CONSUMERS: &str = "consumers";
 
 /// Array of all label names in the order they're defined
 pub const LABEL_NAMES: &[&str] = &[
@@ -95,6 +102,13 @@ pub const LABEL_NAMES: &[&str] = &[
     LABEL_MQTT,
     LABEL_CLUSTERING,
     LABEL_METRICS,
+    LABEL_TLS,
+    LABEL_QUORUM_QUEUES,
+    LABEL_NETWORKING,
+    LABEL_CLASSIC_QUEUES,
+    LABEL_POLICIES,
+    LABEL_TIMEOUTS,
+    LABEL_CONSUMERS,
 ];
 
 bitflags! {
@@ -137,6 +151,13 @@ bitflags! {
         const MQTT                = 1 << 34;
         const CLUSTERING          = 1 << 35;
         const METRICS             = 1 << 36;
+        const TLS                 = 1 << 37;
+        const QUORUM_QUEUES       = 1 << 38;
+        const NETWORKING          = 1 << 39;
+        const CLASSIC_QUEUES      = 1 << 40;
+        const POLICIES            = 1 << 41;
+        const TIMEOUTS            = 1 << 42;
+        const CONSUMERS           = 1 << 43;
     }
 }
 
@@ -265,6 +286,27 @@ impl Serialize for LogEntryLabels {
         if self.contains(Self::METRICS) {
             map.serialize_entry(LABEL_METRICS, &true)?;
         }
+        if self.contains(Self::TLS) {
+            map.serialize_entry(LABEL_TLS, &true)?;
+        }
+        if self.contains(Self::QUORUM_QUEUES) {
+            map.serialize_entry(LABEL_QUORUM_QUEUES, &true)?;
+        }
+        if self.contains(Self::NETWORKING) {
+            map.serialize_entry(LABEL_NETWORKING, &true)?;
+        }
+        if self.contains(Self::CLASSIC_QUEUES) {
+            map.serialize_entry(LABEL_CLASSIC_QUEUES, &true)?;
+        }
+        if self.contains(Self::POLICIES) {
+            map.serialize_entry(LABEL_POLICIES, &true)?;
+        }
+        if self.contains(Self::TIMEOUTS) {
+            map.serialize_entry(LABEL_TIMEOUTS, &true)?;
+        }
+        if self.contains(Self::CONSUMERS) {
+            map.serialize_entry(LABEL_CONSUMERS, &true)?;
+        }
 
         map.end()
     }
@@ -337,6 +379,13 @@ impl<'de> Deserialize<'de> for LogEntryLabels {
                             LABEL_MQTT => labels |= LogEntryLabels::MQTT,
                             LABEL_CLUSTERING => labels |= LogEntryLabels::CLUSTERING,
                             LABEL_METRICS => labels |= LogEntryLabels::METRICS,
+                            LABEL_TLS => labels |= LogEntryLabels::TLS,
+                            LABEL_QUORUM_QUEUES => labels |= LogEntryLabels::QUORUM_QUEUES,
+                            LABEL_NETWORKING => labels |= LogEntryLabels::NETWORKING,
+                            LABEL_CLASSIC_QUEUES => labels |= LogEntryLabels::CLASSIC_QUEUES,
+                            LABEL_POLICIES => labels |= LogEntryLabels::POLICIES,
+                            LABEL_TIMEOUTS => labels |= LogEntryLabels::TIMEOUTS,
+                            LABEL_CONSUMERS => labels |= LogEntryLabels::CONSUMERS,
                             _ => {}
                         }
                     }

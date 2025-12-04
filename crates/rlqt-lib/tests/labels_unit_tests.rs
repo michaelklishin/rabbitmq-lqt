@@ -733,8 +733,8 @@ fn test_real_rabbitmq_log_fixture_annotation() {
 fn test_label_names_count_matches_bitflags() {
     assert_eq!(
         LABEL_NAMES.len(),
-        37,
-        "LABEL_NAMES array has {} entries but should have 37. Update LABEL_NAMES when adding new label flags.",
+        44,
+        "LABEL_NAMES array has {} entries but should have 44. Update LABEL_NAMES when adding new label flags.",
         LABEL_NAMES.len()
     );
 }
@@ -874,7 +874,7 @@ fn test_streams_annotator_matches_rabbit_stream_underscore() {
 
 #[test]
 fn test_streams_annotator_no_match() {
-    let entry = create_test_entry("Stream processing started", Severity::Info);
+    let entry = create_test_entry("Starting Ra systems", Severity::Debug);
 
     let annotator = StreamsAnnotator;
     assert!(!annotator.does_match(&entry));

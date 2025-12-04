@@ -18,8 +18,11 @@
 //! RabbitMQ documentation URLs. These annotators mutate entries by setting
 //! the `doc_url_id` field, which maps to a URL defined in the constants module.
 
-use crate::constants::{ALARMS_DOC_URL_ID, METADATA_STORE_DOC_URL_ID};
+use crate::constants::{
+    ALARMS_DOC_URL_ID, CONSUMER_ACK_TIMEOUT_DOC_URL_ID, METADATA_STORE_DOC_URL_ID,
+};
 use crate::entry_metadata::annotator::Annotator;
+use crate::entry_metadata::shared::matches_consumer_delivery_timeout;
 use crate::entry_metadata::subsystems::Subsystem;
 use crate::parser::ParsedLogEntry;
 
@@ -57,14 +60,32 @@ impl DocUrlAnnotator for FreeDiskSpaceAlarmDocAnnotator {
     }
 }
 
+#[derive(Debug)]
+pub struct ConsumerAckTimeoutDocAnnotator;
+
+impl Annotator for ConsumerAckTimeoutDocAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        matches_consumer_delivery_timeout(&entry.message_lowercased)
+    }
+}
+
+impl DocUrlAnnotator for ConsumerAckTimeoutDocAnnotator {
+    fn annotate(&self, entry: &mut ParsedLogEntry) {
+        entry.doc_url_id = Some(CONSUMER_ACK_TIMEOUT_DOC_URL_ID);
+    }
+}
+
 #[inline]
 pub fn annotate_doc_urls(entry: &mut ParsedLogEntry) -> &mut ParsedLogEntry {
     if entry.doc_url_id.is_some() {
         return entry;
     }
 
-    const ANNOTATORS: &[&dyn DocUrlAnnotator] =
-        &[&MetadataStoreDocAnnotator, &FreeDiskSpaceAlarmDocAnnotator];
+    const ANNOTATORS: &[&dyn DocUrlAnnotator] = &[
+        &MetadataStoreDocAnnotator,
+        &FreeDiskSpaceAlarmDocAnnotator,
+        &ConsumerAckTimeoutDocAnnotator,
+    ];
 
     for annotator in ANNOTATORS {
         if annotator.does_match(entry) {

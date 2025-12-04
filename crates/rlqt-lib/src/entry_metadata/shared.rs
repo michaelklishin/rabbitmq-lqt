@@ -88,6 +88,17 @@ pub fn matches_federation(msg_lower: &str) -> bool {
 }
 
 #[inline]
+pub fn matches_policies(msg_lower: &str) -> bool {
+    msg_lower.contains("policy ")
+}
+
+#[inline]
+pub fn matches_consumer_delivery_timeout(msg_lower: &str) -> bool {
+    msg_lower.contains("timed out")
+        && msg_lower.contains("waiting for a consumer acknowledgement of a delivery")
+}
+
+#[inline]
 pub fn matches_plugins(msg_lower: &str) -> bool {
     msg_lower.contains("loading the following plugins")
         || msg_lower.contains("setting plugins up")

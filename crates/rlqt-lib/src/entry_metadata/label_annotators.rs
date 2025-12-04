@@ -24,7 +24,8 @@
 use crate::entry_metadata::annotator::Annotator;
 use crate::entry_metadata::labels::LogEntryLabels;
 use crate::entry_metadata::shared::{
-    matches_cq_storage, matches_federation, matches_plugins, matches_shovels, matches_virtual_hosts,
+    matches_consumer_delivery_timeout, matches_cq_storage, matches_federation, matches_plugins,
+    matches_policies, matches_shovels, matches_virtual_hosts,
 };
 use crate::parser::ParsedLogEntry;
 use regex::Regex;
@@ -189,6 +190,10 @@ impl Annotator for QueuesAnnotator {
             || msg_lower.contains("finished rebuilding index")
             || msg_lower.contains("rebuilding message location index from")
             || msg_lower.contains("priority queues enabled")
+            || msg_lower.contains("declaring queue")
+            || msg_lower.contains("durable queue")
+            || msg_lower.contains("queue index")
+            || msg_lower.contains("queue indices")
     }
 }
 
@@ -328,6 +333,8 @@ impl Annotator for ConnectionsAnnotator {
             || msg_lower.starts_with("started tcp listener")
             || msg_lower.starts_with("started tls")
             || msg_lower.contains("epmd monitor")
+            || msg_lower.contains("inter-node communication")
+            || msg_lower.contains("credit flow")
     }
 }
 
@@ -486,9 +493,8 @@ pub struct StreamsAnnotator;
 
 impl Annotator for StreamsAnnotator {
     fn does_match(&self, entry: &ParsedLogEntry) -> bool {
-        entry.message_lowercased.contains("rabbit_stream")
-            || entry.message_lowercased.contains("stream tcp listener")
-            || entry.message_lowercased.contains("stream replicas")
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.contains("rabbit_stream") || msg_lower.contains("stream ")
     }
 }
 
@@ -609,6 +615,7 @@ impl Annotator for ShutdownAnnotator {
             || msg_lower.starts_with("stopped ssl")
             || msg_lower.starts_with("stopped mqtt")
             || msg_lower.starts_with("stopped stomp")
+            || msg_lower.contains("listener stopped")
     }
 }
 
@@ -713,7 +720,12 @@ pub struct ClusteringAnnotator;
 
 impl Annotator for ClusteringAnnotator {
     fn does_match(&self, entry: &ParsedLogEntry) -> bool {
-        CLUSTERING_PATTERN.is_match(&entry.message_lowercased)
+        let msg_lower = &entry.message_lowercased;
+        CLUSTERING_PATTERN.is_match(msg_lower)
+            || msg_lower.contains("inter-node communication")
+            || msg_lower.contains("inter-node tls")
+            || msg_lower.contains("maintenance mode")
+            || msg_lower.contains("draining")
     }
 }
 
@@ -732,12 +744,139 @@ impl Annotator for MetricsAnnotator {
         msg_lower.contains("statistics database")
             || msg_lower.contains("management plugin:")
             || msg_lower.contains("prometheus metrics:")
+            || msg_lower.contains("global counters")
+            || msg_lower.contains("message rates")
     }
 }
 
 impl LabelAnnotator for MetricsAnnotator {
     fn annotate(&self, labels: &mut LogEntryLabels) {
         *labels |= LogEntryLabels::METRICS;
+    }
+}
+
+#[derive(Debug)]
+pub struct TlsAnnotator;
+
+impl Annotator for TlsAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.contains("inter-node tls")
+            || msg_lower.contains("tls options")
+            || msg_lower.contains("tls connection")
+            || msg_lower.contains("ssl options")
+            || msg_lower.contains("ssl connection")
+            || msg_lower.contains("client certificates")
+    }
+}
+
+impl LabelAnnotator for TlsAnnotator {
+    fn annotate(&self, labels: &mut LogEntryLabels) {
+        *labels |= LogEntryLabels::TLS;
+    }
+}
+
+#[derive(Debug)]
+pub struct QuorumQueuesAnnotator;
+
+impl Annotator for QuorumQueuesAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.contains("all queue leaders are balanced")
+            || msg_lower.contains("all leaders balanced")
+            || msg_lower.contains("rebalancing leader")
+            || msg_lower.contains("leader balanced")
+            || msg_lower.contains("leader rebalanced")
+            || msg_lower.contains("quorum queue")
+            || msg_lower.starts_with("rabbit_quorum_queue: ")
+    }
+}
+
+impl LabelAnnotator for QuorumQueuesAnnotator {
+    fn annotate(&self, labels: &mut LogEntryLabels) {
+        *labels |= LogEntryLabels::QUORUM_QUEUES | LogEntryLabels::QUEUES | LogEntryLabels::RAFT;
+    }
+}
+
+#[derive(Debug)]
+pub struct NetworkingAnnotator;
+
+impl Annotator for NetworkingAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.contains("http listener registry")
+            || msg_lower.contains("listener stopped")
+            || msg_lower.contains("listener started")
+    }
+}
+
+impl LabelAnnotator for NetworkingAnnotator {
+    fn annotate(&self, labels: &mut LogEntryLabels) {
+        *labels |= LogEntryLabels::NETWORKING;
+    }
+}
+
+#[derive(Debug)]
+pub struct ClassicQueuesAnnotator;
+
+impl Annotator for ClassicQueuesAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.contains("classic queue")
+            || msg_lower.starts_with("mirrored ")
+            || msg_lower.contains("classic queue mirroring")
+    }
+}
+
+impl LabelAnnotator for ClassicQueuesAnnotator {
+    fn annotate(&self, labels: &mut LogEntryLabels) {
+        *labels |= LogEntryLabels::CLASSIC_QUEUES | LogEntryLabels::QUEUES;
+    }
+}
+
+#[derive(Debug)]
+pub struct PoliciesAnnotator;
+
+impl Annotator for PoliciesAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        matches_policies(&entry.message_lowercased)
+    }
+}
+
+impl LabelAnnotator for PoliciesAnnotator {
+    fn annotate(&self, labels: &mut LogEntryLabels) {
+        *labels |= LogEntryLabels::POLICIES;
+    }
+}
+
+#[derive(Debug)]
+pub struct TimeoutsAnnotator;
+
+impl Annotator for TimeoutsAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg = &entry.message_lowercased;
+        msg.contains("timeout") || msg.contains("timed out")
+    }
+}
+
+impl LabelAnnotator for TimeoutsAnnotator {
+    fn annotate(&self, labels: &mut LogEntryLabels) {
+        *labels |= LogEntryLabels::TIMEOUTS;
+    }
+}
+
+#[derive(Debug)]
+pub struct ConsumerDeliveryTimeoutAnnotator;
+
+impl Annotator for ConsumerDeliveryTimeoutAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        matches_consumer_delivery_timeout(&entry.message_lowercased)
+    }
+}
+
+impl LabelAnnotator for ConsumerDeliveryTimeoutAnnotator {
+    fn annotate(&self, labels: &mut LogEntryLabels) {
+        *labels |= LogEntryLabels::CONSUMERS | LogEntryLabels::TIMEOUTS;
     }
 }
 
@@ -781,6 +920,13 @@ pub fn annotate_labels(entry: &ParsedLogEntry) -> LogEntryLabels {
         &MqttAnnotator,
         &ClusteringAnnotator,
         &MetricsAnnotator,
+        &TlsAnnotator,
+        &QuorumQueuesAnnotator,
+        &NetworkingAnnotator,
+        &ClassicQueuesAnnotator,
+        &PoliciesAnnotator,
+        &TimeoutsAnnotator,
+        &ConsumerDeliveryTimeoutAnnotator,
     ];
 
     let mut labels = LogEntryLabels::default();

@@ -47,6 +47,7 @@ pub enum Subsystem {
     RuntimeParameters = 12,
     FederationPlugin = 13,
     MqttPlugin = 14,
+    Policies = 15,
 }
 
 impl Subsystem {

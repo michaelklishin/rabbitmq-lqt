@@ -48,12 +48,13 @@ fn test_subsystem_from_id_all_variants() {
     assert_eq!(Subsystem::from_id(12), Some(Subsystem::RuntimeParameters));
     assert_eq!(Subsystem::from_id(13), Some(Subsystem::FederationPlugin));
     assert_eq!(Subsystem::from_id(14), Some(Subsystem::MqttPlugin));
+    assert_eq!(Subsystem::from_id(15), Some(Subsystem::Policies));
 }
 
 #[test]
 fn test_subsystem_from_id_invalid() {
     assert_eq!(Subsystem::from_id(0), None);
-    assert_eq!(Subsystem::from_id(15), None);
+    assert_eq!(Subsystem::from_id(16), None);
     assert_eq!(Subsystem::from_id(-1), None);
     assert_eq!(Subsystem::from_id(100), None);
     assert_eq!(Subsystem::from_id(i16::MAX), None);

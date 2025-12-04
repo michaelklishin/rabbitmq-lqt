@@ -13,6 +13,7 @@
 // limitations under the License.
 pub const METADATA_STORE_DOC_URL_ID: i16 = 1;
 pub const ALARMS_DOC_URL_ID: i16 = 2;
+pub const CONSUMER_ACK_TIMEOUT_DOC_URL_ID: i16 = 3;
 
 pub const ISSUE_14181: i16 = 1;
 pub const ISSUE_14213: i16 = 2;
@@ -23,6 +24,9 @@ pub fn doc_url_from_id(id: i16) -> Option<&'static str> {
     match id {
         METADATA_STORE_DOC_URL_ID => Some("https://www.rabbitmq.com/docs/metadata-store"),
         ALARMS_DOC_URL_ID => Some("https://www.rabbitmq.com/docs/alarms"),
+        CONSUMER_ACK_TIMEOUT_DOC_URL_ID => {
+            Some("https://www.rabbitmq.com/docs/consumers#acknowledgement-timeout")
+        }
         _ => None,
     }
 }

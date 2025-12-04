@@ -22,7 +22,8 @@
 
 use crate::entry_metadata::annotator::Annotator;
 use crate::entry_metadata::shared::{
-    matches_cq_storage, matches_federation, matches_plugins, matches_shovels, matches_virtual_hosts,
+    matches_cq_storage, matches_federation, matches_plugins, matches_policies, matches_shovels,
+    matches_virtual_hosts,
 };
 use crate::entry_metadata::subsystems::Subsystem;
 use crate::parser::ParsedLogEntry;
@@ -46,6 +47,7 @@ impl Annotator for MetadataStoreAnnotator {
             || msg_lower.starts_with("starting khepri")
             || msg_lower.starts_with("db: ")
             || msg_lower.starts_with("starting mnesia")
+            || msg_lower.contains("cannot query members in store")
     }
 }
 
@@ -297,6 +299,21 @@ impl SubsystemAnnotator for MqttPluginAnnotator {
     }
 }
 
+#[derive(Debug)]
+pub struct PoliciesSubsystemAnnotator;
+
+impl Annotator for PoliciesSubsystemAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        matches_policies(&entry.message_lowercased)
+    }
+}
+
+impl SubsystemAnnotator for PoliciesSubsystemAnnotator {
+    fn annotate(&self, entry: &mut ParsedLogEntry) {
+        entry.subsystem_id = Some(Subsystem::Policies.to_id());
+    }
+}
+
 #[inline]
 pub fn annotate_subsystems(entry: &mut ParsedLogEntry) -> &mut ParsedLogEntry {
     const ANNOTATORS: &[&dyn SubsystemAnnotator] = &[
@@ -314,6 +331,7 @@ pub fn annotate_subsystems(entry: &mut ParsedLogEntry) -> &mut ParsedLogEntry {
         &RuntimeParametersAnnotator,
         &FederationPluginAnnotator,
         &MqttPluginAnnotator,
+        &PoliciesSubsystemAnnotator,
     ];
 
     for annotator in ANNOTATORS {
