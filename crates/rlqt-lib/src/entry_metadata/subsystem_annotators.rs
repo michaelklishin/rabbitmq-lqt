@@ -43,11 +43,14 @@ impl Annotator for MetadataStoreAnnotator {
         msg_lower.starts_with("rabbitmq metadata store:")
             || msg_lower.starts_with("mnesia->khepri data copy:")
             || msg_lower.starts_with("syncing mnesia->khepri")
+            || msg_lower.starts_with("mnesia->khepri cluster sync:")
             || msg_lower.starts_with("khepri-based")
             || msg_lower.starts_with("starting khepri")
             || msg_lower.starts_with("db: ")
             || msg_lower.starts_with("starting mnesia")
+            || msg_lower.starts_with("waiting for mnesia tables")
             || msg_lower.contains("cannot query members in store")
+            || msg_lower.starts_with("successfully synced tables")
     }
 }
 
@@ -88,6 +91,17 @@ impl Annotator for BootAnnotator {
             || msg_lower.starts_with("logging: configured log handlers")
             || msg_lower.starts_with("fhc read buffering")
             || msg_lower.starts_with("fhc write buffering")
+            || msg_lower.starts_with("== boot steps")
+            || msg_lower.starts_with("== prelaunch")
+            || msg_lower.starts_with("== postlaunch")
+            || msg_lower.starts_with("== plugins")
+            || msg_lower.starts_with("marking rabbitmq as running")
+            || msg_lower.contains("systemd")
+            || msg_lower.starts_with("decoding encrypted config values")
+            || msg_lower.starts_with("opening log file")
+            || msg_lower.starts_with("webmachine_log_handler")
+            || msg_lower.starts_with("files and directories found in node's data directory")
+            || msg_lower.starts_with("prevent_startup_if_node_was_reset")
     }
 }
 
@@ -314,9 +328,29 @@ impl SubsystemAnnotator for PoliciesSubsystemAnnotator {
     }
 }
 
+#[derive(Debug)]
+pub struct MaintenanceModeAnnotator;
+
+impl Annotator for MaintenanceModeAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.contains("maintenance mode")
+            || msg_lower.contains("resetting node maintenance status")
+            || msg_lower.contains("unmarking the node as undergoing maintenance")
+            || msg_lower.contains("marking the node as undergoing maintenance")
+    }
+}
+
+impl SubsystemAnnotator for MaintenanceModeAnnotator {
+    fn annotate(&self, entry: &mut ParsedLogEntry) {
+        entry.subsystem_id = Some(Subsystem::MaintenanceMode.to_id());
+    }
+}
+
 #[inline]
 pub fn annotate_subsystems(entry: &mut ParsedLogEntry) -> &mut ParsedLogEntry {
     const ANNOTATORS: &[&dyn SubsystemAnnotator] = &[
+        &MaintenanceModeAnnotator,
         &MetadataStoreAnnotator,
         &FeatureFlagsAnnotator,
         &BootAnnotator,

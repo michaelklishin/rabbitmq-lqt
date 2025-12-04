@@ -62,6 +62,9 @@ pub const LABEL_CLASSIC_QUEUES: &str = "classic_queues";
 pub const LABEL_POLICIES: &str = "policies";
 pub const LABEL_TIMEOUTS: &str = "timeouts";
 pub const LABEL_CONSUMERS: &str = "consumers";
+pub const LABEL_DEPRECATED_FEATURES: &str = "deprecated_features";
+pub const LABEL_MAINTENANCE_MODE: &str = "maintenance_mode";
+pub const LABEL_KHEPRI: &str = "khepri";
 
 /// Array of all label names in the order they're defined
 pub const LABEL_NAMES: &[&str] = &[
@@ -109,6 +112,9 @@ pub const LABEL_NAMES: &[&str] = &[
     LABEL_POLICIES,
     LABEL_TIMEOUTS,
     LABEL_CONSUMERS,
+    LABEL_DEPRECATED_FEATURES,
+    LABEL_MAINTENANCE_MODE,
+    LABEL_KHEPRI,
 ];
 
 bitflags! {
@@ -158,6 +164,9 @@ bitflags! {
         const POLICIES            = 1 << 41;
         const TIMEOUTS            = 1 << 42;
         const CONSUMERS           = 1 << 43;
+        const DEPRECATED_FEATURES = 1 << 44;
+        const MAINTENANCE_MODE    = 1 << 45;
+        const KHEPRI              = 1 << 46;
     }
 }
 
@@ -307,6 +316,15 @@ impl Serialize for LogEntryLabels {
         if self.contains(Self::CONSUMERS) {
             map.serialize_entry(LABEL_CONSUMERS, &true)?;
         }
+        if self.contains(Self::DEPRECATED_FEATURES) {
+            map.serialize_entry(LABEL_DEPRECATED_FEATURES, &true)?;
+        }
+        if self.contains(Self::MAINTENANCE_MODE) {
+            map.serialize_entry(LABEL_MAINTENANCE_MODE, &true)?;
+        }
+        if self.contains(Self::KHEPRI) {
+            map.serialize_entry(LABEL_KHEPRI, &true)?;
+        }
 
         map.end()
     }
@@ -386,6 +404,11 @@ impl<'de> Deserialize<'de> for LogEntryLabels {
                             LABEL_POLICIES => labels |= LogEntryLabels::POLICIES,
                             LABEL_TIMEOUTS => labels |= LogEntryLabels::TIMEOUTS,
                             LABEL_CONSUMERS => labels |= LogEntryLabels::CONSUMERS,
+                            LABEL_DEPRECATED_FEATURES => {
+                                labels |= LogEntryLabels::DEPRECATED_FEATURES
+                            }
+                            LABEL_MAINTENANCE_MODE => labels |= LogEntryLabels::MAINTENANCE_MODE,
+                            LABEL_KHEPRI => labels |= LogEntryLabels::KHEPRI,
                             _ => {}
                         }
                     }

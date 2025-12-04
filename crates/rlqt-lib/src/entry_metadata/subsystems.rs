@@ -48,6 +48,7 @@ pub enum Subsystem {
     FederationPlugin = 13,
     MqttPlugin = 14,
     Policies = 15,
+    MaintenanceMode = 16,
 }
 
 impl Subsystem {

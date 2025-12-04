@@ -49,12 +49,13 @@ fn test_subsystem_from_id_all_variants() {
     assert_eq!(Subsystem::from_id(13), Some(Subsystem::FederationPlugin));
     assert_eq!(Subsystem::from_id(14), Some(Subsystem::MqttPlugin));
     assert_eq!(Subsystem::from_id(15), Some(Subsystem::Policies));
+    assert_eq!(Subsystem::from_id(16), Some(Subsystem::MaintenanceMode));
 }
 
 #[test]
 fn test_subsystem_from_id_invalid() {
     assert_eq!(Subsystem::from_id(0), None);
-    assert_eq!(Subsystem::from_id(16), None);
+    assert_eq!(Subsystem::from_id(17), None);
     assert_eq!(Subsystem::from_id(-1), None);
     assert_eq!(Subsystem::from_id(100), None);
     assert_eq!(Subsystem::from_id(i16::MAX), None);
@@ -78,6 +79,8 @@ fn test_subsystem_round_trip_conversion() {
         Subsystem::RuntimeParameters,
         Subsystem::FederationPlugin,
         Subsystem::MqttPlugin,
+        Subsystem::Policies,
+        Subsystem::MaintenanceMode,
     ];
 
     for subsystem in subsystems {
@@ -110,6 +113,8 @@ fn test_subsystem_id_uniqueness() {
         Subsystem::RuntimeParameters,
         Subsystem::FederationPlugin,
         Subsystem::MqttPlugin,
+        Subsystem::Policies,
+        Subsystem::MaintenanceMode,
     ];
 
     let mut ids = Vec::new();
@@ -124,7 +129,7 @@ fn test_subsystem_id_uniqueness() {
         ids.push(id);
     }
 
-    assert_eq!(ids.len(), 14, "Expected 14 unique subsystem IDs");
+    assert_eq!(ids.len(), 16, "Expected 16 unique subsystem IDs");
 }
 
 #[test]
@@ -144,13 +149,15 @@ fn test_subsystem_id_range() {
         Subsystem::RuntimeParameters,
         Subsystem::FederationPlugin,
         Subsystem::MqttPlugin,
+        Subsystem::Policies,
+        Subsystem::MaintenanceMode,
     ];
 
     for subsystem in subsystems {
         let id = subsystem.to_id();
         assert!(
-            (1..=14).contains(&id),
-            "ID {} for {:?} is outside expected range [1, 14]",
+            (1..=16).contains(&id),
+            "ID {} for {:?} is outside expected range [1, 16]",
             id,
             subsystem
         );
