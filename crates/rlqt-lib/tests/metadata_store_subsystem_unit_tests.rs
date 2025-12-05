@@ -110,3 +110,23 @@ fn test_metadata_store_mnesia_khepri_cluster_sync() {
     annotate_subsystems(&mut entry);
     assert_eq!(entry.subsystem_id, Some(Subsystem::MetadataStore.to_id()));
 }
+
+#[test]
+fn test_metadata_store_found_members() {
+    let mut entry = create_test_entry(
+        "Found the following metadata store members: [rabbit@node1, rabbit@node2]",
+        Severity::Info,
+    );
+    annotate_subsystems(&mut entry);
+    assert_eq!(entry.subsystem_id, Some(Subsystem::MetadataStore.to_id()));
+}
+
+#[test]
+fn test_metadata_store_trying_to_restart_ra_server() {
+    let mut entry = create_test_entry(
+        "Trying to restart local Ra server for store \"rabbitmq_metadata\" in Ra system \"coordination\"",
+        Severity::Debug,
+    );
+    annotate_subsystems(&mut entry);
+    assert_eq!(entry.subsystem_id, Some(Subsystem::MetadataStore.to_id()));
+}

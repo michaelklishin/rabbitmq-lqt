@@ -75,7 +75,7 @@ fn test_subsystem_from_id_all_variants() {
 #[test]
 fn test_subsystem_from_id_invalid() {
     assert_eq!(Subsystem::from_id(0), None);
-    assert_eq!(Subsystem::from_id(26), None);
+    assert_eq!(Subsystem::from_id(30), None);
     assert_eq!(Subsystem::from_id(-1), None);
     assert_eq!(Subsystem::from_id(100), None);
     assert_eq!(Subsystem::from_id(i16::MAX), None);

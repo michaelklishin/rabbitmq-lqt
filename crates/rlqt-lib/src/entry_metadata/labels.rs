@@ -69,6 +69,8 @@ pub const LABEL_RUNTIME_PARAMETERS: &str = "runtime_parameters";
 pub const LABEL_HTTP: &str = "http";
 pub const LABEL_SESSIONS: &str = "sessions";
 pub const LABEL_AMQP10: &str = "amqp1_0";
+pub const LABEL_OAUTH2: &str = "oauth2";
+pub const LABEL_SQL: &str = "sql";
 
 /// Array of all label names in the order they were defined
 pub const LABEL_NAMES: &[&str] = &[
@@ -123,6 +125,8 @@ pub const LABEL_NAMES: &[&str] = &[
     LABEL_HTTP,
     LABEL_SESSIONS,
     LABEL_AMQP10,
+    LABEL_OAUTH2,
+    LABEL_SQL,
 ];
 
 // Given that a parsed dataset can have 100s of thousands or millions of labels,
@@ -181,6 +185,8 @@ bitflags! {
         const HTTP                = 1 << 48;
         const SESSIONS            = 1 << 49;
         const AMQP10              = 1 << 50;
+        const OAUTH2              = 1 << 51;
+        const SQL                 = 1 << 52;
     }
 }
 
@@ -257,6 +263,8 @@ impl LogEntryLabels {
             LABEL_HTTP => Some(1 << 48),
             LABEL_SESSIONS => Some(1 << 49),
             LABEL_AMQP10 => Some(1 << 50),
+            LABEL_OAUTH2 => Some(1 << 51),
+            LABEL_SQL => Some(1 << 52),
             _ => None,
         }
     }
@@ -422,6 +430,12 @@ impl Serialize for LogEntryLabels {
         if self.contains(Self::AMQP10) {
             map.serialize_entry(LABEL_AMQP10, &true)?;
         }
+        if self.contains(Self::OAUTH2) {
+            map.serialize_entry(LABEL_OAUTH2, &true)?;
+        }
+        if self.contains(Self::SQL) {
+            map.serialize_entry(LABEL_SQL, &true)?;
+        }
 
         map.end()
     }
@@ -510,6 +524,8 @@ impl<'de> Deserialize<'de> for LogEntryLabels {
                             LABEL_HTTP => labels |= LogEntryLabels::HTTP,
                             LABEL_SESSIONS => labels |= LogEntryLabels::SESSIONS,
                             LABEL_AMQP10 => labels |= LogEntryLabels::AMQP10,
+                            LABEL_OAUTH2 => labels |= LogEntryLabels::OAUTH2,
+                            LABEL_SQL => labels |= LogEntryLabels::SQL,
                             _ => {}
                         }
                     }

@@ -22,8 +22,8 @@ use test_helpers::create_test_entry;
 #[test]
 fn test_recovery_of_state_machine_version() {
     let entry = create_test_entry(
-        "Starting recovery of state machine version 2",
-        Severity::Info,
+        "RabbitMQ metadata store: recovery of state machine version 1:1 from index 0 to 21 took 3ms",
+        Severity::Debug,
     );
     let labels = annotate_labels(&entry);
     assert!(labels.contains(LogEntryLabels::RAFT));
@@ -32,7 +32,10 @@ fn test_recovery_of_state_machine_version() {
 
 #[test]
 fn test_recovering_state_machine_version() {
-    let entry = create_test_entry("Now recovering state machine version 3", Severity::Info);
+    let entry = create_test_entry(
+        "RabbitMQ metadata store: recovering state machine version 0:1 from index 0 to 21",
+        Severity::Debug,
+    );
     let labels = annotate_labels(&entry);
     assert!(labels.contains(LogEntryLabels::RAFT));
     assert!(!labels.contains(LogEntryLabels::ELECTIONS));
@@ -40,7 +43,10 @@ fn test_recovering_state_machine_version() {
 
 #[test]
 fn test_scanning_for_cluster_changes() {
-    let entry = create_test_entry("Raft scanning for cluster changes", Severity::Info);
+    let entry = create_test_entry(
+        "RabbitMQ metadata store: scanning for cluster changes 1:0",
+        Severity::Debug,
+    );
     let labels = annotate_labels(&entry);
     assert!(labels.contains(LogEntryLabels::RAFT));
     assert!(!labels.contains(LogEntryLabels::ELECTIONS));
@@ -58,16 +64,22 @@ fn test_vote_granted_for_term() {
 }
 
 #[test]
-fn test_vote_granted_for_term_case_insensitive() {
-    let entry = create_test_entry("VOTE GRANTED FOR TERM 5", Severity::Info);
+fn test_queue_vote_granted_for_term() {
+    let entry = create_test_entry(
+        "queue 'qq.1' in vhost '/': vote granted for term 1 votes 1",
+        Severity::Debug,
+    );
     let labels = annotate_labels(&entry);
     assert!(labels.contains(LogEntryLabels::RAFT));
     assert!(labels.contains(LogEntryLabels::ELECTIONS));
 }
 
 #[test]
-fn test_case_insensitive() {
-    let entry = create_test_entry("SCANNING FOR CLUSTER CHANGES detected", Severity::Info);
+fn test_queue_scanning_for_cluster_changes() {
+    let entry = create_test_entry(
+        "queue 'qq.1' in vhost '/': scanning for cluster changes 1:0",
+        Severity::Debug,
+    );
     let labels = annotate_labels(&entry);
     assert!(labels.contains(LogEntryLabels::RAFT));
 }
@@ -124,6 +136,69 @@ fn test_metadata_store_caught_up() {
     let entry = create_test_entry(
         "local Khepri-based RabbitMQ metadata store member is caught up to the Raft cluster leader",
         Severity::Info,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::RAFT));
+}
+
+#[test]
+fn test_starting_ra_systems() {
+    let entry = create_test_entry("Starting Ra systems", Severity::Debug);
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::RAFT));
+}
+
+#[test]
+fn test_ra_systems_lowercase() {
+    let entry = create_test_entry("ra systems initialized", Severity::Debug);
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::RAFT));
+}
+
+#[test]
+fn test_stopping_ra_systems() {
+    let entry = create_test_entry("Stopping Ra systems", Severity::Info);
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::RAFT));
+    assert!(labels.contains(LogEntryLabels::SHUTDOWN));
+}
+
+#[test]
+fn test_trying_to_restart_local_ra_server() {
+    let entry = create_test_entry(
+        "Trying to restart local Ra server for store \"rabbitmq_metadata\" in Ra system \"coordination\"",
+        Severity::Debug,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::KHEPRI));
+    assert!(labels.contains(LogEntryLabels::RAFT));
+}
+
+#[test]
+fn test_ra_node_left_cluster() {
+    let entry = create_test_entry(
+        "Ra node {rabbitmq_metadata,rabbit@node1} has successfully left the cluster.",
+        Severity::Info,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::RAFT));
+}
+
+#[test]
+fn test_ra_snapshot_skipping() {
+    let entry = create_test_entry(
+        "ra_snapshot: RabbitMQ metadata store: skipping snapshot.dat as did not validate. Err: enoent",
+        Severity::Info,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::RAFT));
+}
+
+#[test]
+fn test_ra_monitors_target_not_recognised() {
+    let entry = create_test_entry(
+        "ra_monitors: target {rabbitmq_metadata,rabbit@unknown} not recognised",
+        Severity::Debug,
     );
     let labels = annotate_labels(&entry);
     assert!(labels.contains(LogEntryLabels::RAFT));

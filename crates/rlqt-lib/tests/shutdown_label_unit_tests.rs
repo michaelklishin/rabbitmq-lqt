@@ -55,3 +55,21 @@ fn test_stopped_ssl_listener() {
     let labels = annotate_labels(&entry);
     assert!(labels.contains(LogEntryLabels::SHUTDOWN));
 }
+
+#[test]
+fn test_stopping_ranch_listeners_for_protocol() {
+    let entry = create_test_entry(
+        "Stopping Ranch listeners for protocol amqp",
+        Severity::Debug,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::SHUTDOWN));
+    assert!(labels.contains(LogEntryLabels::NETWORKING));
+}
+
+#[test]
+fn test_stopping_ra_systems_shutdown() {
+    let entry = create_test_entry("Stopping Ra systems", Severity::Info);
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::SHUTDOWN));
+}

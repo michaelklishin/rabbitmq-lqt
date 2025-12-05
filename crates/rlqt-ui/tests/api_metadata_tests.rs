@@ -588,7 +588,7 @@ async fn test_get_metadata_returns_sorted_collections() {
         .iter()
         .map(|l| l.as_str().unwrap().to_string())
         .collect();
-    assert_eq!(labels.len(), 51, "Should return all 51 available labels");
+    assert_eq!(labels.len(), 53, "Should return all 53 available labels");
     assert!(labels.contains(&"elections".to_string()));
     assert!(labels.contains(&"federation".to_string()));
     assert!(labels.contains(&"queues".to_string()));
@@ -684,8 +684,8 @@ async fn test_get_metadata_handles_special_characters() {
         .collect();
     assert_eq!(
         labels.len(),
-        51,
-        "Should return all 51 available labels regardless of what's in the database"
+        53,
+        "Should return all 53 available labels regardless of what's in the database"
     );
 }
 

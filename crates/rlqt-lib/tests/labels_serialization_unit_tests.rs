@@ -100,6 +100,8 @@ fn test_serialize_deserialize_roundtrip_each_label_individually() {
         LogEntryLabels::HTTP,
         LogEntryLabels::SESSIONS,
         LogEntryLabels::AMQP10,
+        LogEntryLabels::OAUTH2,
+        LogEntryLabels::SQL,
     ];
 
     assert_eq!(

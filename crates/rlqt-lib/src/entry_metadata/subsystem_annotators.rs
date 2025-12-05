@@ -22,7 +22,8 @@
 
 use crate::entry_metadata::annotator::Annotator;
 use crate::entry_metadata::shared::{
-    matches_cq_storage, matches_federation, matches_plugins, matches_policies, matches_shovels,
+    matches_cq_storage, matches_federation, matches_management, matches_oauth2, matches_plugins,
+    matches_policies, matches_raft, matches_shovels, matches_shutdown, matches_streams,
     matches_virtual_hosts,
 };
 use crate::entry_metadata::subsystems::Subsystem;
@@ -58,6 +59,8 @@ impl Annotator for MetadataStoreAnnotator {
                 && msg_lower.contains("from its cluster")
             || msg_lower.starts_with("deleting server rabbitmq_metadata")
             || msg_lower.contains("mnesia_event got {inconsistent_database")
+            || msg_lower.starts_with("found the following metadata store members")
+            || msg_lower.starts_with("trying to restart local ra server")
     }
 }
 
@@ -101,6 +104,10 @@ impl Annotator for BootAnnotator {
             || msg_lower.starts_with("== prelaunch")
             || msg_lower.starts_with("== postlaunch")
             || msg_lower.starts_with("== plugins")
+            || msg_lower.starts_with("== clustering ==")
+            || msg_lower.starts_with("boot failed")
+            || msg_lower.starts_with("failed to start ranch listener")
+            || msg_lower.contains("starting rabbit_node_monitor")
             || msg_lower.starts_with("marking rabbitmq as running")
             || msg_lower.contains("systemd")
             || msg_lower.starts_with("decoding encrypted config values")
@@ -136,15 +143,7 @@ pub struct RaftBasedAnnotator;
 
 impl Annotator for RaftBasedAnnotator {
     fn does_match(&self, entry: &ParsedLogEntry) -> bool {
-        let msg_lower = &entry.message_lowercased;
-        msg_lower.starts_with("wal:")
-            || msg_lower.starts_with("ra system")
-            || msg_lower.starts_with("ra:")
-            || msg_lower.starts_with("starting ra system:")
-            || msg_lower.starts_with("ra_log_")
-            || msg_lower.starts_with("trigger election in")
-            || msg_lower.starts_with("ra_system_recover")
-            || msg_lower.starts_with("segment_writer")
+        matches_raft(&entry.message_lowercased)
     }
 }
 
@@ -442,6 +441,7 @@ impl Annotator for ShutdownSubsystemAnnotator {
         let msg_lower = &entry.message_lowercased;
         msg_lower.starts_with("rabbitmq is asked to stop")
             || msg_lower.starts_with("successfully stopped rabbitmq")
+            || matches_shutdown(msg_lower)
     }
 }
 
@@ -509,8 +509,7 @@ pub struct StreamsSubsystemAnnotator;
 
 impl Annotator for StreamsSubsystemAnnotator {
     fn does_match(&self, entry: &ParsedLogEntry) -> bool {
-        let msg_lower = &entry.message_lowercased;
-        msg_lower.contains("osiris") || msg_lower.starts_with("stream:")
+        matches_streams(&entry.message_lowercased)
     }
 }
 
@@ -542,6 +541,73 @@ impl SubsystemAnnotator for QueuesSubsystemAnnotator {
     }
 }
 
+#[derive(Debug)]
+pub struct OAuth2SubsystemAnnotator;
+
+impl Annotator for OAuth2SubsystemAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        matches_oauth2(&entry.message_lowercased)
+    }
+}
+
+impl SubsystemAnnotator for OAuth2SubsystemAnnotator {
+    fn annotate(&self, entry: &mut ParsedLogEntry) {
+        entry.subsystem_id = Some(Subsystem::OAuth2.to_id());
+    }
+}
+
+#[derive(Debug)]
+pub struct ManagementSubsystemAnnotator;
+
+impl Annotator for ManagementSubsystemAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        matches_management(&entry.message_lowercased)
+    }
+}
+
+impl SubsystemAnnotator for ManagementSubsystemAnnotator {
+    fn annotate(&self, entry: &mut ParsedLogEntry) {
+        entry.subsystem_id = Some(Subsystem::Management.to_id());
+    }
+}
+
+#[derive(Debug)]
+pub struct MetricsSubsystemAnnotator;
+
+impl Annotator for MetricsSubsystemAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.contains("aggregated metrics")
+            || msg_lower.contains("prometheus metrics:")
+            || msg_lower.contains("global counters")
+            || msg_lower.contains("message rates")
+    }
+}
+
+impl SubsystemAnnotator for MetricsSubsystemAnnotator {
+    fn annotate(&self, entry: &mut ParsedLogEntry) {
+        entry.subsystem_id = Some(Subsystem::Metrics.to_id());
+    }
+}
+
+#[derive(Debug)]
+pub struct Amqp10SubsystemAnnotator;
+
+impl Annotator for Amqp10SubsystemAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.contains("amqp 1.0")
+            || msg_lower.contains("sql expression")
+            || msg_lower.contains("amqp10")
+    }
+}
+
+impl SubsystemAnnotator for Amqp10SubsystemAnnotator {
+    fn annotate(&self, entry: &mut ParsedLogEntry) {
+        entry.subsystem_id = Some(Subsystem::Amqp10.to_id());
+    }
+}
+
 #[inline]
 pub fn annotate_subsystems(entry: &mut ParsedLogEntry) -> &mut ParsedLogEntry {
     const ANNOTATORS: &[&dyn SubsystemAnnotator] = &[
@@ -557,7 +623,11 @@ pub fn annotate_subsystems(entry: &mut ParsedLogEntry) -> &mut ParsedLogEntry {
         &BootAnnotator,
         &RaftBasedAnnotator,
         &PeerDiscoveryAnnotator,
+        &OAuth2SubsystemAnnotator,
+        &ManagementSubsystemAnnotator,
+        &MetricsSubsystemAnnotator,
         &PluginsAnnotator,
+        &Amqp10SubsystemAnnotator,
         &AccessControlAnnotator,
         &ConnectionsAnnotator,
         &ShovelsAnnotator,

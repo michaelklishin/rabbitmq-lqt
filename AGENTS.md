@@ -63,7 +63,7 @@ Each log entry is annotated with metadata including:
  * **Subsystems**: the RabbitMQ subsystem the log entry relates to (e.g., connections, queues, virtual hosts)
  * **Labels**: semantic tags applied to log entries (e.g., access control, auto-delete, federation)
  * **Documentation URLs**: links to relevant RabbitMQ documentation
- * **Issue/SCM URLs**: links to related GitHub issues, pull requests or commits
+ * **Known Issue/Resolution URLs**: links to related GitHub issues, pull requests or commits
 
 The tool supports querying by severity, time range, subsystem, labels, and text search.
 
@@ -95,6 +95,13 @@ The tool supports querying by severity, time range, subsystem, labels, and text 
  * Add tests to the modules under `tests`, never in the implementation files
  * At the end of each task, run `cargo fmt --all`
  * At the end of each task, run `cargo clippy --all` and fix any warnings it might emit
+
+## Tests
+
+Never use made-up (fabricated) log strings, only real log entries from RabbitMQ log files,
+RabbitMQ source code or documentation guides.
+
+For false positive tests, use real log entries from other tests, not dummy fabricated strings.
 
 ## Benchmarks
 

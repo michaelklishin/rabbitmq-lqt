@@ -230,3 +230,73 @@ fn test_annotate_sets_subsystem() {
     annotator.annotate(&mut entry);
     assert_eq!(entry.subsystem_id, Some(Subsystem::VirtualHosts.to_id()));
 }
+
+#[test]
+fn test_making_sure_data_directory_for_vhost() {
+    let entry = create_test_entry(
+        "Making sure data directory '/Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/msg_stores/vhosts/A4X2V27YYX9QUVIGVX5MF58JO' for vhost 'rabbitmqadmin.test-vhosts-delete-multiple-protects-protected-3' exists",
+        Severity::Debug,
+    );
+    let annotator = VirtualHostsAnnotator;
+    assert!(annotator.does_match(&entry));
+}
+
+#[test]
+fn test_making_sure_data_directory_for_vhost_linux_path() {
+    let entry = create_test_entry(
+        "Making sure data directory '/home/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/msg_stores/vhosts/BG2SCZNHO1T30EHH913BAFTNA' for vhost 'rabbitmqadmin.test-vhosts-delete-multiple-protects-protected-1' exists",
+        Severity::Debug,
+    );
+    let annotator = VirtualHostsAnnotator;
+    assert!(annotator.does_match(&entry));
+}
+
+#[test]
+fn test_making_sure_data_directory_for_vhost_short_path() {
+    let entry = create_test_entry(
+        "Making sure data directory '/data/rabbitmq/var/lib/rabbitmq/mnesia/rabbit@sunnyside/msg_stores/vhosts/DUO4TWE7I18HMUL4J8JOK8IZ2' for vhost 'rabbitmqadmin.exchange_vhost_3' exists",
+        Severity::Debug,
+    );
+    let annotator = VirtualHostsAnnotator;
+    assert!(annotator.does_match(&entry));
+}
+
+#[test]
+fn test_deleting_message_store_directory_for_vhost() {
+    let entry = create_test_entry(
+        "Deleting message store directory for vhost 'rabbitmqadmin.exchange_vhost_4' at '/Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/msg_stores/vhosts/BHSXL8V66T6NH5C86SDNB8NPG'",
+        Severity::Debug,
+    );
+    let annotator = VirtualHostsAnnotator;
+    assert!(annotator.does_match(&entry));
+}
+
+#[test]
+fn test_deleting_message_store_directory_for_vhost_with_slash() {
+    let entry = create_test_entry(
+        "Deleting message store directory for vhost 'rust/rabbitmqadmin' at '/Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/msg_stores/vhosts/D3JIXVJ6KFALWG4SVPIFGZGAH'",
+        Severity::Debug,
+    );
+    let annotator = VirtualHostsAnnotator;
+    assert!(annotator.does_match(&entry));
+}
+
+#[test]
+fn test_deleting_message_store_directory_for_vhost_linux_path() {
+    let entry = create_test_entry(
+        "Deleting message store directory for vhost 'rabbitmqadmin.test_operator_policies_bulk_policy_keys_manipulation.1' at '/home/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/msg_stores/vhosts/19KA1Z5XPTSAXB5J9HD2XDPCQ'",
+        Severity::Debug,
+    );
+    let annotator = VirtualHostsAnnotator;
+    assert!(annotator.does_match(&entry));
+}
+
+#[test]
+fn test_deleting_message_store_directory_for_vhost_standard_path() {
+    let entry = create_test_entry(
+        "Deleting message store directory for vhost 'rabbitmqadmin.federation.exchange.test7' at '/var/lib/rabbitmq/mnesia/rabbit@sunnyside/msg_stores/vhosts/1LOONF6SMWSBO2BRHGDQX72M8'",
+        Severity::Debug,
+    );
+    let annotator = VirtualHostsAnnotator;
+    assert!(annotator.does_match(&entry));
+}

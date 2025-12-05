@@ -58,6 +58,10 @@ pub enum Subsystem {
     Logging = 23,
     Streams = 24,
     Queues = 25,
+    OAuth2 = 26,
+    Management = 27,
+    Metrics = 28,
+    Amqp10 = 29,
 }
 
 impl Subsystem {

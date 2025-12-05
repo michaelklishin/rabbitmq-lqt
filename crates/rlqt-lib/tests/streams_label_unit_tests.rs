@@ -51,8 +51,79 @@ fn test_rabbit_stream() {
 }
 
 #[test]
+fn test_osiris_writer() {
+    let entry = create_test_entry(
+        "osiris_writer:init/1: name: stream_name last offset: -1 committed chunk id: -1 epoch: 1",
+        Severity::Debug,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::STREAMS));
+}
+
+#[test]
+fn test_osiris_log() {
+    let entry = create_test_entry(
+        "stream_name [osiris_log:open_new_segment/1] 00000000000000000000.segment",
+        Severity::Debug,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::STREAMS));
+}
+
+#[test]
+fn test_stream_coordinator() {
+    let entry = create_test_entry(
+        "Starting stream coordinator on nodes [rabbit@node1, rabbit@node2]",
+        Severity::Info,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::STREAMS));
+    assert!(labels.contains(LogEntryLabels::RAFT));
+}
+
+#[test]
+fn test_stream_replica() {
+    let entry = create_test_entry(
+        "Stream replica started on node rabbit@node1",
+        Severity::Info,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::STREAMS));
+}
+
+#[test]
+fn test_stream_member() {
+    let entry = create_test_entry(
+        "Stream member joined cluster on node rabbit@node2",
+        Severity::Info,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::STREAMS));
+}
+
+#[test]
 fn test_no_match_unrelated() {
-    let entry = create_test_entry("Some other log message", Severity::Info);
+    let entry = create_test_entry("ra: starting system quorum_queues", Severity::Info);
     let labels = annotate_labels(&entry);
     assert!(!labels.contains(LogEntryLabels::STREAMS));
+}
+
+#[test]
+fn test_stream_osiris_log_data_directory() {
+    let entry = create_test_entry(
+        "Stream: rabbitmqadmin_definitions_import_test1_stream_1_1764319106807498875 will use /Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/stream/rabbitmqadmin_definitions_import_test1_stream_1_1764319106807498875 for osiris log data directory",
+        Severity::Debug,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::STREAMS));
+}
+
+#[test]
+fn test_stream_osiris_log_data_directory_variant() {
+    let entry = create_test_entry(
+        "Stream: rabbitmqadmin_definitions_import_test1_stream_3_asjdh will use /Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/stream/rabbitmqadmin_definitions_import_test1_stream_1_sadf78a6fd87a6f for osiris log data directory",
+        Severity::Debug,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::STREAMS));
 }

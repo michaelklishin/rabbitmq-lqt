@@ -22,16 +22,9 @@ use test_helpers::create_test_entry;
 
 #[test]
 fn test_connections_annotator_matches_authenticated_by_backend() {
-    let entry = create_test_entry("User authenticated successfully by backend", Severity::Info);
-    let annotator = ConnectionsAnnotator;
-    assert!(annotator.does_match(&entry));
-}
-
-#[test]
-fn test_connections_annotator_matches_client_address() {
     let entry = create_test_entry(
-        "Client address during authN phase: 192.168.1.100",
-        Severity::Info,
+        "User 'guest' authenticated successfully by backend rabbit_auth_backend_internal",
+        Severity::Debug,
     );
     let annotator = ConnectionsAnnotator;
     assert!(annotator.does_match(&entry));
@@ -40,18 +33,8 @@ fn test_connections_annotator_matches_client_address() {
 #[test]
 fn test_connections_annotator_matches_granted_access() {
     let entry = create_test_entry(
-        "User authenticated and granted access to vhost '/'",
+        "connection [::1]:57941 -> [::1]:5672 - perf-test-configuration-0: user 'guest' authenticated and granted access to vhost '/'",
         Severity::Info,
-    );
-    let annotator = ConnectionsAnnotator;
-    assert!(annotator.does_match(&entry));
-}
-
-#[test]
-fn test_connections_annotator_matches_failed_to_authenticate() {
-    let entry = create_test_entry(
-        "Connection (<0.1234.0>) from 10.0.0.1:54321 failed to authenticate",
-        Severity::Warning,
     );
     let annotator = ConnectionsAnnotator;
     assert!(annotator.does_match(&entry));
@@ -60,7 +43,7 @@ fn test_connections_annotator_matches_failed_to_authenticate() {
 #[test]
 fn test_connections_annotator_matches_connection_closed() {
     let entry = create_test_entry(
-        "connection_closed: connection <0.1234.0> closed",
+        "node hare@sunnyside down: connection_closed",
         Severity::Info,
     );
     let annotator = ConnectionsAnnotator;
@@ -69,7 +52,7 @@ fn test_connections_annotator_matches_connection_closed() {
 
 #[test]
 fn test_connections_annotator_no_match() {
-    let entry = create_test_entry("Unrelated message", Severity::Info);
+    let entry = create_test_entry("ra: starting system quorum_queues", Severity::Info);
     let annotator = ConnectionsAnnotator;
     assert!(!annotator.does_match(&entry));
 }

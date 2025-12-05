@@ -144,3 +144,37 @@ fn test_boot_prevent_startup() {
     annotate_subsystems(&mut entry);
     assert_eq!(entry.subsystem_id, Some(Subsystem::Boot.to_id()));
 }
+
+#[test]
+fn test_boot_clustering_banner() {
+    let mut entry = create_test_entry("== Clustering ==", Severity::Info);
+    annotate_subsystems(&mut entry);
+    assert_eq!(entry.subsystem_id, Some(Subsystem::Boot.to_id()));
+}
+
+#[test]
+fn test_boot_failed() {
+    let mut entry = create_test_entry(
+        "BOOT FAILED\n===========\nError during startup",
+        Severity::Error,
+    );
+    annotate_subsystems(&mut entry);
+    assert_eq!(entry.subsystem_id, Some(Subsystem::Boot.to_id()));
+}
+
+#[test]
+fn test_boot_ranch_listener_failed() {
+    let mut entry = create_test_entry(
+        "Failed to start Ranch listener rabbit_web_mqtt_listener_tls in ranch_ssl:listen([{port,15676}]) for reason eaddrinuse (address already in use)",
+        Severity::Error,
+    );
+    annotate_subsystems(&mut entry);
+    assert_eq!(entry.subsystem_id, Some(Subsystem::Boot.to_id()));
+}
+
+#[test]
+fn test_boot_starting_rabbit_node_monitor() {
+    let mut entry = create_test_entry("Starting rabbit_node_monitor", Severity::Debug);
+    annotate_subsystems(&mut entry);
+    assert_eq!(entry.subsystem_id, Some(Subsystem::Boot.to_id()));
+}

@@ -20,52 +20,45 @@ use rlqt_lib::entry_metadata::labels::LogEntryLabels;
 use test_helpers::create_test_entry;
 
 #[test]
-fn test_inter_node_tls() {
-    let entry = create_test_entry("Inter-node TLS not enabled", Severity::Debug);
-    let labels = annotate_labels(&entry);
-    assert!(labels.contains(LogEntryLabels::TLS));
-}
-
-#[test]
-fn test_tls_options() {
+fn test_oauth2_downloading_signing_keys_from_jwks() {
     let entry = create_test_entry(
-        "TLS options: [{certfile,\"/path/to/cert.pem\"}]",
+        "Downloading signing keys from https://auth.example.com/.well-known/jwks.json (TLS options: [])",
         Severity::Debug,
     );
     let labels = annotate_labels(&entry);
-    assert!(labels.contains(LogEntryLabels::TLS));
+    assert!(labels.contains(LogEntryLabels::OAUTH2));
 }
 
 #[test]
-fn test_tls_connection() {
+fn test_oauth2_decoding_token_with_provider_id() {
     let entry = create_test_entry(
-        "TLS connection from 192.168.1.1:45678 established",
-        Severity::Info,
+        "Decoding token for resource_server: rabbitmq using oauth_provider_id: keycloak",
+        Severity::Debug,
     );
     let labels = annotate_labels(&entry);
-    assert!(labels.contains(LogEntryLabels::TLS));
+    assert!(labels.contains(LogEntryLabels::OAUTH2));
 }
 
 #[test]
-fn test_ssl_options() {
-    let entry = create_test_entry("SSL options: [{verify,verify_peer}]", Severity::Debug);
-    let labels = annotate_labels(&entry);
-    assert!(labels.contains(LogEntryLabels::TLS));
-}
-
-#[test]
-fn test_ssl_connection() {
+fn test_oauth2_jwk_from_pem_error() {
     let entry = create_test_entry(
-        "SSL connection from 10.0.0.1:54321 accepted",
-        Severity::Info,
+        "Error parsing jwk from pem: invalid_format",
+        Severity::Warning,
     );
     let labels = annotate_labels(&entry);
-    assert!(labels.contains(LogEntryLabels::TLS));
+    assert!(labels.contains(LogEntryLabels::OAUTH2));
 }
 
 #[test]
-fn test_tls_no_false_positive() {
-    let entry = create_test_entry("ra: starting system quorum_queues", Severity::Info);
+fn test_oauth2_no_false_positive() {
+    let entry = create_test_entry("Connection from 192.168.1.1 established", Severity::Debug);
     let labels = annotate_labels(&entry);
-    assert!(!labels.contains(LogEntryLabels::TLS));
+    assert!(!labels.contains(LogEntryLabels::OAUTH2));
+}
+
+#[test]
+fn test_oauth2_client_plugin() {
+    let entry = create_test_entry("    oauth2_client", Severity::Info);
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::OAUTH2));
 }

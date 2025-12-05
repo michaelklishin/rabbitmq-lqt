@@ -23,22 +23,28 @@ use rlqt_lib::entry_metadata::labels::LogEntryLabels;
 use test_helpers::create_test_entry;
 
 #[test]
-fn test_http_annotator_matches_http_api() {
-    let entry = create_test_entry("HTTP API: request completed", Severity::Info);
+fn test_http_annotator_matches_http_api_payload_size() {
+    let entry = create_test_entry(
+        "HTTP API: request exceeded maximum allowed payload size (limit: 8000000 bytes, payload size: 10000000 bytes)",
+        Severity::Warning,
+    );
     let annotator = HttpAnnotator;
     assert!(annotator.does_match(&entry));
 }
 
 #[test]
-fn test_http_annotator_case_insensitive() {
-    let entry = create_test_entry("http api: something", Severity::Info);
+fn test_http_annotator_matches_http_api_slow_query() {
+    let entry = create_test_entry(
+        "HTTP API: ~s slow query mode requested - extended sort on ~0p",
+        Severity::Debug,
+    );
     let annotator = HttpAnnotator;
     assert!(annotator.does_match(&entry));
 }
 
 #[test]
 fn test_http_annotator_no_match() {
-    let entry = create_test_entry("Using HTTP for communication", Severity::Info);
+    let entry = create_test_entry("ra: starting system quorum_queues", Severity::Info);
     let annotator = HttpAnnotator;
     assert!(!annotator.does_match(&entry));
 }

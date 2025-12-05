@@ -146,3 +146,61 @@ fn test_no_match_unrelated() {
     let labels = annotate_labels(&entry);
     assert!(!labels.contains(LogEntryLabels::VIRTUAL_HOSTS));
 }
+
+#[test]
+fn test_making_sure_data_directory_for_vhost() {
+    let entry = create_test_entry(
+        "Making sure data directory '/Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/msg_stores/vhosts/9FIC234PN23PFSWT1G3TOFRJN' for vhost 'rabbitmqadmin.test-vhosts-delete-multiple-protects-protected-2' exists",
+        Severity::Debug,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::VIRTUAL_HOSTS));
+}
+
+#[test]
+fn test_deleting_message_store_directory_for_vhost() {
+    let entry = create_test_entry(
+        "Deleting message store directory for vhost 'rabbitmqadmin.exchange_vhost_4' at '/Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/msg_stores/vhosts/BHSXL8V66T6NH5C86SDNB8NPG'",
+        Severity::Debug,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::VIRTUAL_HOSTS));
+}
+
+#[test]
+fn test_updating_virtual_host_record() {
+    let entry = create_test_entry(
+        "Updating a virtual host record {vhost,<<\"/\">>,[],",
+        Severity::Debug,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::VIRTUAL_HOSTS));
+}
+
+#[test]
+fn test_updated_virtual_host_record() {
+    let entry = create_test_entry(
+        "Updated a virtual host record {vhost,<<\"/\">>,[],",
+        Severity::Debug,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::VIRTUAL_HOSTS));
+}
+
+#[test]
+fn test_stopping_vhost_supervisor() {
+    let entry = create_test_entry(
+        "Stopping vhost supervisor <0.439.0> for vhost 'cmq-definition-import'",
+        Severity::Info,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::VIRTUAL_HOSTS));
+    assert!(labels.contains(LogEntryLabels::SHUTDOWN));
+}
+
+#[test]
+fn test_virtual_host_stopping() {
+    let entry = create_test_entry("virtual host 'production' is stopping", Severity::Info);
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::VIRTUAL_HOSTS));
+}
