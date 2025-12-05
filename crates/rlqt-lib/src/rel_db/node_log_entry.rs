@@ -24,11 +24,11 @@ pub type NodeLogEntry = Entity;
 /// Can be overridden by specifying an explicit limit in the query context.
 const DEFAULT_MAX_QUERY_LIMIT: u64 = 10_000;
 
-/// Number of entries to insert in a single database transaction.
-/// Batching provides a 10-15% entry insertion speedup.
-///
-/// Values higher hit the law of diminishing returns.
-const DB_INSERT_BATCH_SIZE: usize = 2000;
+/// Number of entries to insert in a single batch.
+/// SQLite has a limit of ~32766 bind variables (SQLITE_MAX_VARIABLE_NUMBER).
+/// With 10 columns per entry, max is ~3200 entries per batch.
+/// Using 3000 for safety margin.
+const DB_INSERT_BATCH_SIZE: usize = 3000;
 
 /// Query context for filtering log entries
 #[derive(Debug, Default, Clone)]

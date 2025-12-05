@@ -19,19 +19,23 @@ use clap::ArgMatches;
 use indicatif::{ProgressBar, ProgressStyle};
 use rayon::prelude::*;
 use rlqt_lib::file_set_metadata::extract_file_metadata;
+use rlqt_lib::parser::ParsedLogEntry;
 use rlqt_lib::rel_db::FileMetadata;
 use rlqt_lib::{
-    NodeLogEntry, QueryContext, create_database, open_database, parse_log_file,
-    post_insertion_operations,
+    NodeLogEntry, QueryContext, create_database_for_bulk_import, finalize_bulk_import,
+    open_database, parse_log_file, post_insertion_operations,
 };
 use rlqt_obfuscation::{LogObfuscator, ObfuscationStats};
 use std::collections::HashSet;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::{BufRead, BufReader, BufWriter, Error as IoError, ErrorKind, Write};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 use sysexits::ExitCode;
 use tabled::{Table, Tabled, settings::Style};
+use tokio::sync::mpsc;
+
+const PIPELINE_CHUNK_SIZE: usize = 25_000;
 
 const ERR_MSG_FILE_NOT_FOUND_HELP: &str = "Make sure:\n\
   • The file path(s) are correct\n\
@@ -146,6 +150,7 @@ fn validate_database_path(db_path: &Path) -> Result<()> {
             "Database file already exists and will be overwritten: {}",
             db_path.display()
         );
+        fs::remove_file(db_path)?;
     }
 
     Ok(())
@@ -197,16 +202,7 @@ fn collect_log_files_from_directory(dir_path: &str) -> Result<Vec<PathBuf>> {
     let entries = std::fs::read_dir(dir).map_err(|e| {
         CommandRunError::Library(rlqt_lib::Error::Io(IoError::new(
             e.kind(),
-            format!(
-                "Failed to read directory '{}': {}\n\
-                \n\
-                Possible causes:\n\
-                • Directory permissions - try: chmod +rx {}\n\
-                • Disk I/O error",
-                dir.display(),
-                e,
-                dir.display()
-            ),
+            format!("Failed to read directory '{}': {}", dir.display(), e),
         )))
     })?;
 
@@ -247,6 +243,18 @@ fn collect_log_files_from_directory(dir_path: &str) -> Result<Vec<PathBuf>> {
     Ok(log_files)
 }
 
+enum InsertionTask {
+    EntriesChunk {
+        node_name: String,
+        entries: Vec<ParsedLogEntry>,
+    },
+    FileCompletionMarker {
+        node_name: String,
+        file_path: PathBuf,
+        total_lines: usize,
+    },
+}
+
 async fn parse_logs(args: &ArgMatches) -> Result<()> {
     let start_time = Instant::now();
 
@@ -273,137 +281,154 @@ async fn parse_logs(args: &ArgMatches) -> Result<()> {
     validate_file_paths(&log_paths)?;
     validate_database_path(&db_path)?;
 
-    let db = create_database(&db_path).await?;
+    let db = create_database_for_bulk_import(&db_path).await?;
 
     let silent = args.get_flag("silent");
 
-    let multi_progress = if !silent {
-        Some(indicatif::MultiProgress::new())
-    } else {
-        None
-    };
+    let (tx, mut rx) = mpsc::channel::<InsertionTask>(4);
 
-    let parsed_files: Vec<_> = log_paths
-        .par_iter()
-        .map(|log_path| {
-            let file_progress = if let Some(mp) = &multi_progress {
-                let pb = mp.add(ProgressBar::new_spinner());
-                pb.set_style(
-                    ProgressStyle::default_spinner()
-                        .template("{spinner:.green} {msg}")
-                        .unwrap()
-                        .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]),
-                );
-                pb.set_message(format!("Parsing {}", log_path.display()));
-                pb.enable_steady_tick(Duration::from_millis(100));
-                Some(pb)
-            } else {
-                None
-            };
+    let db_clone = db.clone();
+    let insert_task = tokio::spawn(async move {
+        let mut next_id = 1i64;
+        let mut current_file_entries: Vec<ParsedLogEntry> = Vec::new();
 
-            let node_name = extract_node_name(log_path)?;
+        while let Some(job) = rx.recv().await {
+            match job {
+                InsertionTask::EntriesChunk {
+                    node_name,
+                    mut entries,
+                } => {
+                    for (i, entry) in entries.iter_mut().enumerate() {
+                        entry.explicit_id = Some(next_id + i as i64);
+                    }
+                    next_id += entries.len() as i64;
 
-            if let Some(pb) = &file_progress {
-                pb.set_message(format!("Reading {}", log_path.display()));
+                    if let Err(e) =
+                        NodeLogEntry::insert_parsed_entries(&db_clone, &entries, &node_name).await
+                    {
+                        log::error!("Failed to insert entries: {}", e);
+                        return Err(e);
+                    }
+
+                    current_file_entries.extend(entries);
+                }
+                InsertionTask::FileCompletionMarker {
+                    node_name,
+                    file_path,
+                    total_lines,
+                } => {
+                    let file_path_str = file_path.to_string_lossy().to_string();
+                    let file_metadata = extract_file_metadata(
+                        &current_file_entries,
+                        file_path_str,
+                        &node_name,
+                        total_lines as i64,
+                    );
+                    if let Err(e) = FileMetadata::insert_metadata(&db_clone, file_metadata).await {
+                        log::error!("Failed to insert file metadata: {}", e);
+                        return Err(e);
+                    }
+                    current_file_entries.clear();
+                }
             }
+        }
+        Ok(())
+    });
 
-            let file = File::open(log_path).map_err(|e| {
-                CommandRunError::Library(rlqt_lib::Error::Io(IoError::new(
-                    e.kind(),
-                    format!(
-                        "Failed to open log file '{}': {}\n\
-                        \n\
-                        Possible causes:\n\
-                        • File permissions - try: chmod +r {}\n\
-                        • File is locked by another process\n\
-                        • Disk I/O error",
-                        log_path.display(),
-                        e,
-                        log_path.display()
-                    ),
-                )))
-            })?;
-            let reader = BufReader::new(file);
+    for log_path in &log_paths {
+        let file_progress = if !silent {
+            let pb = ProgressBar::new_spinner();
+            pb.set_style(
+                ProgressStyle::default_spinner()
+                    .template("{spinner:.green} {msg}")
+                    .unwrap()
+                    .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]),
+            );
+            pb.set_message(format!("Parsing {}", log_path.display()));
+            pb.enable_steady_tick(Duration::from_millis(100));
+            Some(pb)
+        } else {
+            None
+        };
 
-            if let Some(pb) = &file_progress {
-                pb.set_message(format!("Parsing {}", log_path.display()));
-            }
+        let node_name = extract_node_name(log_path)?;
 
-            let parse_result = parse_log_file(reader)?;
-            let total_lines = parse_result.total_lines;
-            let mut parsed_entries = parse_result.entries;
+        if let Some(pb) = &file_progress {
+            pb.set_message(format!("Reading {}", log_path.display()));
+        }
 
-            if let Some(pb) = &file_progress {
-                pb.set_message(format!("Annotating {} entries", parsed_entries.len()));
-            }
+        let file = File::open(log_path).map_err(|e| {
+            CommandRunError::Library(rlqt_lib::Error::Io(IoError::new(
+                e.kind(),
+                format!("Failed to open log file '{}': {}", log_path.display(), e),
+            )))
+        })?;
+        let reader = BufReader::new(file);
 
-            parsed_entries
+        if let Some(pb) = &file_progress {
+            pb.set_message(format!("Parsing {}", log_path.display()));
+        }
+
+        let parse_result = parse_log_file(reader)?;
+        let total_lines = parse_result.total_lines;
+        let entries = parse_result.entries;
+
+        if let Some(pb) = &file_progress {
+            pb.set_message(format!("Processing {} entries", entries.len()));
+        }
+
+        let chunks: Vec<_> = entries
+            .chunks(PIPELINE_CHUNK_SIZE)
+            .map(|c| c.to_vec())
+            .collect();
+
+        for mut chunk in chunks {
+            chunk
                 .par_iter_mut()
                 .for_each(rlqt_lib::entry_metadata::annotate_entry);
+            chunk.sort_by_key(|e| e.sequence_id);
 
-            parsed_entries.sort_by_key(|e| e.sequence_id);
+            tx.send(InsertionTask::EntriesChunk {
+                node_name: node_name.clone(),
+                entries: chunk,
+            })
+            .await
+            .map_err(|e| {
+                CommandRunError::Library(rlqt_lib::Error::Io(IoError::other(format!(
+                    "Failed to send entries for insertion: {}",
+                    e
+                ))))
+            })?;
+        }
 
-            let doc_urls_count = parsed_entries
-                .iter()
-                .filter(|e| e.doc_url_id.is_some())
-                .count();
-            let issue_urls_count = parsed_entries
-                .iter()
-                .filter(|e| e.resolution_or_discussion_url_id.is_some())
-                .count();
-            log::debug!(
-                "Annotated {} entries with doc URLs, {} entries with issue/SCM URLs",
-                doc_urls_count,
-                issue_urls_count
-            );
-
-            if let Some(pb) = &file_progress {
-                pb.finish_with_message(format!("✓ Parsed {}", log_path.display()));
-            }
-
-            Ok((node_name, parsed_entries, total_lines, log_path.clone()))
+        tx.send(InsertionTask::FileCompletionMarker {
+            node_name: node_name.clone(),
+            file_path: log_path.clone(),
+            total_lines,
         })
-        .collect::<Result<Vec<_>>>()?;
+        .await
+        .map_err(|e| {
+            CommandRunError::Library(rlqt_lib::Error::Io(IoError::other(format!(
+                "Failed to send a file completion marker: {}",
+                e
+            ))))
+        })?;
 
-    let insert_progress = if !silent {
-        let pb = ProgressBar::new(parsed_files.len() as u64);
-        pb.set_style(
-            ProgressStyle::default_bar()
-                .template("{spinner:.green} [{bar:40.cyan/blue}] Inserting entries into database")
-                .unwrap()
-                .progress_chars("#>-"),
-        );
-        Some(pb)
-    } else {
-        None
-    };
-
-    let mut next_id = 1i64;
-    for (node_name, mut parsed_entries, total_lines, log_path) in parsed_files {
-        for (i, entry) in parsed_entries.iter_mut().enumerate() {
-            entry.explicit_id = Some(next_id + i as i64);
-        }
-        next_id += parsed_entries.len() as i64;
-
-        NodeLogEntry::insert_parsed_entries(&db, &parsed_entries, &node_name).await?;
-
-        let file_path_str = log_path.to_string_lossy().to_string();
-        let file_metadata = extract_file_metadata(
-            &parsed_entries,
-            file_path_str,
-            &node_name,
-            total_lines as i64,
-        );
-        FileMetadata::insert_metadata(&db, file_metadata).await?;
-
-        if let Some(pb) = &insert_progress {
-            pb.inc(1);
+        if let Some(pb) = &file_progress {
+            pb.finish_with_message(format!("✓ Parsed {}", log_path.display()));
         }
     }
 
-    if let Some(pb) = insert_progress {
-        pb.finish_with_message("✓ All entries inserted");
-    }
+    drop(tx);
+    insert_task
+        .await
+        .map_err(|e| {
+            CommandRunError::Library(rlqt_lib::Error::Io(IoError::other(format!(
+                "Insertion task panicked: {}",
+                e
+            ))))
+        })?
+        .map_err(|e| CommandRunError::Library(rlqt_lib::Error::Database(e)))?;
 
     let index_progress = if !silent {
         let pb = ProgressBar::new_spinner();
@@ -420,6 +445,7 @@ async fn parse_logs(args: &ArgMatches) -> Result<()> {
     };
 
     post_insertion_operations(&db).await?;
+    finalize_bulk_import(&db).await?;
 
     if let Some(pb) = index_progress {
         pb.finish_with_message("✓ Indexes created");

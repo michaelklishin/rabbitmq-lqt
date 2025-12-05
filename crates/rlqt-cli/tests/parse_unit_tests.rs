@@ -318,3 +318,40 @@ fn parse_multiple_directories_fails_if_one_is_invalid() -> Result<(), Box<dyn Er
 
     Ok(())
 }
+
+#[test]
+fn parse_overwrites_existing_database() -> Result<(), Box<dyn Error>> {
+    let log_path = fixture_log_path();
+    let db_file = NamedTempFile::new()?;
+    let db_path = db_file.path().to_str().unwrap();
+
+    run_succeeds([
+        "logs",
+        "parse",
+        "--input-log-file-path",
+        log_path.to_str().unwrap(),
+        "--output-db-file-path",
+        db_path,
+    ])
+    .stderr(output_includes("465 log entries"));
+
+    let first_size = metadata(db_file.path())?.len();
+
+    run_succeeds([
+        "logs",
+        "parse",
+        "--input-log-file-path",
+        log_path.to_str().unwrap(),
+        "--output-db-file-path",
+        db_path,
+    ])
+    .stderr(output_includes("465 log entries"));
+
+    let second_size = metadata(db_file.path())?.len();
+    assert!(
+        (first_size as i64 - second_size as i64).abs() < 1000,
+        "Database sizes should be comparable after this run"
+    );
+
+    Ok(())
+}

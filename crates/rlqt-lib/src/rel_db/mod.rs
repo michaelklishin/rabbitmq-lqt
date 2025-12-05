@@ -17,17 +17,34 @@ pub mod node_log_entry;
 pub use file_metadata::FileMetadata;
 pub use node_log_entry::{NodeLogEntry, QueryContext};
 
-use crate::entry_metadata::labels::LABEL_NAMES;
 use sea_orm::sea_query::Index;
 use sea_orm::{ConnectionTrait, Database, DatabaseConnection, DbErr, Schema};
 use std::path::Path;
 
 pub async fn create_database(db_path: &Path) -> Result<DatabaseConnection, DbErr> {
+    create_database_with_options(db_path, false).await
+}
+
+/// Create a database optimized for fast bulk import.
+/// Uses synchronous=OFF which is faster but less safe if the system crashes during import.
+/// The database will be consistent after successful completion.
+pub async fn create_database_for_bulk_import(db_path: &Path) -> Result<DatabaseConnection, DbErr> {
+    create_database_with_options(db_path, true).await
+}
+
+async fn create_database_with_options(
+    db_path: &Path,
+    fast_import: bool,
+) -> Result<DatabaseConnection, DbErr> {
     let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
     let db = Database::connect(&db_url).await?;
 
     db.execute_unprepared("PRAGMA journal_mode=WAL;").await?;
-    db.execute_unprepared("PRAGMA synchronous=NORMAL;").await?;
+    if fast_import {
+        db.execute_unprepared("PRAGMA synchronous=OFF;").await?;
+    } else {
+        db.execute_unprepared("PRAGMA synchronous=NORMAL;").await?;
+    }
     db.execute_unprepared("PRAGMA cache_size=10000;").await?;
     db.execute_unprepared("PRAGMA temp_store=MEMORY;").await?;
 
@@ -40,6 +57,14 @@ pub async fn create_database(db_path: &Path) -> Result<DatabaseConnection, DbErr
     db.execute(&create_metadata_table_stmt).await?;
 
     Ok(db)
+}
+
+/// Finalize a database after bulk import by ensuring durability.
+pub async fn finalize_bulk_import(db: &DatabaseConnection) -> Result<(), DbErr> {
+    db.execute_unprepared("PRAGMA synchronous=NORMAL;").await?;
+    db.execute_unprepared("PRAGMA wal_checkpoint(TRUNCATE);")
+        .await?;
+    Ok(())
 }
 
 pub async fn post_insertion_operations(db: &DatabaseConnection) -> Result<(), DbErr> {
@@ -86,17 +111,6 @@ pub async fn post_insertion_operations(db: &DatabaseConnection) -> Result<(), Db
             ],
         ),
     ];
-
-    let json_indices: Vec<String> = LABEL_NAMES
-        .iter()
-        .map(|label| {
-            let index_name = label.replace(':', "_");
-            format!(
-                "CREATE INDEX IF NOT EXISTS idx_label_{} ON node_log_entries(json_extract(labels, '$.{}'))",
-                index_name, label
-            )
-        })
-        .collect();
 
     let url_indices = [
         (
@@ -148,16 +162,6 @@ pub async fn post_insertion_operations(db: &DatabaseConnection) -> Result<(), Db
         }
 
         db.execute(&idx).await?;
-    }
-
-    for idx_sql in json_indices {
-        if let Some(name_start) = idx_sql.find("idx_")
-            && let Some(name_end) = idx_sql[name_start..].find(" ON ")
-        {
-            let name = &idx_sql[name_start..name_start + name_end];
-            log::debug!("Creating index {}", name);
-        }
-        db.execute_unprepared(&idx_sql).await?;
     }
 
     for (name, cols) in url_indices {

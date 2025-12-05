@@ -31,7 +31,8 @@ pub use errors::Error;
 pub use parser::{ParseResult, ParsedLogEntry, parse_log_file};
 pub use rel_db::node_log_entry::Entity as NodeLogEntryEntity;
 pub use rel_db::{
-    NodeLogEntry, QueryContext, create_database, open_database, post_insertion_operations,
+    NodeLogEntry, QueryContext, create_database, create_database_for_bulk_import,
+    finalize_bulk_import, open_database, post_insertion_operations,
 };
 pub use severity::Severity;
 
