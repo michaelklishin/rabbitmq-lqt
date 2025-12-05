@@ -11,13 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-use crate::entry_metadata::labels::LABEL_NAMES;
+use crate::entry_metadata::labels::{LABEL_NAMES, LogEntryLabels};
 use crate::parser::ParsedLogEntry;
 use sea_orm::entity::prelude::*;
-use sea_orm::sea_query::{Expr, ExprTrait};
-use sea_orm::{ActiveValue, Condition, QueryOrder, QuerySelect, TransactionTrait};
+use sea_orm::sea_query::Expr;
+use sea_orm::{ActiveValue, QueryOrder, QuerySelect, TransactionTrait};
 use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value, to_value};
 
 pub type NodeLogEntry = Entity;
 
@@ -152,9 +151,8 @@ pub struct Model {
     /// Log message content (can be multiline)
     pub message: String,
 
-    /// Labels attached to this log entry (stored as JSONB)
-    #[sea_orm(column_type = "JsonBinary")]
-    pub labels: Json,
+    /// Labels attached to this log entry (stored as bitflags in i64)
+    pub labels: i64,
 
     /// ID of related resolution or discussion URL
     pub resolution_or_discussion_url_id: Option<i16>,
@@ -178,23 +176,28 @@ impl Model {
     /// Format labels as a newline-separated list of set labels
     #[inline]
     pub fn format_labels(&self) -> String {
-        if let Some(obj) = self.labels.as_object() {
-            LABEL_NAMES
-                .iter()
-                .filter(|&label| obj.get(*label).and_then(|v| v.as_bool()).unwrap_or(false))
-                .copied()
-                .collect::<Vec<_>>()
-                .join("\n")
-        } else {
-            String::new()
+        let labels = LogEntryLabels::from_bits_i64(self.labels);
+        let mut result = String::new();
+        for (i, label_name) in LABEL_NAMES.iter().enumerate() {
+            if labels.bits() & (1u64 << i) != 0 {
+                if !result.is_empty() {
+                    result.push('\n');
+                }
+                result.push_str(label_name);
+            }
         }
+        result
+    }
+
+    /// Get labels as LogEntryLabels bitflags
+    #[inline]
+    pub fn get_labels(&self) -> LogEntryLabels {
+        LogEntryLabels::from_bits_i64(self.labels)
     }
 }
 
 impl ActiveModel {
     fn from_parsed(entry: &ParsedLogEntry, node: &str) -> Self {
-        let labels_json = to_value(entry.labels).unwrap_or_else(|_| Value::Object(Map::new()));
-
         let id_value = if let Some(explicit_id) = entry.explicit_id {
             ActiveValue::Set(explicit_id)
         } else {
@@ -209,7 +212,7 @@ impl ActiveModel {
             erlang_pid: ActiveValue::Set(entry.process_id.clone()),
             subsystem_id: ActiveValue::Set(entry.subsystem_id),
             message: ActiveValue::Set(entry.message.clone()),
-            labels: ActiveValue::Set(labels_json),
+            labels: ActiveValue::Set(entry.labels.to_bits_i64()),
             resolution_or_discussion_url_id: ActiveValue::Set(
                 entry.resolution_or_discussion_url_id,
             ),
@@ -258,20 +261,35 @@ impl Entity {
         }
 
         if !ctx.labels.is_empty() {
-            let mut label_condition = if ctx.matching_all_labels {
-                Condition::all()
+            if ctx.matching_all_labels {
+                // AND query: all specified labels must be set
+                let mut combined_mask: u64 = 0;
+                for label in &ctx.labels {
+                    if let Some(bit) = LogEntryLabels::bit_for_label(label) {
+                        combined_mask |= bit;
+                    }
+                }
+                if combined_mask != 0 {
+                    query = query.filter(Expr::cust_with_values(
+                        "(labels & ?) = ?",
+                        [combined_mask as i64, combined_mask as i64],
+                    ));
+                }
             } else {
-                Condition::any()
-            };
-            for label in &ctx.labels {
-                if LABEL_NAMES.contains(&label.as_str()) {
-                    let json_path = format!("$.{}", label);
-                    label_condition = label_condition.add(
-                        Expr::cust_with_values("json_extract(labels, ?)", [json_path]).eq(true),
-                    );
+                // OR query: any of the specified labels must be set
+                let mut combined_mask: u64 = 0;
+                for label in &ctx.labels {
+                    if let Some(bit) = LogEntryLabels::bit_for_label(label) {
+                        combined_mask |= bit;
+                    }
+                }
+                if combined_mask != 0 {
+                    query = query.filter(Expr::cust_with_values(
+                        "(labels & ?) != 0",
+                        [combined_mask as i64],
+                    ));
                 }
             }
-            query = query.filter(label_condition);
         }
 
         if ctx.has_resolution_or_discussion_url {

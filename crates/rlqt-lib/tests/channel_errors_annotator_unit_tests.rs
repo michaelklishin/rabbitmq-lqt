@@ -70,5 +70,5 @@ fn test_channel_errors_annotator_annotates_both_labels() {
     let mut labels = LogEntryLabels::default();
     annotator.annotate(&mut labels);
     assert!(labels.contains(LogEntryLabels::CHANNELS));
-    assert!(labels.contains(LogEntryLabels::CHANNEL_EXCEPTIONS));
+    assert!(labels.contains(LogEntryLabels::EXCEPTIONS));
 }

@@ -94,7 +94,7 @@ fn test_stomp_protocol_error_annotator_sets_labels() {
     let mut labels = LogEntryLabels::default();
     annotator.annotate(&mut labels);
     assert!(labels.contains(LogEntryLabels::STOMP));
-    assert!(labels.contains(LogEntryLabels::CHANNEL_EXCEPTIONS));
+    assert!(labels.contains(LogEntryLabels::EXCEPTIONS));
 }
 
 #[test]

@@ -665,8 +665,8 @@ async fn test_query_with_unlabelled_filter() {
     let ctx = QueryContext::default().add_label("unlabelled");
     let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
     assert_eq!(results.len(), 2);
-    assert_eq!(results[0].labels["unlabelled"], true);
-    assert_eq!(results[1].labels["unlabelled"], true);
+    assert!(results[0].get_labels().contains(LogEntryLabels::UNLABELLED));
+    assert!(results[1].get_labels().contains(LogEntryLabels::UNLABELLED));
 }
 
 #[tokio::test]
@@ -710,8 +710,8 @@ async fn test_query_excluding_unlabelled() {
     let ctx = QueryContext::default().add_label("elections");
     let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
     assert_eq!(results.len(), 1);
-    assert_eq!(results[0].labels["elections"], true);
-    assert_eq!(results[0].labels.get("unlabelled"), None);
+    assert!(results[0].get_labels().contains(LogEntryLabels::ELECTIONS));
+    assert!(!results[0].get_labels().contains(LogEntryLabels::UNLABELLED));
 }
 
 #[tokio::test]
@@ -774,13 +774,13 @@ async fn test_end_to_end_unlabelled_annotation() {
     let ctx = QueryContext::default().add_label("unlabelled");
     let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
     assert_eq!(results.len(), 2, "Should find 2 unlabelled entries");
-    assert_eq!(results[0].labels["unlabelled"], true);
-    assert_eq!(results[1].labels["unlabelled"], true);
+    assert!(results[0].get_labels().contains(LogEntryLabels::UNLABELLED));
+    assert!(results[1].get_labels().contains(LogEntryLabels::UNLABELLED));
 
     let ctx = QueryContext::default().add_label("access_control");
     let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
     assert_eq!(results.len(), 1, "Should find 1 access_control entry");
-    assert_eq!(results[0].labels.get("unlabelled"), None);
+    assert!(!results[0].get_labels().contains(LogEntryLabels::UNLABELLED));
 }
 
 #[tokio::test]

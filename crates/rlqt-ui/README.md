@@ -1,46 +1,42 @@
 # RabbitMQ Log Query Tools - Web UI
 
-A modern web interface for querying and analyzing RabbitMQ log files
+This is a Web equivalent of the `logs query` command.
+
+It includes a React-based frontend that's embedded into the `rabbitmq-lqt` binary
+at compile time.
+
+## Running
+
+First, make sure to parse and annotate a set of log files using `rabbitmq-lqt logs parse`.
+It will produce a database file that is used by this UI as the data source.
+
+Then start an API server:
+
+```bash
+rabbitmq-lqt web serve --input-db-file-path /path/to/logs.db
+```
+
+The web UI will be available at http://127.0.0.1:15692
 
 ## Building
 
-### Backend (Rust)
+### Full Build
+
+The frontend is automatically rebuilt by `cargo build` (using a custom `build.rs`) when relevant files change:
 
 ```bash
-cargo build --package rlqt-ui
+cargo build --package rlqt-cli
 ```
 
-### Frontend (React)
+### Frontend Only
+
+To rebuild just the frontend assets:
 
 ```bash
 cd crates/rlqt-ui/frontend
 npm install
 npm run build
 ```
-
-## Running
-
-First, ensure you have a parsed SQLite database (created using `rabbitmq-lqt logs parse`)
-
-Then start the web server:
-
-```bash
-cargo run --package rlqt-ui -- web serve --input-db-file-path /path/to/logs.db
-```
-
-Or using the built binary:
-
-```bash
-./target/debug/rlqt-ui web serve --input-db-file-path /path/to/logs.db
-```
-
-The web UI will be available at http://127.0.0.1:15692
-
-## Options
-
-- `--input-db-file-path`: Path to the SQLite database file (required)
-- `--host`: Host address to bind to (default: 127.0.0.1)
-- `--port` / `-p`: Port to listen on (default: 15692)
 
 ## Development
 
@@ -51,4 +47,4 @@ cd crates/rlqt-ui/frontend
 npm run dev
 ```
 
-This will start a Vite dev server on port 5173 that proxies API requests to the backend
+This will start a Vite dev server on port 5173 that proxies API requests to the backend.

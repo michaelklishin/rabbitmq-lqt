@@ -19,6 +19,7 @@ use axum::extract::{Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use chrono::{DateTime, Utc};
+use rlqt_lib::entry_metadata::labels::LABEL_NAMES;
 use rlqt_lib::rel_db::node_log_entry::Model;
 use rlqt_lib::{NodeLogEntry, QueryContext};
 use serde::{Deserialize, Serialize};
@@ -62,13 +63,13 @@ pub struct LogEntry {
 
 impl From<Model> for LogEntry {
     fn from(model: Model) -> Self {
-        let labels = if let Some(obj) = model.labels.as_object() {
-            obj.iter()
-                .filter_map(|(k, v)| v.as_bool().filter(|&b| b).map(|b| (k.clone(), b)))
-                .collect()
-        } else {
-            HashMap::new()
-        };
+        let label_bits = model.labels as u64;
+        let mut labels = HashMap::new();
+        for (i, label_name) in LABEL_NAMES.iter().enumerate() {
+            if label_bits & (1u64 << i) != 0 {
+                labels.insert(label_name.to_string(), true);
+            }
+        }
 
         let subsystem = model
             .subsystem_id

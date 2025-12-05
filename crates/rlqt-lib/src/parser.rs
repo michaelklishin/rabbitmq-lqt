@@ -184,6 +184,7 @@ fn parse_log_entry(input: &str) -> IResult<&str, ParsedLogEntry> {
     ))
 }
 
+#[inline]
 fn parse_date(input: &str) -> IResult<&str, (i32, u32, u32)> {
     let (input, year) = map_res(digit1, |s: &str| s.parse::<i32>()).parse(input)?;
     let (input, _) = char('-').parse(input)?;
@@ -193,6 +194,7 @@ fn parse_date(input: &str) -> IResult<&str, (i32, u32, u32)> {
     Ok((input, (year, month, day)))
 }
 
+#[inline]
 fn parse_time(input: &str) -> IResult<&str, (u32, u32, u32, u32)> {
     let (input, hour) = map_res(digit1, |s: &str| s.parse::<u32>()).parse(input)?;
     let (input, _) = char(':').parse(input)?;
@@ -204,6 +206,7 @@ fn parse_time(input: &str) -> IResult<&str, (u32, u32, u32, u32)> {
     Ok((input, (hour, minute, second, microseconds)))
 }
 
+#[inline]
 fn parse_timezone(input: &str) -> IResult<&str, i32> {
     let (input, tz_sign) = alt((char('+'), char('-'))).parse(input)?;
     let (input, tz_hour) = map_res(digit1, |s: &str| s.parse::<i32>()).parse(input)?;
@@ -217,6 +220,7 @@ fn nom_verify_error() -> NomErr<NomError<&'static str>> {
     NomErr::Error(NomError::new("", ErrorKind::Verify))
 }
 
+#[inline]
 fn build_datetime(
     date: (i32, u32, u32),
     time: (u32, u32, u32, u32),
@@ -242,6 +246,7 @@ fn build_datetime(
     Ok(dt.to_utc())
 }
 
+#[inline]
 fn parse_timestamp(input: &str) -> IResult<&str, DateTime<Utc>> {
     let (input, date) = parse_date(input)?;
     let (input, _) = space1.parse(input)?;

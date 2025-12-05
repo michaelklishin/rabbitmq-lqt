@@ -16,35 +16,42 @@ mod test_helpers;
 
 use rlqt_lib::Severity;
 use rlqt_lib::entry_metadata::Annotator;
-use rlqt_lib::entry_metadata::label_annotators::{ChannelExceptionsAnnotator, LabelAnnotator};
+use rlqt_lib::entry_metadata::label_annotators::{ExceptionsAnnotator, LabelAnnotator};
 use rlqt_lib::entry_metadata::labels::LogEntryLabels;
 use test_helpers::create_test_entry;
 
 #[test]
-fn test_channel_exceptions_annotator_matches() {
+fn test_exceptions_annotator_matches_channel_error() {
     let entry = create_test_entry("Channel error on connection <0.456.0>", Severity::Info);
-    let annotator = ChannelExceptionsAnnotator;
+    let annotator = ExceptionsAnnotator;
     assert!(annotator.does_match(&entry));
 }
 
 #[test]
-fn test_channel_exceptions_annotator_matches_case_insensitive() {
+fn test_exceptions_annotator_matches_channel_error_case_insensitive() {
     let entry = create_test_entry("CHANNEL ERROR ON CONNECTION <0.456.0>", Severity::Info);
-    let annotator = ChannelExceptionsAnnotator;
+    let annotator = ExceptionsAnnotator;
     assert!(annotator.does_match(&entry));
 }
 
 #[test]
-fn test_channel_exceptions_annotator_no_match() {
+fn test_exceptions_annotator_matches_amqp_connection_error() {
+    let entry = create_test_entry("Error on AMQP connection <0.456.0>", Severity::Info);
+    let annotator = ExceptionsAnnotator;
+    assert!(annotator.does_match(&entry));
+}
+
+#[test]
+fn test_exceptions_annotator_no_match() {
     let entry = create_test_entry("Unrelated message", Severity::Info);
-    let annotator = ChannelExceptionsAnnotator;
+    let annotator = ExceptionsAnnotator;
     assert!(!annotator.does_match(&entry));
 }
 
 #[test]
-fn test_channel_exceptions_annotator_annotates() {
-    let annotator = ChannelExceptionsAnnotator;
+fn test_exceptions_annotator_annotates() {
+    let annotator = ExceptionsAnnotator;
     let mut labels = LogEntryLabels::default();
     annotator.annotate(&mut labels);
-    assert!(labels.contains(LogEntryLabels::CHANNEL_EXCEPTIONS));
+    assert!(labels.contains(LogEntryLabels::EXCEPTIONS));
 }

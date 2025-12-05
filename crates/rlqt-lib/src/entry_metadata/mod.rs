@@ -23,8 +23,8 @@ pub mod subsystems;
 pub use annotator::Annotator;
 pub use doc_url_annotators::annotate_doc_urls;
 pub use label_annotators::{
-    AccessControlAnnotator, AutoDeleteAnnotator, ChannelExceptionsAnnotator, ConnectionsAnnotator,
-    DeleteAnnotator, ElectionsAnnotator, ErlProcessCrashAnnotator, ExclusiveAnnotator,
+    AccessControlAnnotator, AutoDeleteAnnotator, ConnectionsAnnotator, DeleteAnnotator,
+    ElectionsAnnotator, ErlProcessCrashAnnotator, ExceptionsAnnotator, ExclusiveAnnotator,
     FederationAnnotator, LabelAnnotator, ProcessStopsAnnotator, QueueFederationAnnotator,
     QueuesAnnotator, RaftBasedAnnotator, ShovelsAnnotator, UndefinedFnAnnotator,
     VirtualHostsAnnotator, annotate_labels,

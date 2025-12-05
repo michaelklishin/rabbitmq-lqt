@@ -95,7 +95,6 @@ impl Annotator for BootAnnotator {
             || msg_lower.starts_with("home dir")
             || msg_lower.contains("internal cluster id")
             || msg_lower.contains("boot state")
-            || msg_lower.starts_with("logging: configured log handlers")
             || msg_lower.starts_with("fhc read buffering")
             || msg_lower.starts_with("fhc write buffering")
             || msg_lower.starts_with("== boot steps")
@@ -112,6 +111,17 @@ impl Annotator for BootAnnotator {
             || msg_lower.starts_with("'networking' boot step skipped")
             || msg_lower.starts_with("will use") && msg_lower.contains("processes for")
             || msg_lower.starts_with("starting worker pool")
+            || msg_lower.starts_with("time to start rabbitmq:")
+            || msg_lower.starts_with("register 'rabbit' process")
+            || msg_lower.starts_with("will seed default virtual host and user")
+            || msg_lower.starts_with("will not seed default virtual host and user")
+            || msg_lower.starts_with("will use module")
+                && msg_lower.contains("to import definitions")
+            || msg_lower.starts_with("will try to load definitions from")
+            || msg_lower.contains("there are fewer than target cluster size")
+            || msg_lower.starts_with("applying definitions from file")
+            || msg_lower.contains("[rabbit_quorum_queue:system_recover/1] rabbit not booted")
+            || msg_lower.starts_with("running rabbit_prelaunch:shutdown_func()")
     }
 }
 
@@ -149,7 +159,9 @@ pub struct PeerDiscoveryAnnotator;
 
 impl Annotator for PeerDiscoveryAnnotator {
     fn does_match(&self, entry: &ParsedLogEntry) -> bool {
-        entry.message_lowercased.starts_with("peer discovery:")
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.starts_with("peer discovery:")
+            || msg_lower.starts_with("classic peer discovery backend:")
     }
 }
 
@@ -184,6 +196,20 @@ impl Annotator for AccessControlAnnotator {
             || msg_lower.contains("successfully set permissions for user")
             || msg_lower.contains("asked to set permissions for user")
             || msg_lower.contains("sasl_not_supported")
+            || msg_lower.contains("successfully set user tags for user")
+            || msg_lower.contains("successfully cleared permissions for user")
+            || msg_lower.contains("successfully cleared topic permissions")
+            || msg_lower.contains("successfully set topic permissions")
+            || msg_lower.contains("successfully changed password for user")
+            || msg_lower.contains("clearing password for user")
+            || msg_lower.contains("failed to add user")
+            || msg_lower.contains("failed to delete user")
+            || msg_lower.contains("failed to change password for user")
+            || msg_lower.contains("failed to set tags for user")
+            || msg_lower.contains("failed to set permissions for user")
+            || msg_lower.contains("failed to clear permissions for user")
+            || msg_lower.starts_with("created user")
+            || msg_lower.starts_with("deleted user")
     }
 }
 
@@ -230,17 +256,17 @@ impl SubsystemAnnotator for ConnectionsAnnotator {
 }
 
 #[derive(Debug)]
-pub struct ShovelPluginAnnotator;
+pub struct ShovelsAnnotator;
 
-impl Annotator for ShovelPluginAnnotator {
+impl Annotator for ShovelsAnnotator {
     fn does_match(&self, entry: &ParsedLogEntry) -> bool {
         matches_shovels(&entry.message_lowercased)
     }
 }
 
-impl SubsystemAnnotator for ShovelPluginAnnotator {
+impl SubsystemAnnotator for ShovelsAnnotator {
     fn annotate(&self, entry: &mut ParsedLogEntry) {
-        entry.subsystem_id = Some(Subsystem::ShovelPlugin.to_id());
+        entry.subsystem_id = Some(Subsystem::Shovels.to_id());
     }
 }
 
@@ -279,9 +305,11 @@ pub struct RuntimeParametersAnnotator;
 
 impl Annotator for RuntimeParametersAnnotator {
     fn does_match(&self, entry: &ParsedLogEntry) -> bool {
-        entry
-            .message_lowercased
-            .contains("asked to set or update runtime parameter")
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.contains("asked to set or update runtime parameter")
+            || msg_lower.contains("setting global parameter")
+            || msg_lower.contains("importing sequentially")
+                && msg_lower.contains("global runtime parameters")
     }
 }
 
@@ -292,24 +320,24 @@ impl SubsystemAnnotator for RuntimeParametersAnnotator {
 }
 
 #[derive(Debug)]
-pub struct FederationPluginAnnotator;
+pub struct FederationAnnotator;
 
-impl Annotator for FederationPluginAnnotator {
+impl Annotator for FederationAnnotator {
     fn does_match(&self, entry: &ParsedLogEntry) -> bool {
         matches_federation(&entry.message_lowercased)
     }
 }
 
-impl SubsystemAnnotator for FederationPluginAnnotator {
+impl SubsystemAnnotator for FederationAnnotator {
     fn annotate(&self, entry: &mut ParsedLogEntry) {
-        entry.subsystem_id = Some(Subsystem::FederationPlugin.to_id());
+        entry.subsystem_id = Some(Subsystem::Federation.to_id());
     }
 }
 
 #[derive(Debug)]
-pub struct MqttPluginAnnotator;
+pub struct MqttAnnotator;
 
-impl Annotator for MqttPluginAnnotator {
+impl Annotator for MqttAnnotator {
     fn does_match(&self, entry: &ParsedLogEntry) -> bool {
         entry
             .message_lowercased
@@ -317,9 +345,9 @@ impl Annotator for MqttPluginAnnotator {
     }
 }
 
-impl SubsystemAnnotator for MqttPluginAnnotator {
+impl SubsystemAnnotator for MqttAnnotator {
     fn annotate(&self, entry: &mut ParsedLogEntry) {
-        entry.subsystem_id = Some(Subsystem::MqttPlugin.to_id());
+        entry.subsystem_id = Some(Subsystem::Mqtt.to_id());
     }
 }
 
@@ -406,10 +434,124 @@ impl SubsystemAnnotator for ChannelsAnnotator {
     }
 }
 
+#[derive(Debug)]
+pub struct ShutdownSubsystemAnnotator;
+
+impl Annotator for ShutdownSubsystemAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.starts_with("rabbitmq is asked to stop")
+            || msg_lower.starts_with("successfully stopped rabbitmq")
+    }
+}
+
+impl SubsystemAnnotator for ShutdownSubsystemAnnotator {
+    fn annotate(&self, entry: &mut ParsedLogEntry) {
+        entry.subsystem_id = Some(Subsystem::Shutdown.to_id());
+    }
+}
+
+#[derive(Debug)]
+pub struct ClusteringSubsystemAnnotator;
+
+impl Annotator for ClusteringSubsystemAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.starts_with("autoheal:")
+            || msg_lower.starts_with("autoheal request")
+            || msg_lower.starts_with("autoheal finished")
+    }
+}
+
+impl SubsystemAnnotator for ClusteringSubsystemAnnotator {
+    fn annotate(&self, entry: &mut ParsedLogEntry) {
+        entry.subsystem_id = Some(Subsystem::Clustering.to_id());
+    }
+}
+
+#[derive(Debug)]
+pub struct LimitsSubsystemAnnotator;
+
+impl Annotator for LimitsSubsystemAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        (msg_lower.contains("alarm")
+            && (msg_lower.contains(" set") || msg_lower.contains(" cleared")))
+            || msg_lower.contains("resource limit alarm")
+            || msg_lower.contains("file descriptor limit alarm")
+    }
+}
+
+impl SubsystemAnnotator for LimitsSubsystemAnnotator {
+    fn annotate(&self, entry: &mut ParsedLogEntry) {
+        entry.subsystem_id = Some(Subsystem::Limits.to_id());
+    }
+}
+
+#[derive(Debug)]
+pub struct LoggingSubsystemAnnotator;
+
+impl Annotator for LoggingSubsystemAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.starts_with("logging: configured log handlers")
+    }
+}
+
+impl SubsystemAnnotator for LoggingSubsystemAnnotator {
+    fn annotate(&self, entry: &mut ParsedLogEntry) {
+        entry.subsystem_id = Some(Subsystem::Logging.to_id());
+    }
+}
+
+#[derive(Debug)]
+pub struct StreamsSubsystemAnnotator;
+
+impl Annotator for StreamsSubsystemAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.contains("osiris") || msg_lower.starts_with("stream:")
+    }
+}
+
+impl SubsystemAnnotator for StreamsSubsystemAnnotator {
+    fn annotate(&self, entry: &mut ParsedLogEntry) {
+        entry.subsystem_id = Some(Subsystem::Streams.to_id());
+    }
+}
+
+#[derive(Debug)]
+pub struct QueuesSubsystemAnnotator;
+
+impl Annotator for QueuesSubsystemAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.starts_with("will remove all queues from node")
+            || msg_lower.contains("queue rebalance")
+            || msg_lower.contains("starting queue rebalance")
+            || msg_lower.contains("finished queue rebalance")
+            || msg_lower.contains("migrating queue")
+            || msg_lower.contains("error migrating queue")
+            || (msg_lower.contains("queue") && msg_lower.contains("migrated to"))
+    }
+}
+
+impl SubsystemAnnotator for QueuesSubsystemAnnotator {
+    fn annotate(&self, entry: &mut ParsedLogEntry) {
+        entry.subsystem_id = Some(Subsystem::Queues.to_id());
+    }
+}
+
 #[inline]
 pub fn annotate_subsystems(entry: &mut ParsedLogEntry) -> &mut ParsedLogEntry {
     const ANNOTATORS: &[&dyn SubsystemAnnotator] = &[
         &MaintenanceModeAnnotator,
+        &ShutdownSubsystemAnnotator,
+        &LimitsSubsystemAnnotator,
+        &ClusteringSubsystemAnnotator,
+        &LoggingSubsystemAnnotator,
+        &StreamsSubsystemAnnotator,
+        &QueuesSubsystemAnnotator,
         &MetadataStoreAnnotator,
         &FeatureFlagsAnnotator,
         &BootAnnotator,
@@ -418,12 +560,12 @@ pub fn annotate_subsystems(entry: &mut ParsedLogEntry) -> &mut ParsedLogEntry {
         &PluginsAnnotator,
         &AccessControlAnnotator,
         &ConnectionsAnnotator,
-        &ShovelPluginAnnotator,
+        &ShovelsAnnotator,
         &ClassicQueuesAnnotator,
         &VirtualHostsAnnotator,
         &RuntimeParametersAnnotator,
-        &FederationPluginAnnotator,
-        &MqttPluginAnnotator,
+        &FederationAnnotator,
+        &MqttAnnotator,
         &PoliciesSubsystemAnnotator,
         &ErlangOtpAnnotator,
         &ExchangesAnnotator,

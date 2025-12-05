@@ -173,15 +173,15 @@ fn logs_subcommands() -> Vec<Command> {
             Arg::new("subsystem")
                 .long("subsystem")
                 .value_name("SUBSYSTEM")
-                .value_parser(["metadata_store", "feature_flags", "boot", "raft", "peer_discovery", "plugins", "access_control", "connections", "shovel_plugin", "classic_queues", "virtual_hosts", "runtime_parameters", "federation_plugin", "mqtt_plugin", "policies", "maintenance_mode", "erlang_otp", "exchanges", "channels"])
-                .help("Filter by subsystem (e.g., metadata_store, feature_flags, boot, raft, peer_discovery, plugins, access_control, connections, shovel_plugin, classic_queues, virtual_hosts, runtime_parameters, federation_plugin, mqtt_plugin, policies, maintenance_mode, erlang_otp, exchanges, channels)"),
+                .value_parser(["access_control", "boot", "channels", "classic_queues", "clustering", "connections", "erlang_otp", "exchanges", "feature_flags", "federation", "limits", "logging", "maintenance_mode", "metadata_store", "mqtt", "peer_discovery", "plugins", "policies", "queues", "raft", "runtime_parameters", "shovels", "shutdown", "streams", "virtual_hosts"])
+                .help("Filter by subsystem"),
         )
         .arg(
             Arg::new("label")
                 .long("label")
                 .value_name("LABEL")
                 .action(ArgAction::Append)
-                .value_parser(["unlabelled", "erl_process_crash", "undefined_fn", "process_stops", "raft", "elections", "election", "queues", "auto_delete", "exclusive", "channel_exceptions", "delete", "queue_federation", "virtual_hosts", "connections", "access_control", "shovels", "cq_stores", "disconnects", "federation", "deletion_protection", "multiline", "streams", "limits", "worker_pool", "peer_discovery:classic", "plugins", "exchanges", "wal", "handshake", "startup_banner", "channels", "shutdown", "definitions", "feature_flags", "stomp", "websockets", "mqtt", "clustering", "metrics", "tls", "quorum_queues", "networking", "classic_queues", "policies", "timeouts", "consumers", "deprecated_features", "maintenance_mode", "khepri", "runtime_parameters", "http"])
+                .value_parser(["access_control", "amqp1_0", "auto_delete", "channels", "classic_queues", "clustering", "connections", "consumers", "cq_stores", "definitions", "delete", "deletion_protection", "deprecated_features", "disconnects", "election", "elections", "erl_process_crash", "exceptions", "exchanges", "exclusive", "feature_flags", "federation", "handshake", "http", "khepri", "limits", "maintenance_mode", "metrics", "mqtt", "multiline", "networking", "peer_discovery:classic", "plugins", "policies", "process_stops", "queue_federation", "queues", "quorum_queues", "raft", "runtime_parameters", "sessions", "shovels", "shutdown", "startup_banner", "stomp", "streams", "timeouts", "tls", "undefined_fn", "unlabelled", "virtual_hosts", "wal", "websockets", "worker_pool"])
                 .help("Filter by label (can be specified multiple times). Matches entries with ANY of the specified labels set to true. Note: 'election' is an alias for 'elections', and 'unlabelled' matches entries with no labels."),
         )
         .arg(

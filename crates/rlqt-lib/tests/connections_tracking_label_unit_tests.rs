@@ -40,7 +40,7 @@ fn test_setting_up_per_vhost_connection_table() {
     let labels = annotate_labels(&entry);
     assert!(labels.contains(LogEntryLabels::CONNECTIONS));
     assert!(!labels.contains(LogEntryLabels::CHANNELS));
-    assert!(!labels.contains(LogEntryLabels::ACCESS_CONTROL));
+    assert!(labels.contains(LogEntryLabels::VIRTUAL_HOSTS));
 }
 
 #[test]
@@ -52,5 +52,5 @@ fn test_setting_up_per_user_connection_table() {
     let labels = annotate_labels(&entry);
     assert!(labels.contains(LogEntryLabels::CONNECTIONS));
     assert!(!labels.contains(LogEntryLabels::CHANNELS));
-    assert!(!labels.contains(LogEntryLabels::ACCESS_CONTROL));
+    assert!(labels.contains(LogEntryLabels::ACCESS_CONTROL));
 }

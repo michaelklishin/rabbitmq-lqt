@@ -16,23 +16,21 @@ mod test_helpers;
 
 use rlqt_lib::Severity;
 use rlqt_lib::entry_metadata::Annotator;
-use rlqt_lib::entry_metadata::subsystem_annotators::{
-    FederationPluginAnnotator, SubsystemAnnotator,
-};
+use rlqt_lib::entry_metadata::subsystem_annotators::{FederationAnnotator, SubsystemAnnotator};
 use rlqt_lib::entry_metadata::subsystems::Subsystem;
 use test_helpers::create_test_entry;
 
 #[test]
 fn test_federation_queue() {
     let entry = create_test_entry("Started federation queue 'my-queue'", Severity::Info);
-    let annotator = FederationPluginAnnotator;
+    let annotator = FederationAnnotator;
     assert!(annotator.does_match(&entry));
 }
 
 #[test]
 fn test_disconnecting_from_queue() {
     let entry = create_test_entry("Disconnecting from queue 'test-queue'", Severity::Info);
-    let annotator = FederationPluginAnnotator;
+    let annotator = FederationAnnotator;
     assert!(annotator.does_match(&entry));
 }
 
@@ -42,7 +40,7 @@ fn test_federation_upstream_component() {
         "Asked to start a dynamic shovel for component 'federation-upstream'",
         Severity::Info,
     );
-    let annotator = FederationPluginAnnotator;
+    let annotator = FederationAnnotator;
     assert!(annotator.does_match(&entry));
 }
 
@@ -52,24 +50,21 @@ fn test_federation_upstream_component_case_insensitive() {
         "CONFIGURATION FOR COMPONENT 'FEDERATION-UPSTREAM'",
         Severity::Info,
     );
-    let annotator = FederationPluginAnnotator;
+    let annotator = FederationAnnotator;
     assert!(annotator.does_match(&entry));
 }
 
 #[test]
 fn test_no_match_unrelated() {
     let entry = create_test_entry("Queue created successfully", Severity::Info);
-    let annotator = FederationPluginAnnotator;
+    let annotator = FederationAnnotator;
     assert!(!annotator.does_match(&entry));
 }
 
 #[test]
 fn test_annotate_sets_subsystem() {
     let mut entry = create_test_entry("federation queue started", Severity::Info);
-    let annotator = FederationPluginAnnotator;
+    let annotator = FederationAnnotator;
     annotator.annotate(&mut entry);
-    assert_eq!(
-        entry.subsystem_id,
-        Some(Subsystem::FederationPlugin.to_id())
-    );
+    assert_eq!(entry.subsystem_id, Some(Subsystem::Federation.to_id()));
 }

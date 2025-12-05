@@ -2,7 +2,14 @@
 
 ## 0.12.0 (in development)
 
-No changes yet.
+### Enhancements
+
+ * Annotations for close to 200 new log entry types
+ * New subsystems, labels
+ * Labels are now stored using a bit set, improving `parse logs` performance by 20-25% for
+   several example log files of different sizes
+ * Improved annotator test coverage for negative cases
+
 
 
 ## 0.11.0 (Dec 2, 2025)

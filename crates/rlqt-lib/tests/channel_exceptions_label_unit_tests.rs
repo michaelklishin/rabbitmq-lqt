@@ -23,14 +23,14 @@ use test_helpers::create_test_entry;
 fn test_channel_error() {
     let entry = create_test_entry("Channel error on connection <0.123.0>", Severity::Info);
     let labels = annotate_labels(&entry);
-    assert!(labels.contains(LogEntryLabels::CHANNEL_EXCEPTIONS));
+    assert!(labels.contains(LogEntryLabels::EXCEPTIONS));
 }
 
 #[test]
 fn test_channel_error_case_insensitive() {
     let entry = create_test_entry("channel error on connection <0.456.0>", Severity::Info);
     let labels = annotate_labels(&entry);
-    assert!(labels.contains(LogEntryLabels::CHANNEL_EXCEPTIONS));
+    assert!(labels.contains(LogEntryLabels::EXCEPTIONS));
 }
 
 #[test]
@@ -40,12 +40,12 @@ fn test_channel_error_in_longer_message() {
         Severity::Info,
     );
     let labels = annotate_labels(&entry);
-    assert!(labels.contains(LogEntryLabels::CHANNEL_EXCEPTIONS));
+    assert!(labels.contains(LogEntryLabels::EXCEPTIONS));
 }
 
 #[test]
 fn test_no_match_different_error() {
     let entry = create_test_entry("Connection error occurred", Severity::Info);
     let labels = annotate_labels(&entry);
-    assert!(!labels.contains(LogEntryLabels::CHANNEL_EXCEPTIONS));
+    assert!(!labels.contains(LogEntryLabels::EXCEPTIONS));
 }

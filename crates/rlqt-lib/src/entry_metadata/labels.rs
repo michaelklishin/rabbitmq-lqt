@@ -27,7 +27,7 @@ pub const LABEL_ELECTIONS: &str = "elections";
 pub const LABEL_QUEUES: &str = "queues";
 pub const LABEL_AUTO_DELETE: &str = "auto_delete";
 pub const LABEL_EXCLUSIVE: &str = "exclusive";
-pub const LABEL_CHANNEL_EXCEPTIONS: &str = "channel_exceptions";
+pub const LABEL_EXCEPTIONS: &str = "exceptions";
 pub const LABEL_DELETE: &str = "delete";
 pub const LABEL_QUEUE_FEDERATION: &str = "queue_federation";
 pub const LABEL_VIRTUAL_HOSTS: &str = "virtual_hosts";
@@ -67,8 +67,10 @@ pub const LABEL_MAINTENANCE_MODE: &str = "maintenance_mode";
 pub const LABEL_KHEPRI: &str = "khepri";
 pub const LABEL_RUNTIME_PARAMETERS: &str = "runtime_parameters";
 pub const LABEL_HTTP: &str = "http";
+pub const LABEL_SESSIONS: &str = "sessions";
+pub const LABEL_AMQP10: &str = "amqp1_0";
 
-/// Array of all label names in the order they're defined
+/// Array of all label names in the order they were defined
 pub const LABEL_NAMES: &[&str] = &[
     LABEL_UNLABELLED,
     LABEL_ERL_PROCESS_CRASH,
@@ -79,7 +81,7 @@ pub const LABEL_NAMES: &[&str] = &[
     LABEL_QUEUES,
     LABEL_AUTO_DELETE,
     LABEL_EXCLUSIVE,
-    LABEL_CHANNEL_EXCEPTIONS,
+    LABEL_EXCEPTIONS,
     LABEL_DELETE,
     LABEL_QUEUE_FEDERATION,
     LABEL_VIRTUAL_HOSTS,
@@ -119,8 +121,12 @@ pub const LABEL_NAMES: &[&str] = &[
     LABEL_KHEPRI,
     LABEL_RUNTIME_PARAMETERS,
     LABEL_HTTP,
+    LABEL_SESSIONS,
+    LABEL_AMQP10,
 ];
 
+// Given that a parsed dataset can have 100s of thousands or millions of labels,
+// they are stored using a bitflags representation for efficiency.
 bitflags! {
     #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
     pub struct LogEntryLabels: u64 {
@@ -133,7 +139,7 @@ bitflags! {
         const QUEUES              = 1 << 6;
         const AUTO_DELETE         = 1 << 7;
         const EXCLUSIVE           = 1 << 8;
-        const CHANNEL_EXCEPTIONS  = 1 << 9;
+        const EXCEPTIONS          = 1 << 9;
         const DELETE              = 1 << 10;
         const QUEUE_FEDERATION    = 1 << 11;
         const VIRTUAL_HOSTS       = 1 << 12;
@@ -173,6 +179,8 @@ bitflags! {
         const KHEPRI              = 1 << 46;
         const RUNTIME_PARAMETERS  = 1 << 47;
         const HTTP                = 1 << 48;
+        const SESSIONS            = 1 << 49;
+        const AMQP10              = 1 << 50;
     }
 }
 
@@ -180,6 +188,77 @@ impl LogEntryLabels {
     #[inline]
     pub fn merge(&mut self, other: Self) {
         *self |= other;
+    }
+
+    /// Convert to a bitflag value for storage
+    #[inline]
+    pub fn to_bits_i64(self) -> i64 {
+        self.bits() as i64
+    }
+
+    /// Instantiate from a stored bitflag value
+    #[inline]
+    pub fn from_bits_i64(bits: i64) -> Self {
+        Self::from_bits_truncate(bits as u64)
+    }
+
+    /// Convert label name to its bit position
+    #[inline]
+    pub fn bit_for_label(label: &str) -> Option<u64> {
+        match label {
+            LABEL_UNLABELLED => Some(1 << 0),
+            LABEL_ERL_PROCESS_CRASH => Some(1 << 1),
+            LABEL_UNDEFINED_FN => Some(1 << 2),
+            LABEL_PROCESS_STOPS => Some(1 << 3),
+            LABEL_RAFT => Some(1 << 4),
+            LABEL_ELECTIONS => Some(1 << 5),
+            LABEL_QUEUES => Some(1 << 6),
+            LABEL_AUTO_DELETE => Some(1 << 7),
+            LABEL_EXCLUSIVE => Some(1 << 8),
+            LABEL_EXCEPTIONS => Some(1 << 9),
+            LABEL_DELETE => Some(1 << 10),
+            LABEL_QUEUE_FEDERATION => Some(1 << 11),
+            LABEL_VIRTUAL_HOSTS => Some(1 << 12),
+            LABEL_CONNECTIONS => Some(1 << 13),
+            LABEL_ACCESS_CONTROL => Some(1 << 14),
+            LABEL_SHOVELS => Some(1 << 15),
+            LABEL_CQ_STORES => Some(1 << 16),
+            LABEL_DISCONNECTS => Some(1 << 17),
+            LABEL_FEDERATION => Some(1 << 18),
+            LABEL_DELETION_PROTECTION => Some(1 << 19),
+            LABEL_MULTILINE => Some(1 << 20),
+            LABEL_STREAMS => Some(1 << 21),
+            LABEL_LIMITS => Some(1 << 22),
+            LABEL_WORKER_POOL => Some(1 << 23),
+            LABEL_PEER_DISCOVERY_CLASSIC => Some(1 << 24),
+            LABEL_PLUGINS => Some(1 << 25),
+            LABEL_EXCHANGES => Some(1 << 26),
+            LABEL_STARTUP_BANNER => Some(1 << 27),
+            LABEL_CHANNELS => Some(1 << 28),
+            LABEL_SHUTDOWN => Some(1 << 29),
+            LABEL_DEFINITIONS => Some(1 << 30),
+            LABEL_FEATURE_FLAGS => Some(1 << 31),
+            LABEL_STOMP => Some(1 << 32),
+            LABEL_WEBSOCKETS => Some(1 << 33),
+            LABEL_MQTT => Some(1 << 34),
+            LABEL_CLUSTERING => Some(1 << 35),
+            LABEL_METRICS => Some(1 << 36),
+            LABEL_TLS => Some(1 << 37),
+            LABEL_QUORUM_QUEUES => Some(1 << 38),
+            LABEL_NETWORKING => Some(1 << 39),
+            LABEL_CLASSIC_QUEUES => Some(1 << 40),
+            LABEL_POLICIES => Some(1 << 41),
+            LABEL_TIMEOUTS => Some(1 << 42),
+            LABEL_CONSUMERS => Some(1 << 43),
+            LABEL_DEPRECATED_FEATURES => Some(1 << 44),
+            LABEL_MAINTENANCE_MODE => Some(1 << 45),
+            LABEL_KHEPRI => Some(1 << 46),
+            LABEL_RUNTIME_PARAMETERS => Some(1 << 47),
+            LABEL_HTTP => Some(1 << 48),
+            LABEL_SESSIONS => Some(1 << 49),
+            LABEL_AMQP10 => Some(1 << 50),
+            _ => None,
+        }
     }
 }
 
@@ -217,8 +296,8 @@ impl Serialize for LogEntryLabels {
         if self.contains(Self::EXCLUSIVE) {
             map.serialize_entry(LABEL_EXCLUSIVE, &true)?;
         }
-        if self.contains(Self::CHANNEL_EXCEPTIONS) {
-            map.serialize_entry(LABEL_CHANNEL_EXCEPTIONS, &true)?;
+        if self.contains(Self::EXCEPTIONS) {
+            map.serialize_entry(LABEL_EXCEPTIONS, &true)?;
         }
         if self.contains(Self::DELETE) {
             map.serialize_entry(LABEL_DELETE, &true)?;
@@ -337,6 +416,12 @@ impl Serialize for LogEntryLabels {
         if self.contains(Self::HTTP) {
             map.serialize_entry(LABEL_HTTP, &true)?;
         }
+        if self.contains(Self::SESSIONS) {
+            map.serialize_entry(LABEL_SESSIONS, &true)?;
+        }
+        if self.contains(Self::AMQP10) {
+            map.serialize_entry(LABEL_AMQP10, &true)?;
+        }
 
         map.end()
     }
@@ -375,9 +460,7 @@ impl<'de> Deserialize<'de> for LogEntryLabels {
                             LABEL_QUEUES => labels |= LogEntryLabels::QUEUES,
                             LABEL_AUTO_DELETE => labels |= LogEntryLabels::AUTO_DELETE,
                             LABEL_EXCLUSIVE => labels |= LogEntryLabels::EXCLUSIVE,
-                            LABEL_CHANNEL_EXCEPTIONS => {
-                                labels |= LogEntryLabels::CHANNEL_EXCEPTIONS
-                            }
+                            LABEL_EXCEPTIONS => labels |= LogEntryLabels::EXCEPTIONS,
                             LABEL_DELETE => labels |= LogEntryLabels::DELETE,
                             LABEL_QUEUE_FEDERATION => labels |= LogEntryLabels::QUEUE_FEDERATION,
                             LABEL_VIRTUAL_HOSTS => labels |= LogEntryLabels::VIRTUAL_HOSTS,
@@ -425,6 +508,8 @@ impl<'de> Deserialize<'de> for LogEntryLabels {
                                 labels |= LogEntryLabels::RUNTIME_PARAMETERS
                             }
                             LABEL_HTTP => labels |= LogEntryLabels::HTTP,
+                            LABEL_SESSIONS => labels |= LogEntryLabels::SESSIONS,
+                            LABEL_AMQP10 => labels |= LogEntryLabels::AMQP10,
                             _ => {}
                         }
                     }
