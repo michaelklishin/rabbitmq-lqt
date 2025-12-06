@@ -190,7 +190,11 @@ pub async fn query_logs(
         ctx = ctx.add_label("unlabelled");
     }
 
-    let models = NodeLogEntry::query(&state.db, &ctx).await?;
+    let db = state.db.clone();
+    let models = tokio::task::spawn_blocking(move || NodeLogEntry::query(&db, &ctx))
+        .await
+        .map_err(|e| ServerError::Io(std::io::Error::other(format!("Task join error: {}", e))))??;
+
     let total = models.len();
     let entries: Vec<LogEntry> = models.into_iter().map(LogEntry::from).collect();
 

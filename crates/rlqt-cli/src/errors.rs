@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+use duckdb::Error as DuckDbError;
 use rlqt_lib::Error as LibError;
-use sea_orm::DbErr;
 use std::io::Error as IoError;
 use thiserror::Error;
 
@@ -32,8 +32,8 @@ impl From<IoError> for CommandRunError {
     }
 }
 
-impl From<DbErr> for CommandRunError {
-    fn from(err: DbErr) -> Self {
+impl From<DuckDbError> for CommandRunError {
+    fn from(err: DuckDbError) -> Self {
         CommandRunError::Library(LibError::Database(err))
     }
 }

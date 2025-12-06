@@ -17,7 +17,6 @@ use rlqt_lib::constants::{doc_url_from_id, resolution_or_discussion_url_from_id}
 use rlqt_lib::entry_metadata::subsystems::Subsystem;
 use rlqt_lib::rel_db::file_metadata;
 use rlqt_lib::rel_db::node_log_entry::Model;
-use serde_json::Value;
 use std::borrow::Cow;
 use std::collections::hash_map::DefaultHasher;
 use std::env;
@@ -229,16 +228,6 @@ pub fn display_log_entries(
     Ok(())
 }
 
-fn json_to_list(json: &Value) -> Vec<String> {
-    match json {
-        Value::Array(arr) => arr
-            .iter()
-            .filter_map(|v| v.as_str().map(|s| s.to_string()))
-            .collect(),
-        _ => Vec::new(),
-    }
-}
-
 pub fn display_file_metadata(
     metadata_entries: Vec<file_metadata::Model>,
     _without_colors: bool,
@@ -255,14 +244,15 @@ pub fn display_file_metadata(
 
         println!("File: {}", metadata.file_path);
 
-        let rmq_versions = json_to_list(&metadata.rabbitmq_versions);
-        if !rmq_versions.is_empty() {
-            println!("  RabbitMQ Versions: {}", rmq_versions.join(", "));
+        if !metadata.rabbitmq_versions.is_empty() {
+            println!(
+                "  RabbitMQ Versions: {}",
+                metadata.rabbitmq_versions.join(", ")
+            );
         }
 
-        let erl_versions = json_to_list(&metadata.erlang_versions);
-        if !erl_versions.is_empty() {
-            println!("  Erlang Versions: {}", erl_versions.join(", "));
+        if !metadata.erlang_versions.is_empty() {
+            println!("  Erlang Versions: {}", metadata.erlang_versions.join(", "));
         }
 
         if let Some(tls_lib) = &metadata.tls_library {
@@ -283,34 +273,30 @@ pub fn display_file_metadata(
         println!("  Total Lines: {}", metadata.total_lines);
         println!("  Total Entries: {}", metadata.total_entries);
 
-        let nodes = json_to_list(&metadata.nodes);
-        if !nodes.is_empty() {
+        if !metadata.nodes.is_empty() {
             println!("  Nodes:");
-            for node in &nodes {
+            for node in &metadata.nodes {
                 println!("    - {}", node);
             }
         }
 
-        let subsystems = json_to_list(&metadata.subsystems);
-        if !subsystems.is_empty() {
+        if !metadata.subsystems.is_empty() {
             println!("  Subsystems:");
-            for subsystem in &subsystems {
+            for subsystem in &metadata.subsystems {
                 println!("    - {}", subsystem);
             }
         }
 
-        let labels = json_to_list(&metadata.labels);
-        if !labels.is_empty() {
+        if !metadata.labels.is_empty() {
             println!("  Labels:");
-            for label in &labels {
+            for label in &metadata.labels {
                 println!("    - {}", label);
             }
         }
 
-        let plugins = json_to_list(&metadata.enabled_plugins);
-        if !plugins.is_empty() {
-            println!("  Enabled Plugins ({}):", plugins.len());
-            for plugin in &plugins {
+        if !metadata.enabled_plugins.is_empty() {
+            println!("  Enabled Plugins ({}):", metadata.enabled_plugins.len());
+            for plugin in &metadata.enabled_plugins {
                 println!("    - {}", plugin);
             }
         }

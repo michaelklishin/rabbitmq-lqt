@@ -33,7 +33,8 @@ indicatif = "0.18"
 num_enum = "0.7"
 strum = { version = "0.27", features = ["derive"] }
 
-sea-orm = { version = "2.0.0-rc", features = ["runtime-tokio-rustls", "sqlx-sqlite", "macros"] }
+duckdb = { version = "1.3", features = ["bundled"] }
+r2d2 = "0.8"
 tokio = { version = "1.48", features = ["full"] }
 futures = "0.3"
 criterion = { version = "0.8", features = ["async_tokio"] }

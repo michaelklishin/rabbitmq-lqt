@@ -15,28 +15,28 @@
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use chrono::Utc;
-use rlqt_lib::NodeLogEntry;
+use rlqt_lib::DatabaseConnection;
 use rlqt_lib::Severity;
 use rlqt_lib::create_database;
 use rlqt_lib::entry_metadata::labels::LogEntryLabels;
 use rlqt_lib::parser::ParsedLogEntry;
 use rlqt_lib::rel_db::FileMetadata;
+use rlqt_lib::rel_db::NodeLogEntry;
 use rlqt_lib::rel_db::file_metadata;
 use rlqt_ui::server::create_router_for_testing;
-use sea_orm::DatabaseConnection;
 use serde_json::Value;
 use std::sync::Arc;
 use tempfile::TempDir;
 use tower::ServiceExt;
 
-async fn setup_test_db() -> (TempDir, DatabaseConnection) {
+fn setup_test_db() -> (TempDir, DatabaseConnection) {
     let temp_dir = TempDir::new().unwrap();
     let db_path = temp_dir.path().join("test.db");
-    let db = create_database(&db_path).await.unwrap();
+    let db = create_database(&db_path).unwrap();
     (temp_dir, db)
 }
 
-async fn insert_file_metadata(
+fn insert_file_metadata(
     db: &DatabaseConnection,
     file_path: &str,
     nodes: Vec<&str>,
@@ -45,38 +45,28 @@ async fn insert_file_metadata(
 ) {
     let model = file_metadata::Model {
         file_path: file_path.to_string(),
-        rabbitmq_versions: Value::Array(vec![Value::String("4.2.0".to_string())]),
-        erlang_versions: Value::Array(vec![Value::String("27.3.4.3".to_string())]),
+        rabbitmq_versions: vec!["4.2.0".to_string()],
+        erlang_versions: vec!["27.3.4.3".to_string()],
         tls_library: Some("OpenSSL".to_string()),
         oldest_entry_at: Some(Utc::now()),
         most_recent_entry_at: Some(Utc::now()),
         total_lines: 100,
         total_entries: 50,
-        nodes: Value::Array(nodes.iter().map(|s| Value::String(s.to_string())).collect()),
-        subsystems: Value::Array(
-            subsystems
-                .iter()
-                .map(|s| Value::String(s.to_string()))
-                .collect(),
-        ),
-        labels: Value::Array(
-            labels
-                .iter()
-                .map(|s| Value::String(s.to_string()))
-                .collect(),
-        ),
-        enabled_plugins: Value::Array(vec![
-            Value::String("rabbitmq_management".to_string()),
-            Value::String("rabbitmq_prometheus".to_string()),
-        ]),
+        nodes: nodes.iter().map(|s| s.to_string()).collect(),
+        subsystems: subsystems.iter().map(|s| s.to_string()).collect(),
+        labels: labels.iter().map(|s| s.to_string()).collect(),
+        enabled_plugins: vec![
+            "rabbitmq_management".to_string(),
+            "rabbitmq_prometheus".to_string(),
+        ],
     };
 
-    FileMetadata::insert_metadata(db, model).await.unwrap();
+    FileMetadata::insert_metadata(db, model).unwrap();
 }
 
 #[tokio::test]
 async fn test_get_metadata_returns_nodes_from_file_metadata() {
-    let (_temp_dir, db) = setup_test_db().await;
+    let (_temp_dir, db) = setup_test_db();
 
     insert_file_metadata(
         &db,
@@ -84,8 +74,7 @@ async fn test_get_metadata_returns_nodes_from_file_metadata() {
         vec!["rabbit@node1"],
         vec!["boot", "connections"],
         vec!["queues", "raft"],
-    )
-    .await;
+    );
 
     insert_file_metadata(
         &db,
@@ -93,8 +82,7 @@ async fn test_get_metadata_returns_nodes_from_file_metadata() {
         vec!["rabbit@node2"],
         vec!["plugins"],
         vec!["federation"],
-    )
-    .await;
+    );
 
     let app = create_router_for_testing(Arc::new(db));
 
@@ -125,7 +113,7 @@ async fn test_get_metadata_returns_nodes_from_file_metadata() {
 
 #[tokio::test]
 async fn test_get_metadata_returns_subsystems_from_file_metadata() {
-    let (_temp_dir, db) = setup_test_db().await;
+    let (_temp_dir, db) = setup_test_db();
 
     insert_file_metadata(
         &db,
@@ -133,8 +121,7 @@ async fn test_get_metadata_returns_subsystems_from_file_metadata() {
         vec!["rabbit@node1"],
         vec!["boot", "connections", "raft"],
         vec![],
-    )
-    .await;
+    );
 
     insert_file_metadata(
         &db,
@@ -142,8 +129,7 @@ async fn test_get_metadata_returns_subsystems_from_file_metadata() {
         vec!["rabbit@node2"],
         vec!["plugins", "connections"],
         vec![],
-    )
-    .await;
+    );
 
     let app = create_router_for_testing(Arc::new(db));
 
@@ -173,7 +159,7 @@ async fn test_get_metadata_returns_subsystems_from_file_metadata() {
 
 #[tokio::test]
 async fn test_get_metadata_returns_labels_from_file_metadata() {
-    let (_temp_dir, db) = setup_test_db().await;
+    let (_temp_dir, db) = setup_test_db();
 
     insert_file_metadata(
         &db,
@@ -181,8 +167,7 @@ async fn test_get_metadata_returns_labels_from_file_metadata() {
         vec!["rabbit@node1"],
         vec![],
         vec!["queues", "raft", "elections"],
-    )
-    .await;
+    );
 
     insert_file_metadata(
         &db,
@@ -190,8 +175,7 @@ async fn test_get_metadata_returns_labels_from_file_metadata() {
         vec!["rabbit@node2"],
         vec![],
         vec!["federation", "shovels"],
-    )
-    .await;
+    );
 
     let app = create_router_for_testing(Arc::new(db));
 
@@ -222,7 +206,7 @@ async fn test_get_metadata_returns_labels_from_file_metadata() {
 
 #[tokio::test]
 async fn test_get_metadata_deduplicates_and_sorts() {
-    let (_temp_dir, db) = setup_test_db().await;
+    let (_temp_dir, db) = setup_test_db();
 
     insert_file_metadata(
         &db,
@@ -230,8 +214,7 @@ async fn test_get_metadata_deduplicates_and_sorts() {
         vec!["rabbit@z_node", "rabbit@a_node"],
         vec!["raft", "boot"],
         vec!["queues", "elections"],
-    )
-    .await;
+    );
 
     insert_file_metadata(
         &db,
@@ -239,8 +222,7 @@ async fn test_get_metadata_deduplicates_and_sorts() {
         vec!["rabbit@a_node", "rabbit@m_node"],
         vec!["boot", "plugins"],
         vec!["elections", "shovels"],
-    )
-    .await;
+    );
 
     let app = create_router_for_testing(Arc::new(db));
 
@@ -279,7 +261,7 @@ async fn test_get_metadata_deduplicates_and_sorts() {
 
 #[tokio::test]
 async fn test_get_metadata_returns_severities() {
-    let (_temp_dir, db) = setup_test_db().await;
+    let (_temp_dir, db) = setup_test_db();
 
     let app = create_router_for_testing(Arc::new(db));
 
@@ -309,7 +291,7 @@ async fn test_get_metadata_returns_severities() {
 
 #[tokio::test]
 async fn test_get_file_metadata_returns_all_files() {
-    let (_temp_dir, db) = setup_test_db().await;
+    let (_temp_dir, db) = setup_test_db();
 
     insert_file_metadata(
         &db,
@@ -317,8 +299,7 @@ async fn test_get_file_metadata_returns_all_files() {
         vec!["rabbit@node1"],
         vec!["boot"],
         vec!["queues"],
-    )
-    .await;
+    );
 
     insert_file_metadata(
         &db,
@@ -326,8 +307,7 @@ async fn test_get_file_metadata_returns_all_files() {
         vec!["rabbit@node2"],
         vec!["connections"],
         vec!["raft"],
-    )
-    .await;
+    );
 
     let app = create_router_for_testing(Arc::new(db));
 
@@ -376,7 +356,7 @@ async fn test_get_file_metadata_returns_all_files() {
 
 #[tokio::test]
 async fn test_get_file_metadata_empty_when_no_files() {
-    let (_temp_dir, db) = setup_test_db().await;
+    let (_temp_dir, db) = setup_test_db();
 
     let app = create_router_for_testing(Arc::new(db));
 
@@ -397,7 +377,7 @@ async fn test_get_file_metadata_empty_when_no_files() {
 
 #[tokio::test]
 async fn test_get_file_metadata_returns_actual_plugin_names() {
-    let (_temp_dir, db) = setup_test_db().await;
+    let (_temp_dir, db) = setup_test_db();
 
     insert_file_metadata(
         &db,
@@ -405,8 +385,7 @@ async fn test_get_file_metadata_returns_actual_plugin_names() {
         vec!["rabbit@node1"],
         vec!["boot"],
         vec![],
-    )
-    .await;
+    );
 
     let app = create_router_for_testing(Arc::new(db));
 
@@ -436,11 +415,11 @@ async fn test_get_file_metadata_returns_actual_plugin_names() {
 
 #[tokio::test]
 async fn test_get_stats_returns_total_and_per_node_counts() {
-    let (_temp_dir, db) = setup_test_db().await;
+    let (_temp_dir, db) = setup_test_db();
 
     let entry1 = ParsedLogEntry {
         sequence_id: 1,
-        explicit_id: None,
+        explicit_id: Some(1),
         timestamp: Utc::now(),
         severity: Severity::Info,
         process_id: "<0.1.0>".to_string(),
@@ -454,7 +433,7 @@ async fn test_get_stats_returns_total_and_per_node_counts() {
 
     let entry2 = ParsedLogEntry {
         sequence_id: 2,
-        explicit_id: None,
+        explicit_id: Some(2),
         timestamp: Utc::now(),
         severity: Severity::Warning,
         process_id: "<0.2.0>".to_string(),
@@ -468,7 +447,7 @@ async fn test_get_stats_returns_total_and_per_node_counts() {
 
     let entry3 = ParsedLogEntry {
         sequence_id: 3,
-        explicit_id: None,
+        explicit_id: Some(3),
         timestamp: Utc::now(),
         severity: Severity::Error,
         process_id: "<0.3.0>".to_string(),
@@ -480,12 +459,8 @@ async fn test_get_stats_returns_total_and_per_node_counts() {
         doc_url_id: None,
     };
 
-    NodeLogEntry::insert_parsed_entries(&db, &[entry1, entry2], "rabbit@node1")
-        .await
-        .unwrap();
-    NodeLogEntry::insert_parsed_entries(&db, &[entry3], "rabbit@node2")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &[entry1, entry2], "rabbit@node1").unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &[entry3], "rabbit@node2").unwrap();
 
     let app = create_router_for_testing(Arc::new(db));
 
@@ -517,7 +492,7 @@ async fn test_get_stats_returns_total_and_per_node_counts() {
 
 #[tokio::test]
 async fn test_get_stats_empty_database() {
-    let (_temp_dir, db) = setup_test_db().await;
+    let (_temp_dir, db) = setup_test_db();
 
     let app = create_router_for_testing(Arc::new(db));
 
@@ -539,7 +514,7 @@ async fn test_get_stats_empty_database() {
 
 #[tokio::test]
 async fn test_get_metadata_returns_sorted_collections() {
-    let (_temp_dir, db) = setup_test_db().await;
+    let (_temp_dir, db) = setup_test_db();
 
     insert_file_metadata(
         &db,
@@ -547,8 +522,7 @@ async fn test_get_metadata_returns_sorted_collections() {
         vec!["rabbit@z_node", "rabbit@a_node", "rabbit@m_node"],
         vec!["raft", "boot", "plugins", "connections"],
         vec!["shovels", "queues", "elections", "federation"],
-    )
-    .await;
+    );
 
     let app = create_router_for_testing(Arc::new(db));
 
@@ -597,7 +571,7 @@ async fn test_get_metadata_returns_sorted_collections() {
 
 #[tokio::test]
 async fn test_get_file_metadata_returns_sorted_plugins() {
-    let (_temp_dir, db) = setup_test_db().await;
+    let (_temp_dir, db) = setup_test_db();
 
     insert_file_metadata(
         &db,
@@ -605,8 +579,7 @@ async fn test_get_file_metadata_returns_sorted_plugins() {
         vec!["rabbit@node1"],
         vec!["boot"],
         vec![],
-    )
-    .await;
+    );
 
     let app = create_router_for_testing(Arc::new(db));
 
@@ -636,7 +609,7 @@ async fn test_get_file_metadata_returns_sorted_plugins() {
 
 #[tokio::test]
 async fn test_get_metadata_handles_special_characters() {
-    let (_temp_dir, db) = setup_test_db().await;
+    let (_temp_dir, db) = setup_test_db();
 
     insert_file_metadata(
         &db,
@@ -644,8 +617,7 @@ async fn test_get_metadata_handles_special_characters() {
         vec!["rabbit@node-1", "rabbit@node_2", "rabbit@node.3"],
         vec!["sub-system", "sub_system", "sub.system"],
         vec!["label-1", "label_2", "label.3"],
-    )
-    .await;
+    );
 
     let app = create_router_for_testing(Arc::new(db));
 
@@ -691,7 +663,7 @@ async fn test_get_metadata_handles_special_characters() {
 
 #[tokio::test]
 async fn test_get_file_metadata_returns_timestamps() {
-    let (_temp_dir, db) = setup_test_db().await;
+    let (_temp_dir, db) = setup_test_db();
 
     insert_file_metadata(
         &db,
@@ -699,8 +671,7 @@ async fn test_get_file_metadata_returns_timestamps() {
         vec!["rabbit@node1"],
         vec!["boot"],
         vec!["queues"],
-    )
-    .await;
+    );
 
     let app = create_router_for_testing(Arc::new(db));
 
@@ -731,7 +702,7 @@ async fn test_get_file_metadata_returns_timestamps() {
 
 #[tokio::test]
 async fn test_get_file_metadata_returns_counts() {
-    let (_temp_dir, db) = setup_test_db().await;
+    let (_temp_dir, db) = setup_test_db();
 
     insert_file_metadata(
         &db,
@@ -739,8 +710,7 @@ async fn test_get_file_metadata_returns_counts() {
         vec!["rabbit@node1"],
         vec!["boot"],
         vec!["queues"],
-    )
-    .await;
+    );
 
     let app = create_router_for_testing(Arc::new(db));
 

@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-use sea_orm::DbErr;
+use duckdb::Error as DuckDbError;
 use std::io::Error as IoError;
 use thiserror::Error;
 
@@ -19,7 +19,7 @@ use thiserror::Error;
 #[non_exhaustive]
 pub enum Error {
     #[error("Database error: {0}")]
-    Database(#[from] DbErr),
+    Database(#[from] DuckDbError),
 
     #[error("IO error: {0}")]
     Io(#[from] IoError),

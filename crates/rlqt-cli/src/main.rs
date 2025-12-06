@@ -38,10 +38,10 @@ const BIN_NAME: &str = env!("CARGO_BIN_NAME");
 async fn dispatch_command(cli: &clap::ArgMatches) -> sysexits::ExitCode {
     match cli.subcommand() {
         Some(("logs", logs_args)) => match logs_args.subcommand() {
-            Some(("parse", args)) => commands::handle_parse_command(args).await,
+            Some(("parse", args)) => commands::handle_parse_command(args),
             Some(("obfuscate", args)) => commands::handle_obfuscate_command(args),
-            Some(("query", args)) => commands::handle_query_command(args).await,
-            Some(("overview", args)) => commands::handle_overview_command(args).await,
+            Some(("query", args)) => commands::handle_query_command(args),
+            Some(("overview", args)) => commands::handle_overview_command(args),
             _ => {
                 eprintln!(
                     "Unknown logs subcommand. Try '{} logs --help' for available commands.",

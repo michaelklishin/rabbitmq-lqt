@@ -17,7 +17,6 @@ use rlqt_lib::Severity;
 use rlqt_lib::entry_metadata::labels::LogEntryLabels;
 use rlqt_lib::file_set_metadata::extract_file_metadata;
 use rlqt_lib::parser::ParsedLogEntry;
-use serde_json::from_value;
 
 fn create_test_entry(
     message: &str,
@@ -49,10 +48,8 @@ fn test_extract_rabbitmq_version_from_startup_banner() {
 
     let metadata = extract_file_metadata(&[entry], "/tmp/test.log".to_string(), "rabbit@node1", 1);
 
-    let rmq_versions: Vec<String> = from_value(metadata.rabbitmq_versions).unwrap();
-    let erl_versions: Vec<String> = from_value(metadata.erlang_versions).unwrap();
-    assert_eq!(rmq_versions, vec!["4.2.0"]);
-    assert_eq!(erl_versions, vec!["27.3.4.3"]);
+    assert_eq!(metadata.rabbitmq_versions, vec!["4.2.0"]);
+    assert_eq!(metadata.erlang_versions, vec!["27.3.4.3"]);
 }
 
 #[test]
@@ -65,10 +62,8 @@ fn test_extract_erlang_version_from_startup_banner() {
 
     let metadata = extract_file_metadata(&[entry], "/tmp/test.log".to_string(), "rabbit@node1", 1);
 
-    let rmq_versions: Vec<String> = from_value(metadata.rabbitmq_versions).unwrap();
-    let erl_versions: Vec<String> = from_value(metadata.erlang_versions).unwrap();
-    assert_eq!(rmq_versions, vec!["3.13.0"]);
-    assert_eq!(erl_versions, vec!["26.2.1"]);
+    assert_eq!(metadata.rabbitmq_versions, vec!["3.13.0"]);
+    assert_eq!(metadata.erlang_versions, vec!["26.2.1"]);
 }
 
 #[test]
@@ -92,12 +87,27 @@ fn test_extract_plugins_from_startup_complete() {
 
     let metadata = extract_file_metadata(&[entry], "/tmp/test.log".to_string(), "rabbit@node1", 1);
 
-    let plugins: Vec<String> = from_value(metadata.enabled_plugins).unwrap();
-    assert_eq!(plugins.len(), 4);
-    assert!(plugins.contains(&"rabbitmq_management".to_string()));
-    assert!(plugins.contains(&"rabbitmq_prometheus".to_string()));
-    assert!(plugins.contains(&"rabbitmq_shovel".to_string()));
-    assert!(plugins.contains(&"rabbitmq_federation".to_string()));
+    assert_eq!(metadata.enabled_plugins.len(), 4);
+    assert!(
+        metadata
+            .enabled_plugins
+            .contains(&"rabbitmq_management".to_string())
+    );
+    assert!(
+        metadata
+            .enabled_plugins
+            .contains(&"rabbitmq_prometheus".to_string())
+    );
+    assert!(
+        metadata
+            .enabled_plugins
+            .contains(&"rabbitmq_shovel".to_string())
+    );
+    assert!(
+        metadata
+            .enabled_plugins
+            .contains(&"rabbitmq_federation".to_string())
+    );
 }
 
 #[test]
@@ -107,9 +117,8 @@ fn test_extract_nodes_from_provided_node_name() {
     let metadata =
         extract_file_metadata(&[entry], "/tmp/test.log".to_string(), "rabbit@server1", 1);
 
-    let nodes: Vec<String> = from_value(metadata.nodes).unwrap();
-    assert_eq!(nodes.len(), 1);
-    assert_eq!(nodes[0], "rabbit@server1");
+    assert_eq!(metadata.nodes.len(), 1);
+    assert_eq!(metadata.nodes[0], "rabbit@server1");
 }
 
 #[test]
@@ -125,8 +134,7 @@ fn test_aggregate_subsystems_from_entries() {
         3,
     );
 
-    let subsystems: Vec<String> = from_value(metadata.subsystems).unwrap();
-    assert!(subsystems.len() >= 2);
+    assert!(metadata.subsystems.len() >= 2);
 }
 
 #[test]
@@ -150,11 +158,10 @@ fn test_aggregate_labels_from_entries() {
         3,
     );
 
-    let labels: Vec<String> = from_value(metadata.labels).unwrap();
-    assert!(labels.contains(&"queues".to_string()));
-    assert!(labels.contains(&"raft".to_string()));
-    assert!(labels.contains(&"elections".to_string()));
-    assert!(labels.contains(&"shovels".to_string()));
+    assert!(metadata.labels.contains(&"queues".to_string()));
+    assert!(metadata.labels.contains(&"raft".to_string()));
+    assert!(metadata.labels.contains(&"elections".to_string()));
+    assert!(metadata.labels.contains(&"shovels".to_string()));
 }
 
 #[test]
@@ -170,9 +177,8 @@ fn test_deduplicates_labels() {
         3,
     );
 
-    let labels: Vec<String> = from_value(metadata.labels).unwrap();
     assert_eq!(
-        labels.iter().filter(|l| *l == "queues").count(),
+        metadata.labels.iter().filter(|l| *l == "queues").count(),
         1,
         "Labels should be deduplicated"
     );
@@ -184,10 +190,8 @@ fn test_handles_missing_startup_banner() {
 
     let metadata = extract_file_metadata(&[entry], "/tmp/test.log".to_string(), "rabbit@node1", 1);
 
-    let rmq_versions: Vec<String> = from_value(metadata.rabbitmq_versions).unwrap();
-    let erl_versions: Vec<String> = from_value(metadata.erlang_versions).unwrap();
-    assert!(rmq_versions.is_empty());
-    assert!(erl_versions.is_empty());
+    assert!(metadata.rabbitmq_versions.is_empty());
+    assert!(metadata.erlang_versions.is_empty());
 }
 
 #[test]
@@ -203,18 +207,12 @@ fn test_handles_missing_tls_info() {
 fn test_handles_empty_entries() {
     let metadata = extract_file_metadata(&[], "/tmp/test.log".to_string(), "rabbit@node1", 0);
 
-    let nodes: Vec<String> = from_value(metadata.nodes).unwrap();
-    assert_eq!(nodes.len(), 1);
-    assert_eq!(nodes[0], "rabbit@node1");
+    assert_eq!(metadata.nodes.len(), 1);
+    assert_eq!(metadata.nodes[0], "rabbit@node1");
 
-    let subsystems: Vec<String> = from_value(metadata.subsystems).unwrap();
-    assert_eq!(subsystems.len(), 0);
-
-    let labels: Vec<String> = from_value(metadata.labels).unwrap();
-    assert_eq!(labels.len(), 0);
-
-    let plugins: Vec<String> = from_value(metadata.enabled_plugins).unwrap();
-    assert_eq!(plugins.len(), 0);
+    assert_eq!(metadata.subsystems.len(), 0);
+    assert_eq!(metadata.labels.len(), 0);
+    assert_eq!(metadata.enabled_plugins.len(), 0);
 }
 
 #[test]
@@ -237,10 +235,8 @@ fn test_multiple_startup_banners_collects_all_versions() {
         2,
     );
 
-    let rmq_versions: Vec<String> = from_value(metadata.rabbitmq_versions).unwrap();
-    let erl_versions: Vec<String> = from_value(metadata.erlang_versions).unwrap();
-    assert_eq!(rmq_versions, vec!["3.12.0", "4.2.0"]);
-    assert_eq!(erl_versions, vec!["25.0", "27.3.4.3"]);
+    assert_eq!(metadata.rabbitmq_versions, vec!["3.12.0", "4.2.0"]);
+    assert_eq!(metadata.erlang_versions, vec!["25.0", "27.3.4.3"]);
 }
 
 #[test]
@@ -255,11 +251,22 @@ fn test_extract_plugins_with_duplicates() {
 
     let metadata = extract_file_metadata(&[entry], "/tmp/test.log".to_string(), "rabbit@node1", 1);
 
-    let plugins: Vec<String> = from_value(metadata.enabled_plugins).unwrap();
-    assert_eq!(plugins.len(), 3);
-    assert!(plugins.contains(&"rabbitmq_management".to_string()));
-    assert!(plugins.contains(&"rabbitmq_prometheus".to_string()));
-    assert!(plugins.contains(&"rabbitmq_shovel".to_string()));
+    assert_eq!(metadata.enabled_plugins.len(), 3);
+    assert!(
+        metadata
+            .enabled_plugins
+            .contains(&"rabbitmq_management".to_string())
+    );
+    assert!(
+        metadata
+            .enabled_plugins
+            .contains(&"rabbitmq_prometheus".to_string())
+    );
+    assert!(
+        metadata
+            .enabled_plugins
+            .contains(&"rabbitmq_shovel".to_string())
+    );
 }
 
 #[test]
@@ -270,8 +277,7 @@ fn test_extract_zero_plugins() {
 
     let metadata = extract_file_metadata(&[entry], "/tmp/test.log".to_string(), "rabbit@node1", 1);
 
-    let plugins: Vec<String> = from_value(metadata.enabled_plugins).unwrap();
-    assert_eq!(plugins.len(), 0);
+    assert_eq!(metadata.enabled_plugins.len(), 0);
 }
 
 #[test]
@@ -293,10 +299,8 @@ fn test_partial_startup_banner_only_rabbitmq() {
 
     let metadata = extract_file_metadata(&[entry], "/tmp/test.log".to_string(), "rabbit@node1", 1);
 
-    let rmq_versions: Vec<String> = from_value(metadata.rabbitmq_versions).unwrap();
-    let erl_versions: Vec<String> = from_value(metadata.erlang_versions).unwrap();
-    assert!(rmq_versions.is_empty());
-    assert!(erl_versions.is_empty());
+    assert!(metadata.rabbitmq_versions.is_empty());
+    assert!(metadata.erlang_versions.is_empty());
 }
 
 #[test]
@@ -309,10 +313,17 @@ fn test_plugin_count_mismatch_still_extracts_plugins() {
 
     let metadata = extract_file_metadata(&[entry], "/tmp/test.log".to_string(), "rabbit@node1", 1);
 
-    let plugins: Vec<String> = from_value(metadata.enabled_plugins).unwrap();
-    assert_eq!(plugins.len(), 2);
-    assert!(plugins.contains(&"rabbitmq_management".to_string()));
-    assert!(plugins.contains(&"rabbitmq_prometheus".to_string()));
+    assert_eq!(metadata.enabled_plugins.len(), 2);
+    assert!(
+        metadata
+            .enabled_plugins
+            .contains(&"rabbitmq_management".to_string())
+    );
+    assert!(
+        metadata
+            .enabled_plugins
+            .contains(&"rabbitmq_prometheus".to_string())
+    );
 }
 
 #[test]
@@ -382,10 +393,8 @@ fn test_extract_version_with_leading_whitespace() {
 
     let metadata = extract_file_metadata(&[entry], "/tmp/test.log".to_string(), "rabbit@node1", 1);
 
-    let rmq_versions: Vec<String> = from_value(metadata.rabbitmq_versions).unwrap();
-    let erl_versions: Vec<String> = from_value(metadata.erlang_versions).unwrap();
-    assert_eq!(rmq_versions, vec!["4.2.0"]);
-    assert_eq!(erl_versions, vec!["27.3.4.2 [jit]"]);
+    assert_eq!(metadata.rabbitmq_versions, vec!["4.2.0"]);
+    assert_eq!(metadata.erlang_versions, vec!["27.3.4.2 [jit]"]);
 }
 
 #[test]

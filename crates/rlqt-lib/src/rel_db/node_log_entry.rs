@@ -13,28 +13,21 @@
 // limitations under the License.
 use crate::entry_metadata::labels::{LABEL_NAMES, LogEntryLabels};
 use crate::parser::ParsedLogEntry;
-use sea_orm::entity::prelude::*;
-use sea_orm::sea_query::Expr;
-use sea_orm::{ActiveValue, QueryOrder, QuerySelect, TransactionTrait};
+use crate::rel_db::DatabaseConnection;
+use chrono::{DateTime, Utc};
+use duckdb::types::Value;
+use duckdb::{Error as DuckDbError, params};
 use serde::{Deserialize, Serialize};
 
-pub type NodeLogEntry = Entity;
+pub struct NodeLogEntry;
 
-/// Default maximum number of entries returned by filtering queries.
-/// Can be overridden by specifying an explicit limit in the query context.
 const DEFAULT_MAX_QUERY_LIMIT: u64 = 10_000;
-
-/// Number of entries to insert in a single batch.
-/// SQLite has a limit of ~32766 bind variables (SQLITE_MAX_VARIABLE_NUMBER).
-/// With 10 columns per entry, max is ~3200 entries per batch.
-/// Using 3000 for safety margin.
 const DB_INSERT_BATCH_SIZE: usize = 3000;
 
-/// Query context for filtering log entries
 #[derive(Debug, Default, Clone)]
 pub struct QueryContext {
-    pub(crate) since_time: Option<DateTimeUtc>,
-    pub(crate) to_time: Option<DateTimeUtc>,
+    pub(crate) since_time: Option<DateTime<Utc>>,
+    pub(crate) to_time: Option<DateTime<Utc>>,
     pub(crate) severity: Option<String>,
     pub(crate) erlang_pid: Option<String>,
     pub(crate) node: Option<String>,
@@ -48,13 +41,13 @@ pub struct QueryContext {
 
 impl QueryContext {
     #[must_use]
-    pub fn since(mut self, time: DateTimeUtc) -> Self {
+    pub fn since(mut self, time: DateTime<Utc>) -> Self {
         self.since_time = Some(time);
         self
     }
 
     #[must_use]
-    pub fn to(mut self, time: DateTimeUtc) -> Self {
+    pub fn to(mut self, time: DateTime<Utc>) -> Self {
         self.to_time = Some(time);
         self
     }
@@ -120,60 +113,26 @@ impl QueryContext {
     }
 }
 
-/// A RabbitMQ log entry stored in the database
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
-#[sea_orm(table_name = "node_log_entries")]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Model {
-    /// Unique numerical ID (primary key)
-    #[sea_orm(primary_key, auto_increment = true)]
     pub id: i64,
-
-    /// Node name
-    #[sea_orm(indexed)]
     pub node: String,
-
-    /// Timestamp of the log entry
-    #[sea_orm(indexed)]
-    pub timestamp: DateTimeUtc,
-
-    /// Log severity level (debug, info, notice, warning, error, critical)
-    #[sea_orm(indexed)]
+    pub timestamp: DateTime<Utc>,
     pub severity: String,
-
-    /// Erlang PID (e.g., "<0.208.0>")
-    #[sea_orm(indexed)]
     pub erlang_pid: String,
-
-    /// Subsystem identifier
-    #[sea_orm(indexed)]
     pub subsystem_id: Option<i16>,
-
-    /// Log message content (can be multiline)
     pub message: String,
-
-    /// Labels attached to this log entry (stored as bitflags in i64)
     pub labels: i64,
-
-    /// ID of related resolution or discussion URL
     pub resolution_or_discussion_url_id: Option<i16>,
-
-    /// ID of relevant documentation URL
     pub doc_url_id: Option<i16>,
 }
 
-#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
-
-impl ActiveModelBehavior for ActiveModel {}
-
 impl Model {
-    /// Check if this log entry is multiline
     #[inline]
     pub fn is_multiline(&self) -> bool {
         self.message.contains('\n')
     }
 
-    /// Format labels as a newline-separated list of set labels
     #[inline]
     pub fn format_labels(&self) -> String {
         let labels = LogEntryLabels::from_bits_i64(self.labels);
@@ -189,143 +148,250 @@ impl Model {
         result
     }
 
-    /// Get labels as LogEntryLabels bitflags
     #[inline]
     pub fn get_labels(&self) -> LogEntryLabels {
         LogEntryLabels::from_bits_i64(self.labels)
     }
 }
 
-impl ActiveModel {
-    fn from_parsed(entry: &ParsedLogEntry, node: &str) -> Self {
-        let id_value = if let Some(explicit_id) = entry.explicit_id {
-            ActiveValue::Set(explicit_id)
-        } else {
-            ActiveValue::NotSet
-        };
+impl NodeLogEntry {
+    pub fn count_all(db: &DatabaseConnection) -> Result<u64, DuckDbError> {
+        let conn = db.get().map_err(|e| {
+            DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))
+        })?;
 
-        Self {
-            id: id_value,
-            node: ActiveValue::Set(node.to_string()),
-            timestamp: ActiveValue::Set(entry.timestamp),
-            severity: ActiveValue::Set(entry.severity.to_string()),
-            erlang_pid: ActiveValue::Set(entry.process_id.clone()),
-            subsystem_id: ActiveValue::Set(entry.subsystem_id),
-            message: ActiveValue::Set(entry.message.clone()),
-            labels: ActiveValue::Set(entry.labels.to_bits_i64()),
-            resolution_or_discussion_url_id: ActiveValue::Set(
-                entry.resolution_or_discussion_url_id,
-            ),
-            doc_url_id: ActiveValue::Set(entry.doc_url_id),
-        }
-    }
-}
-
-impl Entity {
-    /// Count all log entries
-    pub async fn count_all(db: &DatabaseConnection) -> Result<u64, DbErr> {
-        Self::find().count(db).await
+        let mut stmt = conn.prepare("SELECT COUNT(*) FROM node_log_entries")?;
+        let count: i64 = stmt.query_row([], |row| row.get(0))?;
+        Ok(count as u64)
     }
 
-    /// Query log entries with optional filters
-    ///
-    /// Default limit is 10,000 entries to prevent memory exhaustion.
-    /// Specify a limit explicitly to override this.
-    pub async fn query(db: &DatabaseConnection, ctx: &QueryContext) -> Result<Vec<Model>, DbErr> {
-        let mut query = Self::find();
+    pub fn query(db: &DatabaseConnection, ctx: &QueryContext) -> Result<Vec<Model>, DuckDbError> {
+        let conn = db.get().map_err(|e| {
+            DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))
+        })?;
+
+        let mut conditions = Vec::new();
+        let mut params: Vec<Value> = Vec::new();
 
         if let Some(since) = ctx.since_time {
-            query = query.filter(Column::Timestamp.gte(since));
+            conditions.push("timestamp >= ?");
+            params.push(Value::Timestamp(
+                duckdb::types::TimeUnit::Microsecond,
+                since.timestamp_micros(),
+            ));
         }
 
         if let Some(to) = ctx.to_time {
-            query = query.filter(Column::Timestamp.lte(to));
+            conditions.push("timestamp <= ?");
+            params.push(Value::Timestamp(
+                duckdb::types::TimeUnit::Microsecond,
+                to.timestamp_micros(),
+            ));
         }
 
         if let Some(ref sev) = ctx.severity {
-            query = query.filter(Column::Severity.eq(sev));
+            conditions.push("severity = ?");
+            params.push(Value::Text(sev.clone()));
         }
 
         if let Some(ref pid) = ctx.erlang_pid {
-            query = query.filter(Column::ErlangPid.eq(pid));
+            conditions.push("erlang_pid = ?");
+            params.push(Value::Text(pid.clone()));
         }
 
         if let Some(ref n) = ctx.node {
-            query = query.filter(Column::Node.eq(n));
+            conditions.push("node = ?");
+            params.push(Value::Text(n.clone()));
         }
 
         if let Some(ref sub) = ctx.subsystem
             && let Ok(subsystem) = sub.parse::<crate::entry_metadata::subsystems::Subsystem>()
         {
-            query = query.filter(Column::SubsystemId.eq(subsystem.to_id()));
+            conditions.push("subsystem_id = ?");
+            params.push(Value::SmallInt(subsystem.to_id()));
         }
 
         if !ctx.labels.is_empty() {
-            if ctx.matching_all_labels {
-                // AND query: all specified labels must be set
-                let mut combined_mask: u64 = 0;
-                for label in &ctx.labels {
-                    if let Some(bit) = LogEntryLabels::bit_for_label(label) {
-                        combined_mask |= bit;
-                    }
+            let mut combined_mask: u64 = 0;
+            for label in &ctx.labels {
+                if let Some(bit) = LogEntryLabels::bit_for_label(label) {
+                    combined_mask |= bit;
                 }
-                if combined_mask != 0 {
-                    query = query.filter(Expr::cust_with_values(
-                        "(labels & ?) = ?",
-                        [combined_mask as i64, combined_mask as i64],
-                    ));
-                }
-            } else {
-                // OR query: any of the specified labels must be set
-                let mut combined_mask: u64 = 0;
-                for label in &ctx.labels {
-                    if let Some(bit) = LogEntryLabels::bit_for_label(label) {
-                        combined_mask |= bit;
-                    }
-                }
-                if combined_mask != 0 {
-                    query = query.filter(Expr::cust_with_values(
-                        "(labels & ?) != 0",
-                        [combined_mask as i64],
-                    ));
+            }
+            if combined_mask != 0 {
+                if ctx.matching_all_labels {
+                    conditions.push("(labels & ?) = ?");
+                    params.push(Value::BigInt(combined_mask as i64));
+                    params.push(Value::BigInt(combined_mask as i64));
+                } else {
+                    conditions.push("(labels & ?) != 0");
+                    params.push(Value::BigInt(combined_mask as i64));
                 }
             }
         }
 
         if ctx.has_resolution_or_discussion_url {
-            query = query.filter(Column::ResolutionOrDiscussionUrlId.is_not_null());
+            conditions.push("resolution_or_discussion_url_id IS NOT NULL");
         }
 
         if ctx.has_doc_url {
-            query = query.filter(Column::DocUrlId.is_not_null());
+            conditions.push("doc_url_id IS NOT NULL");
         }
 
-        query = query.order_by_asc(Column::Timestamp);
-
         let effective_limit = ctx.limit.unwrap_or(DEFAULT_MAX_QUERY_LIMIT);
-        query = query.limit(effective_limit);
 
-        query.all(db).await
+        let where_clause = if conditions.is_empty() {
+            String::new()
+        } else {
+            format!("WHERE {}", conditions.join(" AND "))
+        };
+
+        let sql = format!(
+            "SELECT id, node, timestamp, severity, erlang_pid, subsystem_id, message, labels, resolution_or_discussion_url_id, doc_url_id
+             FROM node_log_entries
+             {}
+             ORDER BY timestamp ASC
+             LIMIT {}",
+            where_clause, effective_limit
+        );
+
+        let mut stmt = conn.prepare(&sql)?;
+        let params_slice: Vec<&dyn duckdb::ToSql> =
+            params.iter().map(|p| p as &dyn duckdb::ToSql).collect();
+
+        let rows = stmt.query_map(params_slice.as_slice(), |row| {
+            let timestamp_micros: i64 = row.get(2)?;
+            let timestamp = DateTime::from_timestamp_micros(timestamp_micros)
+                .unwrap_or_else(|| DateTime::from_timestamp(0, 0).unwrap());
+
+            Ok(Model {
+                id: row.get(0)?,
+                node: row.get(1)?,
+                timestamp,
+                severity: row.get(3)?,
+                erlang_pid: row.get(4)?,
+                subsystem_id: row.get(5)?,
+                message: row.get(6)?,
+                labels: row.get(7)?,
+                resolution_or_discussion_url_id: row.get(8)?,
+                doc_url_id: row.get(9)?,
+            })
+        })?;
+
+        let mut results = Vec::new();
+        for row_result in rows {
+            results.push(row_result?);
+        }
+        Ok(results)
     }
 
-    pub async fn insert_parsed_entries(
+    pub fn insert_parsed_entries(
         db: &DatabaseConnection,
         entries: &[ParsedLogEntry],
         node: &str,
-    ) -> Result<(), DbErr> {
+    ) -> Result<(), DuckDbError> {
         if entries.is_empty() {
             return Ok(());
         }
 
-        let txn = db.begin().await?;
+        let conn = db.get().map_err(|e| {
+            DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))
+        })?;
+
+        let needs_auto_id = entries.iter().any(|e| e.explicit_id.is_none());
+        let mut running_id = if needs_auto_id {
+            let max_id: Option<i64> = conn
+                .query_row("SELECT MAX(id) FROM node_log_entries", [], |row| row.get(0))
+                .ok()
+                .flatten();
+            max_id.unwrap_or(0) + 1
+        } else {
+            0
+        };
+
         for chunk in entries.chunks(DB_INSERT_BATCH_SIZE) {
-            let active_models: Vec<ActiveModel> = chunk
-                .iter()
-                .map(|entry| ActiveModel::from_parsed(entry, node))
-                .collect();
-            Entity::insert_many(active_models).exec(&txn).await?;
+            let mut appender = conn.appender("node_log_entries")?;
+
+            for entry in chunk {
+                let id = entry.explicit_id.unwrap_or_else(|| {
+                    let id = running_id;
+                    running_id += 1;
+                    id
+                });
+                let timestamp_micros = entry.timestamp.timestamp_micros();
+
+                appender.append_row(params![
+                    id,
+                    node,
+                    Value::Timestamp(duckdb::types::TimeUnit::Microsecond, timestamp_micros),
+                    entry.severity.to_string(),
+                    entry.process_id,
+                    entry.subsystem_id,
+                    entry.message,
+                    entry.labels.to_bits_i64(),
+                    entry.resolution_or_discussion_url_id,
+                    entry.doc_url_id,
+                ])?;
+            }
+
+            appender.flush()?;
         }
-        txn.commit().await?;
+
         Ok(())
+    }
+
+    pub fn find_all(db: &DatabaseConnection) -> Result<Vec<Model>, DuckDbError> {
+        let conn = db.get().map_err(|e| {
+            DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))
+        })?;
+
+        let mut stmt = conn.prepare(
+            "SELECT id, node, timestamp, severity, erlang_pid, subsystem_id, message, labels, resolution_or_discussion_url_id, doc_url_id
+             FROM node_log_entries
+             ORDER BY timestamp ASC",
+        )?;
+
+        let rows = stmt.query_map([], |row| {
+            let timestamp_micros: i64 = row.get(2)?;
+            let timestamp = DateTime::from_timestamp_micros(timestamp_micros)
+                .unwrap_or_else(|| DateTime::from_timestamp(0, 0).unwrap());
+
+            Ok(Model {
+                id: row.get(0)?,
+                node: row.get(1)?,
+                timestamp,
+                severity: row.get(3)?,
+                erlang_pid: row.get(4)?,
+                subsystem_id: row.get(5)?,
+                message: row.get(6)?,
+                labels: row.get(7)?,
+                resolution_or_discussion_url_id: row.get(8)?,
+                doc_url_id: row.get(9)?,
+            })
+        })?;
+
+        let mut results = Vec::new();
+        for row_result in rows {
+            results.push(row_result?);
+        }
+        Ok(results)
+    }
+
+    pub fn get_node_counts(db: &DatabaseConnection) -> Result<Vec<(String, i64)>, DuckDbError> {
+        let conn = db.get().map_err(|e| {
+            DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))
+        })?;
+
+        let mut stmt = conn.prepare(
+            "SELECT node, COUNT(*) as count FROM node_log_entries GROUP BY node ORDER BY node ASC",
+        )?;
+
+        let rows = stmt.query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?;
+
+        let mut results = Vec::new();
+        for row_result in rows {
+            results.push(row_result?);
+        }
+        Ok(results)
     }
 }

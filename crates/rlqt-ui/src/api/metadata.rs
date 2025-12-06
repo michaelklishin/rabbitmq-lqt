@@ -16,14 +16,10 @@ use crate::errors::ServerError;
 use crate::server::AppState;
 use axum::Json;
 use axum::extract::State;
-use rlqt_lib::NodeLogEntry;
 use rlqt_lib::Severity;
 use rlqt_lib::entry_metadata::labels::LABEL_NAMES;
-use rlqt_lib::rel_db::FileMetadata;
-use rlqt_lib::rel_db::node_log_entry::Column;
-use sea_orm::{ColumnTrait, EntityTrait, FromQueryResult, QueryOrder, QuerySelect};
+use rlqt_lib::rel_db::{FileMetadata, NodeLogEntry};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::collections::HashSet;
 
 #[derive(Debug, Serialize)]
@@ -46,16 +42,6 @@ pub struct NodeStats {
     count: u64,
 }
 
-fn json_to_vec(json: &Value) -> Vec<String> {
-    match json {
-        Value::Array(arr) => arr
-            .iter()
-            .filter_map(|v| v.as_str().map(str::to_string))
-            .collect(),
-        _ => Vec::new(),
-    }
-}
-
 fn hashset_to_sorted_vec(set: HashSet<String>) -> Vec<String> {
     let mut vec: Vec<_> = set.into_iter().collect();
     vec.sort_unstable();
@@ -70,14 +56,17 @@ pub async fn get_metadata(
         .map(|s| s.as_str().to_string())
         .collect();
 
-    let file_metadata_list = FileMetadata::find_all(&state.db).await?;
+    let db = state.db.clone();
+    let file_metadata_list = tokio::task::spawn_blocking(move || FileMetadata::find_all(&db))
+        .await
+        .map_err(|e| ServerError::Io(std::io::Error::other(format!("Task join error: {}", e))))??;
 
     let mut nodes_set = HashSet::new();
     let mut subsystems_set = HashSet::new();
 
     for metadata in &file_metadata_list {
-        nodes_set.extend(json_to_vec(&metadata.nodes));
-        subsystems_set.extend(json_to_vec(&metadata.subsystems));
+        nodes_set.extend(metadata.nodes.iter().cloned());
+        subsystems_set.extend(metadata.subsystems.iter().cloned());
     }
 
     let nodes = hashset_to_sorted_vec(nodes_set);
@@ -94,29 +83,20 @@ pub async fn get_metadata(
 }
 
 pub async fn get_stats(State(state): State<AppState>) -> Result<Json<StatsResponse>, ServerError> {
-    #[derive(Debug, FromQueryResult)]
-    struct NodeCount {
-        node: String,
-        count: i64,
-    }
-
-    let total = NodeLogEntry::count_all(&state.db).await?;
-
-    let node_counts = NodeLogEntry::find()
-        .select_only()
-        .column(Column::Node)
-        .column_as(Column::Id.count(), "count")
-        .group_by(Column::Node)
-        .order_by_asc(Column::Node)
-        .into_model::<NodeCount>()
-        .all(&*state.db)
-        .await?;
+    let db = state.db.clone();
+    let (total, node_counts) = tokio::task::spawn_blocking(move || {
+        let total = NodeLogEntry::count_all(&db)?;
+        let node_counts = NodeLogEntry::get_node_counts(&db)?;
+        Ok::<_, duckdb::Error>((total, node_counts))
+    })
+    .await
+    .map_err(|e| ServerError::Io(std::io::Error::other(format!("Task join error: {}", e))))??;
 
     let nodes = node_counts
         .into_iter()
-        .map(|nc| NodeStats {
-            node: nc.node,
-            count: nc.count as u64,
+        .map(|(node, count)| NodeStats {
+            node,
+            count: count as u64,
         })
         .collect();
 
@@ -146,17 +126,17 @@ impl From<rlqt_lib::rel_db::file_metadata::Model> for FileMetadataResponse {
     fn from(model: rlqt_lib::rel_db::file_metadata::Model) -> Self {
         Self {
             file_path: model.file_path,
-            rabbitmq_versions: json_to_vec(&model.rabbitmq_versions),
-            erlang_versions: json_to_vec(&model.erlang_versions),
+            rabbitmq_versions: model.rabbitmq_versions,
+            erlang_versions: model.erlang_versions,
             tls_library: model.tls_library,
             oldest_entry_at: model.oldest_entry_at.map(|dt| dt.to_rfc3339()),
             most_recent_entry_at: model.most_recent_entry_at.map(|dt| dt.to_rfc3339()),
             total_lines: model.total_lines,
             total_entries: model.total_entries,
-            nodes: json_to_vec(&model.nodes),
-            subsystems: json_to_vec(&model.subsystems),
-            labels: json_to_vec(&model.labels),
-            enabled_plugins: json_to_vec(&model.enabled_plugins),
+            nodes: model.nodes,
+            subsystems: model.subsystems,
+            labels: model.labels,
+            enabled_plugins: model.enabled_plugins,
         }
     }
 }
@@ -164,7 +144,11 @@ impl From<rlqt_lib::rel_db::file_metadata::Model> for FileMetadataResponse {
 pub async fn get_file_metadata(
     State(state): State<AppState>,
 ) -> Result<Json<Vec<FileMetadataResponse>>, ServerError> {
-    let metadata_list = FileMetadata::find_all(&state.db).await?;
+    let db = state.db.clone();
+    let metadata_list = tokio::task::spawn_blocking(move || FileMetadata::find_all(&db))
+        .await
+        .map_err(|e| ServerError::Io(std::io::Error::other(format!("Task join error: {}", e))))??;
+
     let response = metadata_list
         .into_iter()
         .map(FileMetadataResponse::from)

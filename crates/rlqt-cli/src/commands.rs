@@ -22,18 +22,19 @@ use rlqt_lib::file_set_metadata::extract_file_metadata;
 use rlqt_lib::parser::ParsedLogEntry;
 use rlqt_lib::rel_db::FileMetadata;
 use rlqt_lib::{
-    NodeLogEntry, QueryContext, create_database_for_bulk_import, finalize_bulk_import,
-    open_database, parse_log_file, post_insertion_operations,
+    DatabaseConnection, NodeLogEntry, QueryContext, create_database_for_bulk_import,
+    finalize_bulk_import, open_database, parse_log_file, post_insertion_operations,
 };
 use rlqt_obfuscation::{LogObfuscator, ObfuscationStats};
 use std::collections::HashSet;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, BufWriter, Error as IoError, ErrorKind, Write};
 use std::path::{Path, PathBuf};
+use std::sync::mpsc;
+use std::thread;
 use std::time::{Duration, Instant};
 use sysexits::ExitCode;
 use tabled::{Table, Tabled, settings::Style};
-use tokio::sync::mpsc;
 
 const PIPELINE_CHUNK_SIZE: usize = 25_000;
 
@@ -45,8 +46,8 @@ const ERR_MSG_FILE_NOT_FOUND_HELP: &str = "Make sure:\n\
 const ERR_MSG_PARENT_DIR_HELP: &str = "Create the directory first with:\n\
   mkdir -p";
 
-pub async fn handle_parse_command(args: &ArgMatches) -> ExitCode {
-    match parse_logs(args).await {
+pub fn handle_parse_command(args: &ArgMatches) -> ExitCode {
+    match parse_logs(args) {
         Ok(_) => {
             if !args.get_flag("silent") {
                 println!("Done");
@@ -60,8 +61,8 @@ pub async fn handle_parse_command(args: &ArgMatches) -> ExitCode {
     }
 }
 
-pub async fn handle_query_command(args: &ArgMatches) -> ExitCode {
-    match query_logs(args).await {
+pub fn handle_query_command(args: &ArgMatches) -> ExitCode {
+    match query_logs(args) {
         Ok(_) => ExitCode::Ok,
         Err(e) => {
             log::error!("Failed to query logs: {}", e);
@@ -70,8 +71,8 @@ pub async fn handle_query_command(args: &ArgMatches) -> ExitCode {
     }
 }
 
-pub async fn handle_overview_command(args: &ArgMatches) -> ExitCode {
-    match overview(args).await {
+pub fn handle_overview_command(args: &ArgMatches) -> ExitCode {
+    match overview(args) {
         Ok(_) => ExitCode::Ok,
         Err(e) => {
             log::error!("Failed to show overview: {}", e);
@@ -255,7 +256,7 @@ enum InsertionTask {
     },
 }
 
-async fn parse_logs(args: &ArgMatches) -> Result<()> {
+fn parse_logs(args: &ArgMatches) -> Result<()> {
     let start_time = Instant::now();
 
     let mut log_paths: Vec<PathBuf> = Vec::new();
@@ -281,59 +282,14 @@ async fn parse_logs(args: &ArgMatches) -> Result<()> {
     validate_file_paths(&log_paths)?;
     validate_database_path(&db_path)?;
 
-    let db = create_database_for_bulk_import(&db_path).await?;
+    let db = create_database_for_bulk_import(&db_path)?;
 
     let silent = args.get_flag("silent");
 
-    let (tx, mut rx) = mpsc::channel::<InsertionTask>(4);
+    let (tx, rx) = mpsc::channel::<InsertionTask>();
 
     let db_clone = db.clone();
-    let insert_task = tokio::spawn(async move {
-        let mut next_id = 1i64;
-        let mut current_file_entries: Vec<ParsedLogEntry> = Vec::new();
-
-        while let Some(job) = rx.recv().await {
-            match job {
-                InsertionTask::EntriesChunk {
-                    node_name,
-                    mut entries,
-                } => {
-                    for (i, entry) in entries.iter_mut().enumerate() {
-                        entry.explicit_id = Some(next_id + i as i64);
-                    }
-                    next_id += entries.len() as i64;
-
-                    if let Err(e) =
-                        NodeLogEntry::insert_parsed_entries(&db_clone, &entries, &node_name).await
-                    {
-                        log::error!("Failed to insert entries: {}", e);
-                        return Err(e);
-                    }
-
-                    current_file_entries.extend(entries);
-                }
-                InsertionTask::FileCompletionMarker {
-                    node_name,
-                    file_path,
-                    total_lines,
-                } => {
-                    let file_path_str = file_path.to_string_lossy().to_string();
-                    let file_metadata = extract_file_metadata(
-                        &current_file_entries,
-                        file_path_str,
-                        &node_name,
-                        total_lines as i64,
-                    );
-                    if let Err(e) = FileMetadata::insert_metadata(&db_clone, file_metadata).await {
-                        log::error!("Failed to insert file metadata: {}", e);
-                        return Err(e);
-                    }
-                    current_file_entries.clear();
-                }
-            }
-        }
-        Ok(())
-    });
+    let insert_thread = thread::spawn(move || insert_entries_thread(db_clone, rx));
 
     for log_path in &log_paths {
         let file_progress = if !silent {
@@ -392,7 +348,6 @@ async fn parse_logs(args: &ArgMatches) -> Result<()> {
                 node_name: node_name.clone(),
                 entries: chunk,
             })
-            .await
             .map_err(|e| {
                 CommandRunError::Library(rlqt_lib::Error::Io(IoError::other(format!(
                     "Failed to send entries for insertion: {}",
@@ -406,7 +361,6 @@ async fn parse_logs(args: &ArgMatches) -> Result<()> {
             file_path: log_path.clone(),
             total_lines,
         })
-        .await
         .map_err(|e| {
             CommandRunError::Library(rlqt_lib::Error::Io(IoError::other(format!(
                 "Failed to send a file completion marker: {}",
@@ -420,13 +374,12 @@ async fn parse_logs(args: &ArgMatches) -> Result<()> {
     }
 
     drop(tx);
-    insert_task
-        .await
-        .map_err(|e| {
-            CommandRunError::Library(rlqt_lib::Error::Io(IoError::other(format!(
-                "Insertion task panicked: {}",
-                e
-            ))))
+    insert_thread
+        .join()
+        .map_err(|_| {
+            CommandRunError::Library(rlqt_lib::Error::Io(IoError::other(
+                "Insertion thread panicked",
+            )))
         })?
         .map_err(|e| CommandRunError::Library(rlqt_lib::Error::Database(e)))?;
 
@@ -444,14 +397,14 @@ async fn parse_logs(args: &ArgMatches) -> Result<()> {
         None
     };
 
-    post_insertion_operations(&db).await?;
-    finalize_bulk_import(&db).await?;
+    post_insertion_operations(&db)?;
+    finalize_bulk_import(&db)?;
 
     if let Some(pb) = index_progress {
         pb.finish_with_message("✓ Indexes created");
     }
 
-    let total = NodeLogEntry::count_all(&db).await?;
+    let total = NodeLogEntry::count_all(&db)?;
     let elapsed = start_time.elapsed();
     let elapsed_secs = elapsed.as_secs_f64();
 
@@ -461,6 +414,48 @@ async fn parse_logs(args: &ArgMatches) -> Result<()> {
         elapsed_secs
     );
 
+    Ok(())
+}
+
+fn insert_entries_thread(
+    db: DatabaseConnection,
+    rx: mpsc::Receiver<InsertionTask>,
+) -> std::result::Result<(), duckdb::Error> {
+    let mut next_id = 1i64;
+    let mut current_file_entries: Vec<ParsedLogEntry> = Vec::new();
+
+    while let Ok(job) = rx.recv() {
+        match job {
+            InsertionTask::EntriesChunk {
+                node_name,
+                mut entries,
+            } => {
+                for (i, entry) in entries.iter_mut().enumerate() {
+                    entry.explicit_id = Some(next_id + i as i64);
+                }
+                next_id += entries.len() as i64;
+
+                NodeLogEntry::insert_parsed_entries(&db, &entries, &node_name)?;
+
+                current_file_entries.extend(entries);
+            }
+            InsertionTask::FileCompletionMarker {
+                node_name,
+                file_path,
+                total_lines,
+            } => {
+                let file_path_str = file_path.to_string_lossy().to_string();
+                let file_metadata = extract_file_metadata(
+                    &current_file_entries,
+                    file_path_str,
+                    &node_name,
+                    total_lines as i64,
+                );
+                FileMetadata::insert_metadata(&db, file_metadata)?;
+                current_file_entries.clear();
+            }
+        }
+    }
     Ok(())
 }
 
@@ -483,14 +478,14 @@ fn extract_node_name(log_path: &Path) -> Result<String> {
     Ok(node_name)
 }
 
-async fn overview(args: &ArgMatches) -> Result<()> {
+fn overview(args: &ArgMatches) -> Result<()> {
     let db_path: PathBuf = args
         .get_one::<String>("input_db_file_path")
         .expect("input_db_file_path is a required argument")
         .into();
 
-    let db = open_database(&db_path).await?;
-    let metadata_entries = FileMetadata::find_all(&db).await?;
+    let db = open_database(&db_path)?;
+    let metadata_entries = FileMetadata::find_all(&db)?;
     log::info!("Found {} log files in database", metadata_entries.len());
 
     let without_colors = args.get_flag("without_colors");
@@ -499,7 +494,7 @@ async fn overview(args: &ArgMatches) -> Result<()> {
     Ok(())
 }
 
-async fn query_logs(args: &ArgMatches) -> Result<()> {
+fn query_logs(args: &ArgMatches) -> Result<()> {
     let db_path: PathBuf = args
         .get_one::<String>("input_db_file_path")
         .expect("input_db_file_path is a required argument")
@@ -570,8 +565,8 @@ async fn query_logs(args: &ArgMatches) -> Result<()> {
         ctx = ctx.add_label("unlabelled");
     }
 
-    let db = open_database(&db_path).await?;
-    let entries = NodeLogEntry::query(&db, &ctx).await?;
+    let db = open_database(&db_path)?;
+    let entries = NodeLogEntry::query(&db, &ctx)?;
     log::info!("Found {} matching entries", entries.len());
 
     let without_colors = args.get_flag("without_colors");

@@ -15,12 +15,13 @@
 use chrono::Utc;
 use rlqt_lib::entry_metadata::labels::LogEntryLabels;
 use rlqt_lib::{NodeLogEntry, ParsedLogEntry, QueryContext, Severity, create_database};
-use tempfile::NamedTempFile;
+use tempfile::TempDir;
 
-#[tokio::test]
-async fn test_query_with_multiple_labels_or_logic() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_query_with_multiple_labels_or_logic() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
     let mut labels_crash = LogEntryLabels::default();
     labels_crash |= LogEntryLabels::ERL_PROCESS_CRASH;
@@ -35,7 +36,7 @@ async fn test_query_with_multiple_labels_or_logic() {
     let entries = vec![
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(1),
             timestamp: Utc::now(),
             severity: Severity::Error,
             process_id: "<0.1.0>".to_string(),
@@ -48,7 +49,7 @@ async fn test_query_with_multiple_labels_or_logic() {
         },
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(2),
             timestamp: Utc::now(),
             severity: Severity::Error,
             process_id: "<0.2.0>".to_string(),
@@ -61,7 +62,7 @@ async fn test_query_with_multiple_labels_or_logic() {
         },
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(3),
             timestamp: Utc::now(),
             severity: Severity::Error,
             process_id: "<0.3.0>".to_string(),
@@ -74,7 +75,7 @@ async fn test_query_with_multiple_labels_or_logic() {
         },
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(4),
             timestamp: Utc::now(),
             severity: Severity::Info,
             process_id: "<0.4.0>".to_string(),
@@ -87,22 +88,21 @@ async fn test_query_with_multiple_labels_or_logic() {
         },
     ];
 
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
     let ctx = QueryContext::default()
         .add_label("erl_process_crash")
         .add_label("undefined_fn")
         .matching_all_labels(false);
-    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(results.len(), 3);
 }
 
-#[tokio::test]
-async fn test_query_with_multiple_labels_and_logic() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_query_with_multiple_labels_and_logic() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
     let mut labels_crash = LogEntryLabels::default();
     labels_crash |= LogEntryLabels::ERL_PROCESS_CRASH;
@@ -117,7 +117,7 @@ async fn test_query_with_multiple_labels_and_logic() {
     let entries = vec![
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(1),
             timestamp: Utc::now(),
             severity: Severity::Error,
             process_id: "<0.1.0>".to_string(),
@@ -130,7 +130,7 @@ async fn test_query_with_multiple_labels_and_logic() {
         },
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(2),
             timestamp: Utc::now(),
             severity: Severity::Error,
             process_id: "<0.2.0>".to_string(),
@@ -143,7 +143,7 @@ async fn test_query_with_multiple_labels_and_logic() {
         },
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(3),
             timestamp: Utc::now(),
             severity: Severity::Error,
             process_id: "<0.3.0>".to_string(),
@@ -156,7 +156,7 @@ async fn test_query_with_multiple_labels_and_logic() {
         },
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(4),
             timestamp: Utc::now(),
             severity: Severity::Info,
             process_id: "<0.4.0>".to_string(),
@@ -169,23 +169,22 @@ async fn test_query_with_multiple_labels_and_logic() {
         },
     ];
 
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
     let ctx = QueryContext::default()
         .add_label("erl_process_crash")
         .add_label("undefined_fn")
         .matching_all_labels(true);
-    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(results.len(), 1);
     assert_eq!(results[0].message, "Both labels");
 }
 
-#[tokio::test]
-async fn test_query_with_three_labels_and_logic() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_query_with_three_labels_and_logic() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
     let mut labels_two = LogEntryLabels::default();
     labels_two |= LogEntryLabels::RAFT;
@@ -199,7 +198,7 @@ async fn test_query_with_three_labels_and_logic() {
     let entries = vec![
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(1),
             timestamp: Utc::now(),
             severity: Severity::Info,
             process_id: "<0.1.0>".to_string(),
@@ -216,7 +215,7 @@ async fn test_query_with_three_labels_and_logic() {
         },
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(2),
             timestamp: Utc::now(),
             severity: Severity::Info,
             process_id: "<0.2.0>".to_string(),
@@ -229,7 +228,7 @@ async fn test_query_with_three_labels_and_logic() {
         },
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(3),
             timestamp: Utc::now(),
             severity: Severity::Info,
             process_id: "<0.3.0>".to_string(),
@@ -242,24 +241,23 @@ async fn test_query_with_three_labels_and_logic() {
         },
     ];
 
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
     let ctx = QueryContext::default()
         .add_label("raft")
         .add_label("elections")
         .add_label("process_stops")
         .matching_all_labels(true);
-    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(results.len(), 1);
     assert_eq!(results[0].message, "All three labels");
 }
 
-#[tokio::test]
-async fn test_query_with_three_labels_or_logic() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_query_with_three_labels_or_logic() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
     let mut labels_two = LogEntryLabels::default();
     labels_two |= LogEntryLabels::RAFT;
@@ -273,7 +271,7 @@ async fn test_query_with_three_labels_or_logic() {
     let entries = vec![
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(1),
             timestamp: Utc::now(),
             severity: Severity::Info,
             process_id: "<0.1.0>".to_string(),
@@ -290,7 +288,7 @@ async fn test_query_with_three_labels_or_logic() {
         },
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(2),
             timestamp: Utc::now(),
             severity: Severity::Info,
             process_id: "<0.2.0>".to_string(),
@@ -303,7 +301,7 @@ async fn test_query_with_three_labels_or_logic() {
         },
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(3),
             timestamp: Utc::now(),
             severity: Severity::Info,
             process_id: "<0.3.0>".to_string(),
@@ -316,7 +314,7 @@ async fn test_query_with_three_labels_or_logic() {
         },
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(4),
             timestamp: Utc::now(),
             severity: Severity::Info,
             process_id: "<0.4.0>".to_string(),
@@ -329,23 +327,22 @@ async fn test_query_with_three_labels_or_logic() {
         },
     ];
 
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
     let ctx = QueryContext::default()
         .add_label("raft")
         .add_label("elections")
         .add_label("process_stops")
         .matching_all_labels(false);
-    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(results.len(), 3);
 }
 
-#[tokio::test]
-async fn test_single_label_unaffected_by_matching_all_labels() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_single_label_unaffected_by_matching_all_labels() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
     let mut labels_crash = LogEntryLabels::default();
     labels_crash |= LogEntryLabels::ERL_PROCESS_CRASH;
@@ -353,7 +350,7 @@ async fn test_single_label_unaffected_by_matching_all_labels() {
     let entries = vec![
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(1),
             timestamp: Utc::now(),
             severity: Severity::Error,
             process_id: "<0.1.0>".to_string(),
@@ -366,7 +363,7 @@ async fn test_single_label_unaffected_by_matching_all_labels() {
         },
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(2),
             timestamp: Utc::now(),
             severity: Severity::Info,
             process_id: "<0.2.0>".to_string(),
@@ -379,29 +376,28 @@ async fn test_single_label_unaffected_by_matching_all_labels() {
         },
     ];
 
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
     let ctx_or = QueryContext::default()
         .add_label("erl_process_crash")
         .matching_all_labels(false);
-    let results_or = NodeLogEntry::query(&db, &ctx_or).await.unwrap();
+    let results_or = NodeLogEntry::query(&db, &ctx_or).unwrap();
 
     let ctx_and = QueryContext::default()
         .add_label("erl_process_crash")
         .matching_all_labels(true);
-    let results_and = NodeLogEntry::query(&db, &ctx_and).await.unwrap();
+    let results_and = NodeLogEntry::query(&db, &ctx_and).unwrap();
 
     assert_eq!(results_or.len(), 1);
     assert_eq!(results_and.len(), 1);
     assert_eq!(results_or[0].message, results_and[0].message);
 }
 
-#[tokio::test]
-async fn test_and_logic_with_no_matching_entries() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_and_logic_with_no_matching_entries() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
     let mut labels_crash = LogEntryLabels::default();
     labels_crash |= LogEntryLabels::ERL_PROCESS_CRASH;
@@ -412,7 +408,7 @@ async fn test_and_logic_with_no_matching_entries() {
     let entries = vec![
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(1),
             timestamp: Utc::now(),
             severity: Severity::Error,
             process_id: "<0.1.0>".to_string(),
@@ -425,7 +421,7 @@ async fn test_and_logic_with_no_matching_entries() {
         },
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(2),
             timestamp: Utc::now(),
             severity: Severity::Error,
             process_id: "<0.2.0>".to_string(),
@@ -438,22 +434,21 @@ async fn test_and_logic_with_no_matching_entries() {
         },
     ];
 
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
     let ctx = QueryContext::default()
         .add_label("erl_process_crash")
         .add_label("undefined_fn")
         .matching_all_labels(true);
-    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(results.len(), 0);
 }
 
-#[tokio::test]
-async fn test_and_logic_combined_with_other_filters() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_and_logic_combined_with_other_filters() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
     let mut labels_both = LogEntryLabels::default();
     labels_both |= LogEntryLabels::ERL_PROCESS_CRASH;
@@ -462,7 +457,7 @@ async fn test_and_logic_combined_with_other_filters() {
     let entries = vec![
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(1),
             timestamp: Utc::now(),
             severity: Severity::Error,
             process_id: "<0.1.0>".to_string(),
@@ -475,7 +470,7 @@ async fn test_and_logic_combined_with_other_filters() {
         },
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(2),
             timestamp: Utc::now(),
             severity: Severity::Info,
             process_id: "<0.2.0>".to_string(),
@@ -488,7 +483,7 @@ async fn test_and_logic_combined_with_other_filters() {
         },
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(3),
             timestamp: Utc::now(),
             severity: Severity::Error,
             process_id: "<0.3.0>".to_string(),
@@ -501,24 +496,23 @@ async fn test_and_logic_combined_with_other_filters() {
         },
     ];
 
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
     let ctx = QueryContext::default()
         .severity("error")
         .add_label("erl_process_crash")
         .add_label("undefined_fn")
         .matching_all_labels(true);
-    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(results.len(), 1);
     assert_eq!(results[0].message, "Error with both labels");
 }
 
-#[tokio::test]
-async fn test_new_labels_with_and_logic() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_new_labels_with_and_logic() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
     let mut labels_queues = LogEntryLabels::default();
     labels_queues |= LogEntryLabels::QUEUES;
@@ -533,7 +527,7 @@ async fn test_new_labels_with_and_logic() {
     let entries = vec![
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(1),
             timestamp: Utc::now(),
             severity: Severity::Info,
             process_id: "<0.1.0>".to_string(),
@@ -546,7 +540,7 @@ async fn test_new_labels_with_and_logic() {
         },
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(2),
             timestamp: Utc::now(),
             severity: Severity::Info,
             process_id: "<0.2.0>".to_string(),
@@ -559,7 +553,7 @@ async fn test_new_labels_with_and_logic() {
         },
         ParsedLogEntry {
             sequence_id: 0,
-            explicit_id: None,
+            explicit_id: Some(3),
             timestamp: Utc::now(),
             severity: Severity::Info,
             process_id: "<0.3.0>".to_string(),
@@ -572,15 +566,13 @@ async fn test_new_labels_with_and_logic() {
         },
     ];
 
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
     let ctx = QueryContext::default()
         .add_label("queues")
         .add_label("delete")
         .matching_all_labels(true);
-    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(results.len(), 1);
     assert_eq!(results[0].message, "Queue deletion event");
 }

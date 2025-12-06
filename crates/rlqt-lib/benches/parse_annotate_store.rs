@@ -17,16 +17,16 @@ use rayon::prelude::*;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
+use std::sync::mpsc;
+use std::thread;
 use tempfile::TempDir;
-use tokio::sync::mpsc;
 
 use rlqt_lib::entry_metadata::annotate_entry;
 use rlqt_lib::parser::{ParsedLogEntry, parse_log_file};
 use rlqt_lib::rel_db::{
-    create_database, create_database_for_bulk_import, finalize_bulk_import,
+    DatabaseConnection, create_database, create_database_for_bulk_import, finalize_bulk_import,
     node_log_entry::NodeLogEntry, post_insertion_operations,
 };
-use sea_orm::DatabaseConnection;
 
 const PIPELINE_CHUNK_SIZE: usize = 25_000;
 
@@ -120,28 +120,25 @@ fn bench_full_pipeline(c: &mut Criterion) {
             BenchmarkId::from_parameter(format!("{}K", lines / 1000)),
             &fixture_path,
             |b, path| {
-                b.to_async(tokio::runtime::Runtime::new().unwrap())
-                    .iter(|| async {
-                        let temp_dir = TempDir::new().unwrap();
-                        let db_path = temp_dir.path().join("benchmark.db");
-                        let db = create_database(&db_path).await.unwrap();
+                b.iter(|| {
+                    let temp_dir = TempDir::new().unwrap();
+                    let db_path = temp_dir.path().join("benchmark.db");
+                    let db = create_database(&db_path).unwrap();
 
-                        let file = File::open(path).unwrap();
-                        let reader = BufReader::new(file);
-                        let mut entries = parse_log_file(reader).unwrap().entries;
+                    let file = File::open(path).unwrap();
+                    let reader = BufReader::new(file);
+                    let mut entries = parse_log_file(reader).unwrap().entries;
 
-                        entries.par_iter_mut().for_each(|entry| {
-                            annotate_entry(entry);
-                        });
-
-                        entries.sort_by_key(|e| e.sequence_id);
-
-                        NodeLogEntry::insert_parsed_entries(&db, &entries, "rabbit@sunnyside")
-                            .await
-                            .unwrap();
-
-                        post_insertion_operations(&db).await.unwrap();
+                    entries.par_iter_mut().for_each(|entry| {
+                        annotate_entry(entry);
                     });
+
+                    entries.sort_by_key(|e| e.sequence_id);
+
+                    NodeLogEntry::insert_parsed_entries(&db, &entries, "rabbit@sunnyside").unwrap();
+
+                    post_insertion_operations(&db).unwrap();
+                });
             },
         );
     }
@@ -149,12 +146,12 @@ fn bench_full_pipeline(c: &mut Criterion) {
     group.finish();
 }
 
-async fn insert_chunk(
+fn insert_chunk(
     db: &DatabaseConnection,
     chunk: Vec<ParsedLogEntry>,
     node: &str,
-) -> Result<(), sea_orm::DbErr> {
-    NodeLogEntry::insert_parsed_entries(db, &chunk, node).await
+) -> Result<(), duckdb::Error> {
+    NodeLogEntry::insert_parsed_entries(db, &chunk, node)
 }
 
 fn bench_pipelined_full(c: &mut Criterion) {
@@ -173,43 +170,40 @@ fn bench_pipelined_full(c: &mut Criterion) {
             BenchmarkId::from_parameter(format!("{}K", lines / 1000)),
             &fixture_path,
             |b, path| {
-                b.to_async(tokio::runtime::Runtime::new().unwrap())
-                    .iter(|| async {
-                        let temp_dir = TempDir::new().unwrap();
-                        let db_path = temp_dir.path().join("benchmark.db");
-                        let db = create_database(&db_path).await.unwrap();
+                b.iter(|| {
+                    let temp_dir = TempDir::new().unwrap();
+                    let db_path = temp_dir.path().join("benchmark.db");
+                    let db = create_database(&db_path).unwrap();
 
-                        let file = File::open(path).unwrap();
-                        let reader = BufReader::new(file);
-                        let entries = parse_log_file(reader).unwrap().entries;
+                    let file = File::open(path).unwrap();
+                    let reader = BufReader::new(file);
+                    let entries = parse_log_file(reader).unwrap().entries;
 
-                        let (tx, mut rx) = mpsc::channel::<Vec<ParsedLogEntry>>(4);
+                    let (tx, rx) = mpsc::channel::<Vec<ParsedLogEntry>>();
 
-                        let db_clone = db.clone();
-                        let insert_task = tokio::spawn(async move {
-                            while let Some(chunk) = rx.recv().await {
-                                insert_chunk(&db_clone, chunk, "rabbit@sunnyside")
-                                    .await
-                                    .unwrap();
-                            }
-                        });
-
-                        let chunks: Vec<_> = entries
-                            .chunks(PIPELINE_CHUNK_SIZE)
-                            .map(|c| c.to_vec())
-                            .collect();
-
-                        for mut chunk in chunks {
-                            chunk.par_iter_mut().for_each(annotate_entry);
-                            chunk.sort_by_key(|e| e.sequence_id);
-                            tx.send(chunk).await.unwrap();
+                    let db_clone = db.clone();
+                    let insert_thread = thread::spawn(move || {
+                        while let Ok(chunk) = rx.recv() {
+                            insert_chunk(&db_clone, chunk, "rabbit@sunnyside").unwrap();
                         }
-
-                        drop(tx);
-                        insert_task.await.unwrap();
-
-                        post_insertion_operations(&db).await.unwrap();
                     });
+
+                    let chunks: Vec<_> = entries
+                        .chunks(PIPELINE_CHUNK_SIZE)
+                        .map(|c| c.to_vec())
+                        .collect();
+
+                    for mut chunk in chunks {
+                        chunk.par_iter_mut().for_each(annotate_entry);
+                        chunk.sort_by_key(|e| e.sequence_id);
+                        tx.send(chunk).unwrap();
+                    }
+
+                    drop(tx);
+                    insert_thread.join().unwrap();
+
+                    post_insertion_operations(&db).unwrap();
+                });
             },
         );
     }
@@ -233,44 +227,41 @@ fn bench_pipelined_fast_import(c: &mut Criterion) {
             BenchmarkId::from_parameter(format!("{}K", lines / 1000)),
             &fixture_path,
             |b, path| {
-                b.to_async(tokio::runtime::Runtime::new().unwrap())
-                    .iter(|| async {
-                        let temp_dir = TempDir::new().unwrap();
-                        let db_path = temp_dir.path().join("benchmark.db");
-                        let db = create_database_for_bulk_import(&db_path).await.unwrap();
+                b.iter(|| {
+                    let temp_dir = TempDir::new().unwrap();
+                    let db_path = temp_dir.path().join("benchmark.db");
+                    let db = create_database_for_bulk_import(&db_path).unwrap();
 
-                        let file = File::open(path).unwrap();
-                        let reader = BufReader::new(file);
-                        let entries = parse_log_file(reader).unwrap().entries;
+                    let file = File::open(path).unwrap();
+                    let reader = BufReader::new(file);
+                    let entries = parse_log_file(reader).unwrap().entries;
 
-                        let (tx, mut rx) = mpsc::channel::<Vec<ParsedLogEntry>>(4);
+                    let (tx, rx) = mpsc::channel::<Vec<ParsedLogEntry>>();
 
-                        let db_clone = db.clone();
-                        let insert_task = tokio::spawn(async move {
-                            while let Some(chunk) = rx.recv().await {
-                                insert_chunk(&db_clone, chunk, "rabbit@sunnyside")
-                                    .await
-                                    .unwrap();
-                            }
-                        });
-
-                        let chunks: Vec<_> = entries
-                            .chunks(PIPELINE_CHUNK_SIZE)
-                            .map(|c| c.to_vec())
-                            .collect();
-
-                        for mut chunk in chunks {
-                            chunk.par_iter_mut().for_each(annotate_entry);
-                            chunk.sort_by_key(|e| e.sequence_id);
-                            tx.send(chunk).await.unwrap();
+                    let db_clone = db.clone();
+                    let insert_thread = thread::spawn(move || {
+                        while let Ok(chunk) = rx.recv() {
+                            insert_chunk(&db_clone, chunk, "rabbit@sunnyside").unwrap();
                         }
-
-                        drop(tx);
-                        insert_task.await.unwrap();
-
-                        post_insertion_operations(&db).await.unwrap();
-                        finalize_bulk_import(&db).await.unwrap();
                     });
+
+                    let chunks: Vec<_> = entries
+                        .chunks(PIPELINE_CHUNK_SIZE)
+                        .map(|c| c.to_vec())
+                        .collect();
+
+                    for mut chunk in chunks {
+                        chunk.par_iter_mut().for_each(annotate_entry);
+                        chunk.sort_by_key(|e| e.sequence_id);
+                        tx.send(chunk).unwrap();
+                    }
+
+                    drop(tx);
+                    insert_thread.join().unwrap();
+
+                    post_insertion_operations(&db).unwrap();
+                    finalize_bulk_import(&db).unwrap();
+                });
             },
         );
     }

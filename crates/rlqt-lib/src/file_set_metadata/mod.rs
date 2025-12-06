@@ -27,8 +27,6 @@ use nom::{
     bytes::complete::{tag, take_until},
     character::complete::multispace0,
 };
-use sea_orm::prelude::Json;
-use serde_json::Value;
 use std::collections::HashSet;
 
 #[derive(Debug, Clone, Default)]
@@ -50,17 +48,17 @@ impl FileMetadataContext {
     pub fn to_model(&self, file_path: String) -> file_metadata::Model {
         file_metadata::Model {
             file_path,
-            rabbitmq_versions: json_from_vec(&self.rabbitmq_versions),
-            erlang_versions: json_from_vec(&self.erlang_versions),
+            rabbitmq_versions: self.rabbitmq_versions.clone(),
+            erlang_versions: self.erlang_versions.clone(),
             tls_library: self.tls_library.clone(),
             oldest_entry_at: self.oldest_entry_at,
             most_recent_entry_at: self.most_recent_entry_at,
             total_lines: self.total_lines,
             total_entries: self.total_entries,
-            nodes: json_from_hashset(&self.nodes),
-            subsystems: json_from_hashset(&self.subsystems),
-            labels: json_from_hashset(&self.labels),
-            enabled_plugins: json_from_hashset(&self.enabled_plugins),
+            nodes: sorted_vec_from_hashset(&self.nodes),
+            subsystems: sorted_vec_from_hashset(&self.subsystems),
+            labels: sorted_vec_from_hashset(&self.labels),
+            enabled_plugins: sorted_vec_from_hashset(&self.enabled_plugins),
         }
     }
 
@@ -102,14 +100,10 @@ impl FileMetadataContext {
     }
 }
 
-fn json_from_hashset(set: &HashSet<String>) -> Json {
+fn sorted_vec_from_hashset(set: &HashSet<String>) -> Vec<String> {
     let mut vec: Vec<String> = set.iter().cloned().collect();
     vec.sort();
-    Json::Array(vec.into_iter().map(Value::String).collect())
-}
-
-fn json_from_vec(vec: &[String]) -> Json {
-    Json::Array(vec.iter().cloned().map(Value::String).collect())
+    vec
 }
 
 fn parse_rabbitmq_version(input: &str) -> IResult<&str, &str> {

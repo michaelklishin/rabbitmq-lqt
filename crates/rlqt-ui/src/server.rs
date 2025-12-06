@@ -21,8 +21,7 @@ use axum::response::IntoResponse;
 use axum::routing::get;
 use clap::ArgMatches;
 use include_dir::{Dir, include_dir};
-use rlqt_lib::open_database;
-use sea_orm::DatabaseConnection;
+use rlqt_lib::{DatabaseConnection, open_database};
 use std::io::{Error as IoError, ErrorKind};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -70,7 +69,7 @@ pub async fn run_server(db_path: &Path, host: &str, port: u16) -> Result<(), Ser
         )));
     }
 
-    let db = open_database(db_path).await?;
+    let db = open_database(db_path)?;
     let state = AppState { db: Arc::new(db) };
     let app = create_router(state);
 

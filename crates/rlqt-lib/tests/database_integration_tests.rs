@@ -20,21 +20,23 @@ use rlqt_lib::{
     open_database, parse_log_file,
 };
 use std::io::BufReader;
-use tempfile::NamedTempFile;
+use tempfile::TempDir;
 
-#[tokio::test]
-async fn test_create_database() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_create_database() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
-    let count = NodeLogEntry::count_all(&db).await.unwrap();
+    let count = NodeLogEntry::count_all(&db).unwrap();
     assert_eq!(count, 0);
 }
 
-#[tokio::test]
-async fn test_insert_and_query() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_insert_and_query() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
     let entries = vec![
         ParsedLogEntry {
@@ -65,22 +67,21 @@ async fn test_insert_and_query() {
         },
     ];
 
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
-    let count = NodeLogEntry::count_all(&db).await.unwrap();
+    let count = NodeLogEntry::count_all(&db).unwrap();
     assert_eq!(count, 2);
 
     let ctx = QueryContext::default();
-    let queried = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let queried = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(queried.len(), 2);
 }
 
-#[tokio::test]
-async fn test_query_with_severity_filter() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_query_with_severity_filter() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
     let entries = vec![
         ParsedLogEntry {
@@ -111,20 +112,19 @@ async fn test_query_with_severity_filter() {
         },
     ];
 
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
     let ctx = QueryContext::default().severity("error");
-    let errors = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let errors = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(errors.len(), 1);
     assert_eq!(errors[0].severity, "error");
 }
 
-#[tokio::test]
-async fn test_query_with_limit() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_query_with_limit() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
     let entries: Vec<ParsedLogEntry> = (0..10)
         .map(|i| ParsedLogEntry {
@@ -142,22 +142,20 @@ async fn test_query_with_limit() {
         })
         .collect();
 
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
     let ctx = QueryContext::default().limit(5);
-    let limited = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let limited = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(limited.len(), 5);
 }
 
-#[tokio::test]
-async fn test_open_existing_database() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db_path = temp_db.path().to_path_buf();
+#[test]
+fn test_open_existing_database() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
 
     {
-        let db = create_database(&db_path).await.unwrap();
+        let db = create_database(&db_path).unwrap();
         let entries = vec![ParsedLogEntry {
             sequence_id: 0,
             explicit_id: None,
@@ -171,32 +169,31 @@ async fn test_open_existing_database() {
             resolution_or_discussion_url_id: None,
             doc_url_id: None,
         }];
-        NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-            .await
-            .unwrap();
+        NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
     }
 
-    let db = open_database(&db_path).await.unwrap();
-    let count = NodeLogEntry::count_all(&db).await.unwrap();
+    let db = open_database(&db_path).unwrap();
+    let count = NodeLogEntry::count_all(&db).unwrap();
     assert_eq!(count, 1);
 }
 
-#[tokio::test]
-async fn test_database_reconnection() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db_path = temp_db.path().to_path_buf();
+#[test]
+fn test_database_reconnection() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
 
-    create_database(&db_path).await.unwrap();
+    create_database(&db_path).unwrap();
 
-    let db = open_database(&db_path).await.unwrap();
-    let count = NodeLogEntry::count_all(&db).await.unwrap();
+    let db = open_database(&db_path).unwrap();
+    let count = NodeLogEntry::count_all(&db).unwrap();
     assert_eq!(count, 0);
 }
 
-#[tokio::test]
-async fn test_query_with_subsystem_filter() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_query_with_subsystem_filter() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
     let entries = vec![
         ParsedLogEntry {
@@ -240,12 +237,10 @@ async fn test_query_with_subsystem_filter() {
         },
     ];
 
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
     let ctx = QueryContext::default().subsystem("metadata_store");
-    let metadata_entries = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let metadata_entries = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(metadata_entries.len(), 1);
     assert_eq!(
         metadata_entries[0].subsystem_id,
@@ -253,7 +248,7 @@ async fn test_query_with_subsystem_filter() {
     );
 
     let ctx = QueryContext::default().subsystem("feature_flags");
-    let feature_entries = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let feature_entries = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(feature_entries.len(), 1);
     assert_eq!(
         feature_entries[0].subsystem_id,
@@ -261,14 +256,15 @@ async fn test_query_with_subsystem_filter() {
     );
 
     let ctx = QueryContext::default();
-    let all_entries = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let all_entries = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(all_entries.len(), 3);
 }
 
-#[tokio::test]
-async fn test_query_with_label_filter() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_query_with_label_filter() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
     let mut labels_crash = LogEntryLabels::default();
     labels_crash |= LogEntryLabels::ERL_PROCESS_CRASH;
@@ -335,33 +331,32 @@ async fn test_query_with_label_filter() {
         },
     ];
 
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
     let ctx = QueryContext::default().add_label("erl_process_crash");
-    let crash_entries = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let crash_entries = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(crash_entries.len(), 2);
 
     let ctx = QueryContext::default().add_label("undefined_fn");
-    let undef_entries = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let undef_entries = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(undef_entries.len(), 2);
 
     let ctx = QueryContext::default()
         .add_label("erl_process_crash")
         .add_label("undefined_fn");
-    let any_label_entries = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let any_label_entries = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(any_label_entries.len(), 3);
 
     let ctx = QueryContext::default();
-    let all_entries = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let all_entries = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(all_entries.len(), 4);
 }
 
-#[tokio::test]
-async fn test_query_with_combined_filters() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_query_with_combined_filters() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
     let mut labels_crash = LogEntryLabels::default();
     labels_crash |= LogEntryLabels::ERL_PROCESS_CRASH;
@@ -408,14 +403,12 @@ async fn test_query_with_combined_filters() {
         },
     ];
 
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
     let ctx = QueryContext::default()
         .subsystem("metadata_store")
         .add_label("erl_process_crash");
-    let filtered_entries = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let filtered_entries = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(filtered_entries.len(), 1);
     assert_eq!(
         filtered_entries[0].subsystem_id,
@@ -425,14 +418,15 @@ async fn test_query_with_combined_filters() {
     let ctx = QueryContext::default()
         .severity("error")
         .add_label("erl_process_crash");
-    let filtered_entries = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let filtered_entries = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(filtered_entries.len(), 2);
 }
 
-#[tokio::test]
-async fn test_query_with_has_doc_url_filter() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_query_with_has_doc_url_filter() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
     let entries = vec![
         ParsedLogEntry {
@@ -476,24 +470,23 @@ async fn test_query_with_has_doc_url_filter() {
         },
     ];
 
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
     let ctx = QueryContext::default().has_doc_url(true);
-    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(results.len(), 2);
     assert!(results.iter().all(|e| e.doc_url_id.is_some()));
 
     let ctx = QueryContext::default().has_doc_url(false);
-    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(results.len(), 3);
 }
 
-#[tokio::test]
-async fn test_query_with_has_resolution_or_discussion_url_filter() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_query_with_has_resolution_or_discussion_url_filter() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
     let entries = vec![
         ParsedLogEntry {
@@ -524,24 +517,23 @@ async fn test_query_with_has_resolution_or_discussion_url_filter() {
         },
     ];
 
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
     let ctx = QueryContext::default().has_resolution_or_discussion_url(true);
-    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(results.len(), 1);
     assert!(results[0].resolution_or_discussion_url_id.is_some());
 
     let ctx = QueryContext::default().has_resolution_or_discussion_url(false);
-    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(results.len(), 2);
 }
 
-#[tokio::test]
-async fn test_query_with_both_url_filters() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_query_with_both_url_filters() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
     let entries = vec![
         ParsedLogEntry {
@@ -598,23 +590,22 @@ async fn test_query_with_both_url_filters() {
         },
     ];
 
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
     let ctx = QueryContext::default()
         .has_doc_url(true)
         .has_resolution_or_discussion_url(true);
-    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(results.len(), 1);
     assert!(results[0].doc_url_id.is_some());
     assert!(results[0].resolution_or_discussion_url_id.is_some());
 }
 
-#[tokio::test]
-async fn test_query_with_unlabelled_filter() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_query_with_unlabelled_filter() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
     let entries = vec![
         ParsedLogEntry {
@@ -658,21 +649,20 @@ async fn test_query_with_unlabelled_filter() {
         },
     ];
 
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
     let ctx = QueryContext::default().add_label("unlabelled");
-    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(results.len(), 2);
     assert!(results[0].get_labels().contains(LogEntryLabels::UNLABELLED));
     assert!(results[1].get_labels().contains(LogEntryLabels::UNLABELLED));
 }
 
-#[tokio::test]
-async fn test_query_excluding_unlabelled() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_query_excluding_unlabelled() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
     let entries = vec![
         ParsedLogEntry {
@@ -703,21 +693,20 @@ async fn test_query_excluding_unlabelled() {
         },
     ];
 
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
     let ctx = QueryContext::default().add_label("elections");
-    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(results.len(), 1);
     assert!(results[0].get_labels().contains(LogEntryLabels::ELECTIONS));
     assert!(!results[0].get_labels().contains(LogEntryLabels::UNLABELLED));
 }
 
-#[tokio::test]
-async fn test_end_to_end_unlabelled_annotation() {
-    let temp_log_file = NamedTempFile::new().unwrap();
-    let temp_db = NamedTempFile::new().unwrap();
+#[test]
+fn test_end_to_end_unlabelled_annotation() {
+    let temp_dir = TempDir::new().unwrap();
+    let temp_log_file = temp_dir.path().join("test.log");
+    let db_path = temp_dir.path().join("test.db");
 
     let log_contents = r#"2025-10-27 18:23:00.123456+00:00 [info] <0.1.0> Some generic log message without any specific subsystem or labels
 2025-10-27 18:23:01.234567+00:00 [info] <0.2.0> User 'admin' authenticated successfully by backend internal
@@ -725,9 +714,9 @@ async fn test_end_to_end_unlabelled_annotation() {
 2025-10-27 18:23:03.456789+00:00 [info] <0.4.0> Deleting auto-delete queue 'my.queue' in vhost '/' because all consumers were removed
 "#;
 
-    std::fs::write(temp_log_file.path(), log_contents).unwrap();
+    std::fs::write(&temp_log_file, log_contents).unwrap();
 
-    let file = std::fs::File::open(temp_log_file.path()).unwrap();
+    let file = std::fs::File::open(&temp_log_file).unwrap();
     let reader = BufReader::new(file);
     let parse_results = parse_log_file(reader).unwrap();
     assert_eq!(parse_results.entries.len(), 4, "Expected 4 log entries");
@@ -766,27 +755,26 @@ async fn test_end_to_end_unlabelled_annotation() {
         "Fourth entry should NOT have UNLABELLED label"
     );
 
-    let db = create_database(temp_db.path()).await.unwrap();
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    let db = create_database(&db_path).unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
     let ctx = QueryContext::default().add_label("unlabelled");
-    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(results.len(), 2, "Should find 2 unlabelled entries");
     assert!(results[0].get_labels().contains(LogEntryLabels::UNLABELLED));
     assert!(results[1].get_labels().contains(LogEntryLabels::UNLABELLED));
 
     let ctx = QueryContext::default().add_label("access_control");
-    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(results.len(), 1, "Should find 1 access_control entry");
     assert!(!results[0].get_labels().contains(LogEntryLabels::UNLABELLED));
 }
 
-#[tokio::test]
-async fn test_bulk_insert_with_chunking() {
-    let temp_db = NamedTempFile::new().unwrap();
-    let db = create_database(temp_db.path()).await.unwrap();
+#[test]
+fn test_bulk_insert_with_chunking() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
 
     let base_time = Utc::now();
     let entry_count = 4500;
@@ -812,22 +800,20 @@ async fn test_bulk_insert_with_chunking() {
         })
         .collect();
 
-    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node")
-        .await
-        .unwrap();
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
 
-    let count = NodeLogEntry::count_all(&db).await.unwrap();
+    let count = NodeLogEntry::count_all(&db).unwrap();
     assert_eq!(count, entry_count as u64);
 
     let ctx = QueryContext::default().severity("info");
-    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(results.len(), 1500);
 
     let ctx = QueryContext::default().severity("warning");
-    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(results.len(), 1500);
 
     let ctx = QueryContext::default().severity("error");
-    let results = NodeLogEntry::query(&db, &ctx).await.unwrap();
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(results.len(), 1500);
 }

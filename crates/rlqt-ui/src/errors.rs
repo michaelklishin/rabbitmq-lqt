@@ -17,7 +17,7 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum ServerError {
     #[error("Database error: {0}")]
-    Database(#[from] sea_orm::DbErr),
+    Database(#[from] duckdb::Error),
 
     #[error("Library error: {0}")]
     Library(#[from] rlqt_lib::Error),
