@@ -4,6 +4,7 @@
 
 ### Enhancements
 
+ * A 60-65% performance improvement for `parse logs`
  * Annotations for close to 200 new log entry types
  * New subsystems, labels
  * Labels are now stored using a bit set, improving `parse logs` performance by 20-25% for
