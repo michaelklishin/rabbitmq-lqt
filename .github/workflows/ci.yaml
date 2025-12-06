@@ -25,6 +25,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Free up disk space
+        run: .github/scripts/free_disk_space.sh
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -61,6 +65,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+
+      - name: Free up disk space
+        run: .github/scripts/free_disk_space.sh
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
