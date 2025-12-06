@@ -3,3 +3,9 @@ default-filter = "all()"
 retries = 2
 failure-output = "final"
 fail-fast = false
+
+[profile.ci]
+default-filter = "all()"
+retries = 2
+failure-output = "final"
+fail-fast = false
