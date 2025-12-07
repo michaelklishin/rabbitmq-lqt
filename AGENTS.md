@@ -57,7 +57,7 @@ This crate obfuscates log file entries, namely:
 
 ## Key Concepts
 
-RLQT parses RabbitMQ log files and stores them in a SQLite database for efficient querying.
+RLQT parses RabbitMQ log files and stores them in an embedded database ([DuckDB](https://duckdb.org/docs/stable/)) for efficient querying.
 Each log entry is annotated with metadata including:
 
  * **Subsystems**: the RabbitMQ subsystem the log entry relates to (e.g., connections, queues, virtual hosts)
