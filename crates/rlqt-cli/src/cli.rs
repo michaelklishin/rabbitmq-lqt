@@ -24,8 +24,12 @@ pub fn clap_parser() -> Command {
         .subcommand_required(true)
         .subcommands(web_subcommands());
 
-    Command::new("rlq")
+    Command::new("rabbitmq-lqt")
         .version(env!("CARGO_PKG_VERSION"))
+        .long_about(format!(
+            "RabbitMQ Log Query Tools (RLQT) {}\n\nParse, query, analyze, obfuscate RabbitMQ log files",
+            env!("CARGO_PKG_VERSION")
+        ))
         .about("RabbitMQ Log Query - Parse and query RabbitMQ log files")
         .subcommand_required(true)
         .subcommand(logs_group)

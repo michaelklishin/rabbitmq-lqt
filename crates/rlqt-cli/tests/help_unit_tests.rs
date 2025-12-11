@@ -35,7 +35,7 @@ fn show_help_with_help_flag() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn show_version() -> Result<(), Box<dyn Error>> {
-    run_succeeds(["--version"]).stdout(output_includes("rlq"));
+    run_succeeds(["--version"]).stdout(output_includes("rabbitmq-lqt"));
 
     Ok(())
 }
