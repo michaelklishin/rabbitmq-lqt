@@ -33,8 +33,6 @@ jobs:
         with:
           components: rustfmt, clippy
 
-      - uses: Swatinem/rust-cache@v2
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -75,10 +73,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.rust-version }}
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          prefix-key: "rlqt-1"
 
       - uses: taiki-e/install-action@nextest
 

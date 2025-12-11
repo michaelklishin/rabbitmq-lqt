@@ -30,7 +30,7 @@ owo-colors = "4.2"
 regex = "1.12"
 bitflags = "2.10"
 indicatif = "0.18"
-num_enum = "0.7.5"
+num_enum = "0.7"
 strum = { version = "0.27", features = ["derive"] }
 
 duckdb = { version = "1.4", features = ["bundled"] }
