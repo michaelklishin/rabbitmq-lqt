@@ -14,6 +14,7 @@
 use crate::entry_metadata::labels::{LABEL_NAMES, LogEntryLabels};
 use crate::parser::ParsedLogEntry;
 use crate::rel_db::DatabaseConnection;
+use crate::rel_db::presets::QueryPreset;
 use chrono::{DateTime, Utc};
 use duckdb::types::Value;
 use duckdb::{Error as DuckDbError, params};
@@ -37,6 +38,7 @@ pub struct QueryContext {
     pub(crate) limit: Option<u64>,
     pub(crate) has_resolution_or_discussion_url: bool,
     pub(crate) has_doc_url: bool,
+    pub(crate) preset: Option<QueryPreset>,
 }
 
 impl QueryContext {
@@ -111,6 +113,12 @@ impl QueryContext {
         self.has_doc_url = has;
         self
     }
+
+    #[must_use]
+    pub fn preset(mut self, preset: QueryPreset) -> Self {
+        self.preset = Some(preset);
+        self
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -174,7 +182,7 @@ impl NodeLogEntry {
         let mut params: Vec<Value> = Vec::new();
 
         if let Some(since) = ctx.since_time {
-            conditions.push("timestamp >= ?");
+            conditions.push("timestamp >= ?".to_string());
             params.push(Value::Timestamp(
                 duckdb::types::TimeUnit::Microsecond,
                 since.timestamp_micros(),
@@ -182,60 +190,79 @@ impl NodeLogEntry {
         }
 
         if let Some(to) = ctx.to_time {
-            conditions.push("timestamp <= ?");
+            conditions.push("timestamp <= ?".to_string());
             params.push(Value::Timestamp(
                 duckdb::types::TimeUnit::Microsecond,
                 to.timestamp_micros(),
             ));
         }
 
-        if let Some(ref sev) = ctx.severity {
-            conditions.push("severity = ?");
-            params.push(Value::Text(sev.clone()));
+        if let Some(ref preset) = ctx.preset {
+            let mut or_parts = Vec::new();
+
+            if let Some(sev) = preset.severity() {
+                or_parts.push("severity = ?".to_string());
+                params.push(Value::Text(sev.to_string()));
+            }
+
+            let label_mask = preset.labels().bits();
+            if label_mask != 0 {
+                or_parts.push("(labels & ?) != 0".to_string());
+                params.push(Value::BigInt(label_mask as i64));
+            }
+
+            if !or_parts.is_empty() {
+                conditions.push(format!("({})", or_parts.join(" OR ")));
+            }
+        } else {
+            if let Some(ref sev) = ctx.severity {
+                conditions.push("severity = ?".to_string());
+                params.push(Value::Text(sev.clone()));
+            }
+
+            if !ctx.labels.is_empty() {
+                let mut combined_mask: u64 = 0;
+                for label in &ctx.labels {
+                    if let Some(bit) = LogEntryLabels::bit_for_label(label) {
+                        combined_mask |= bit;
+                    }
+                }
+                if combined_mask != 0 {
+                    if ctx.matching_all_labels {
+                        conditions.push("(labels & ?) = ?".to_string());
+                        params.push(Value::BigInt(combined_mask as i64));
+                        params.push(Value::BigInt(combined_mask as i64));
+                    } else {
+                        conditions.push("(labels & ?) != 0".to_string());
+                        params.push(Value::BigInt(combined_mask as i64));
+                    }
+                }
+            }
         }
 
         if let Some(ref pid) = ctx.erlang_pid {
-            conditions.push("erlang_pid = ?");
+            conditions.push("erlang_pid = ?".to_string());
             params.push(Value::Text(pid.clone()));
         }
 
         if let Some(ref n) = ctx.node {
-            conditions.push("node = ?");
+            conditions.push("node = ?".to_string());
             params.push(Value::Text(n.clone()));
         }
 
         if let Some(ref sub) = ctx.subsystem
             && let Ok(subsystem) = sub.parse::<crate::entry_metadata::subsystems::Subsystem>()
         {
-            conditions.push("subsystem_id = ?");
+            conditions.push("subsystem_id = ?".to_string());
             params.push(Value::SmallInt(subsystem.to_id()));
         }
 
-        if !ctx.labels.is_empty() {
-            let mut combined_mask: u64 = 0;
-            for label in &ctx.labels {
-                if let Some(bit) = LogEntryLabels::bit_for_label(label) {
-                    combined_mask |= bit;
-                }
-            }
-            if combined_mask != 0 {
-                if ctx.matching_all_labels {
-                    conditions.push("(labels & ?) = ?");
-                    params.push(Value::BigInt(combined_mask as i64));
-                    params.push(Value::BigInt(combined_mask as i64));
-                } else {
-                    conditions.push("(labels & ?) != 0");
-                    params.push(Value::BigInt(combined_mask as i64));
-                }
-            }
-        }
-
         if ctx.has_resolution_or_discussion_url {
-            conditions.push("resolution_or_discussion_url_id IS NOT NULL");
+            conditions.push("resolution_or_discussion_url_id IS NOT NULL".to_string());
         }
 
         if ctx.has_doc_url {
-            conditions.push("doc_url_id IS NOT NULL");
+            conditions.push("doc_url_id IS NOT NULL".to_string());
         }
 
         let effective_limit = ctx.limit.unwrap_or(DEFAULT_MAX_QUERY_LIMIT);

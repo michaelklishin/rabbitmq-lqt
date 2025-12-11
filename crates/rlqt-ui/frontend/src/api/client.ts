@@ -108,3 +108,30 @@ export async function getFileMetadata(): Promise<FileMetadataResponse[]> {
 
   return response.json()
 }
+
+export interface PresetQueryParams {
+  since_time?: string
+  to_time?: string
+  node?: string
+  limit?: number
+}
+
+export async function queryLogsByPreset(
+  presetName: string,
+  params: PresetQueryParams = {}
+): Promise<LogQueryResponse> {
+  const queryString = new URLSearchParams(
+    Object.entries(params)
+      .filter(([_, v]) => v !== undefined && v !== null && v !== '')
+      .map(([k, v]) => [k, String(v)])
+  ).toString()
+
+  const url = `${API_BASE}/logs/preset/${presetName}${queryString ? `?${queryString}` : ''}`
+  const response = await fetch(url)
+
+  if (!response.ok) {
+    throw new Error(`Failed to query logs by preset: ${response.statusText}`)
+  }
+
+  return response.json()
+}

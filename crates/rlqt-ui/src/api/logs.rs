@@ -21,6 +21,7 @@ use axum::response::{IntoResponse, Response};
 use chrono::{DateTime, Utc};
 use rlqt_lib::entry_metadata::labels::LABEL_NAMES;
 use rlqt_lib::rel_db::node_log_entry::Model;
+use rlqt_lib::rel_db::presets::QueryPreset;
 use rlqt_lib::{NodeLogEntry, QueryContext};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -107,6 +108,7 @@ impl IntoResponse for ServerError {
             ServerError::Io(ref e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
             ServerError::Serialization(ref e) => (StatusCode::BAD_REQUEST, e.to_string()),
             ServerError::DateTimeParse(ref e) => (StatusCode::BAD_REQUEST, e.clone()),
+            ServerError::InvalidPreset(ref e) => (StatusCode::BAD_REQUEST, e.clone()),
         };
 
         (status, Json(serde_json::json!({ "error": message }))).into_response()
@@ -203,4 +205,62 @@ pub async fn query_logs(
 
 fn parse_datetime_flexible(s: &str) -> Result<DateTime<Utc>, ServerError> {
     rlqt_lib::datetime::parse_datetime_flexible(s).map_err(ServerError::DateTimeParse)
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PresetQueryParams {
+    since_time: Option<String>,
+    to_time: Option<String>,
+    node: Option<String>,
+    limit: Option<u64>,
+}
+
+pub async fn query_logs_by_preset(
+    State(state): State<AppState>,
+    axum::extract::Path(preset_name): axum::extract::Path<String>,
+    Query(params): Query<PresetQueryParams>,
+) -> Result<Json<LogQueryResponse>, ServerError> {
+    let preset: QueryPreset = preset_name
+        .parse()
+        .map_err(|e: String| ServerError::InvalidPreset(e))?;
+
+    let mut ctx = QueryContext::from(preset);
+
+    if let Some(since) = params
+        .since_time
+        .as_ref()
+        .map(|s| parse_datetime_flexible(s))
+        .transpose()?
+    {
+        ctx = ctx.since(since);
+    }
+
+    if let Some(to) = params
+        .to_time
+        .as_ref()
+        .map(|s| parse_datetime_flexible(s))
+        .transpose()?
+    {
+        ctx = ctx.to(to);
+    }
+
+    if let Some(n) = params.node.as_ref() {
+        ctx = ctx.node(n);
+    }
+
+    if let Some(l) = params.limit
+        && l > 0
+    {
+        ctx = ctx.limit(l);
+    }
+
+    let db = state.db.clone();
+    let models = tokio::task::spawn_blocking(move || NodeLogEntry::query(&db, &ctx))
+        .await
+        .map_err(|e| ServerError::Io(std::io::Error::other(format!("Task join error: {}", e))))??;
+
+    let total = models.len();
+    let entries: Vec<LogEntry> = models.into_iter().map(LogEntry::from).collect();
+
+    Ok(Json(LogQueryResponse { entries, total }))
 }

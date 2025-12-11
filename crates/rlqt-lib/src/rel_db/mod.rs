@@ -13,9 +13,11 @@
 // limitations under the License.
 pub mod file_metadata;
 pub mod node_log_entry;
+pub mod presets;
 
 pub use file_metadata::FileMetadata;
 pub use node_log_entry::{NodeLogEntry, QueryContext};
+pub use presets::QueryPreset;
 
 use duckdb::Error as DuckDbError;
 use r2d2::{Pool, PooledConnection};

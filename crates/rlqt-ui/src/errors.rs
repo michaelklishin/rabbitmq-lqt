@@ -30,4 +30,7 @@ pub enum ServerError {
 
     #[error("Invalid datetime format: {0}")]
     DateTimeParse(String),
+
+    #[error("Invalid preset: {0}")]
+    InvalidPreset(String),
 }

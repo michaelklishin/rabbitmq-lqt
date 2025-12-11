@@ -30,7 +30,7 @@ pub use entry_metadata::subsystems::Subsystem;
 pub use errors::Error;
 pub use parser::{ParseResult, ParsedLogEntry, parse_log_file};
 pub use rel_db::{
-    DatabaseConnection, NodeLogEntry, QueryContext, create_database,
+    DatabaseConnection, NodeLogEntry, QueryContext, QueryPreset, create_database,
     create_database_for_bulk_import, finalize_bulk_import, open_database,
     post_insertion_operations,
 };

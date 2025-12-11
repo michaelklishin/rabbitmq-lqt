@@ -4,21 +4,26 @@ import { FilterPanel } from './components/FilterPanel'
 import { LogTable } from './components/LogTable'
 import { FileMetadataTab } from './components/FileMetadataTab'
 import { MetadataHeader } from './components/MetadataHeader'
+import { PresetFilterPanel } from './components/PresetFilterPanel'
 import {
   queryLogs,
+  queryLogsByPreset,
   getMetadata,
   getStats,
   getFileMetadata,
   QueryParams,
+  PresetQueryParams,
 } from './api/client'
 import { formatDate } from './utils/dateFormat'
 
-type Tab = 'logs' | 'metadata'
+type Tab = 'logs' | 'metadata' | 'preset_errors_or_crashes'
 
 function tabFromURL(): Tab {
   const params = new URLSearchParams(window.location.search)
   const tab = params.get('tab')
-  return tab === 'metadata' ? 'metadata' : 'logs'
+  if (tab === 'metadata') return 'metadata'
+  if (tab === 'preset_errors_or_crashes') return 'preset_errors_or_crashes'
+  return 'logs'
 }
 
 function filtersFromURL(): QueryParams {
@@ -41,32 +46,55 @@ function filtersFromURL(): QueryParams {
   return filters
 }
 
-function stateToURL(filters: QueryParams, tab: Tab): string {
+function presetFiltersFromURL(): PresetQueryParams {
+  const params = new URLSearchParams(window.location.search)
+  const filters: PresetQueryParams = {
+    limit: parseInt(params.get('preset_limit') || '1000'),
+  }
+
+  if (params.has('preset_since_time')) filters.since_time = params.get('preset_since_time')!
+  if (params.has('preset_to_time')) filters.to_time = params.get('preset_to_time')!
+  if (params.has('preset_node')) filters.node = params.get('preset_node')!
+
+  return filters
+}
+
+function stateToURL(filters: QueryParams, presetFilters: PresetQueryParams, tab: Tab): string {
   const params = new URLSearchParams()
 
   if (tab !== 'logs') params.set('tab', tab)
-  if (filters.limit) params.set('limit', filters.limit.toString())
-  if (filters.since_time) params.set('since_time', filters.since_time)
-  if (filters.to_time) params.set('to_time', filters.to_time)
-  if (filters.severity) params.set('severity', filters.severity)
-  if (filters.erlang_pid) params.set('erlang_pid', filters.erlang_pid)
-  if (filters.node) params.set('node', filters.node)
-  if (filters.subsystem) params.set('subsystem', filters.subsystem)
-  if (filters.labels) params.set('labels', filters.labels)
-  if (filters.matching_all_labels) params.set('matching_all_labels', 'true')
-  if (filters.has_resolution_or_discussion_url) params.set('has_resolution_or_discussion_url', 'true')
-  if (filters.has_doc_url) params.set('has_doc_url', 'true')
+
+  if (tab === 'logs') {
+    if (filters.limit) params.set('limit', filters.limit.toString())
+    if (filters.since_time) params.set('since_time', filters.since_time)
+    if (filters.to_time) params.set('to_time', filters.to_time)
+    if (filters.severity) params.set('severity', filters.severity)
+    if (filters.erlang_pid) params.set('erlang_pid', filters.erlang_pid)
+    if (filters.node) params.set('node', filters.node)
+    if (filters.subsystem) params.set('subsystem', filters.subsystem)
+    if (filters.labels) params.set('labels', filters.labels)
+    if (filters.matching_all_labels) params.set('matching_all_labels', 'true')
+    if (filters.has_resolution_or_discussion_url) params.set('has_resolution_or_discussion_url', 'true')
+    if (filters.has_doc_url) params.set('has_doc_url', 'true')
+  } else if (tab === 'preset_errors_or_crashes') {
+    if (presetFilters.limit) params.set('preset_limit', presetFilters.limit.toString())
+    if (presetFilters.since_time) params.set('preset_since_time', presetFilters.since_time)
+    if (presetFilters.to_time) params.set('preset_to_time', presetFilters.to_time)
+    if (presetFilters.node) params.set('preset_node', presetFilters.node)
+  }
 
   return params.toString()
 }
 
 function App() {
   const [filters, setFilters] = useState<QueryParams>(() => filtersFromURL())
+  const [presetFilters, setPresetFilters] = useState<PresetQueryParams>(() => presetFiltersFromURL())
   const [activeTab, setActiveTab] = useState<Tab>(() => tabFromURL())
 
   useEffect(() => {
     const handlePopState = () => {
       setFilters(filtersFromURL())
+      setPresetFilters(presetFiltersFromURL())
       setActiveTab(tabFromURL())
     }
 
@@ -75,10 +103,10 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const queryString = stateToURL(filters, activeTab)
+    const queryString = stateToURL(filters, presetFilters, activeTab)
     const newURL = queryString ? `?${queryString}` : window.location.pathname
     window.history.pushState({}, '', newURL)
-  }, [filters, activeTab])
+  }, [filters, presetFilters, activeTab])
 
   const handlePidFilterClick = (pid: string) => {
     setFilters((prev) => ({
@@ -109,6 +137,17 @@ function App() {
   } = useQuery({
     queryKey: ['logs', filters],
     queryFn: () => queryLogs(filters),
+    enabled: activeTab === 'logs',
+  })
+
+  const {
+    data: presetLogsData,
+    isLoading: isPresetLoading,
+    error: presetError,
+  } = useQuery({
+    queryKey: ['preset_errors_or_crashes', presetFilters],
+    queryFn: () => queryLogsByPreset('errors_or_crashes', presetFilters),
+    enabled: activeTab === 'preset_errors_or_crashes',
   })
 
   return (
@@ -140,6 +179,16 @@ function App() {
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
             >
               Log Entry Filtering
+            </button>
+            <button
+              onClick={() => setActiveTab('preset_errors_or_crashes')}
+              className={`${
+                activeTab === 'preset_errors_or_crashes'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
+            >
+              Preset: Errors, Exceptions
             </button>
             <button
               onClick={() => setActiveTab('metadata')}
@@ -229,6 +278,61 @@ function App() {
               </div>
 
               <LogTable data={logsData?.entries || []} onPidFilterClick={handlePidFilterClick} />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'preset_errors_or_crashes' && (
+          <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+            <div className="lg:col-span-1">
+              <PresetFilterPanel
+                metadata={metadata || null}
+                filters={presetFilters}
+                onFilterChange={setPresetFilters}
+              />
+            </div>
+
+            <div className="lg:col-span-5 space-y-4">
+              <div className="bg-white shadow-sm border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-700">
+                    {isPresetLoading ? (
+                      <span className="flex items-center gap-2">
+                        <svg
+                          className="animate-spin h-4 w-4 text-blue-600"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        Loading...
+                      </span>
+                    ) : presetError ? (
+                      <span className="text-red-600">Error: {(presetError as Error).message}</span>
+                    ) : (
+                      <span>
+                        Showing <span className="font-semibold">{presetLogsData?.total || 0}</span> matching{' '}
+                        {presetLogsData?.total === 1 ? 'entry' : 'entries'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <LogTable data={presetLogsData?.entries || []} onPidFilterClick={handlePidFilterClick} />
             </div>
           </div>
         )}
