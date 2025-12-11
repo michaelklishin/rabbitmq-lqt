@@ -77,6 +77,8 @@ jobs:
           toolchain: ${{ matrix.rust-version }}
 
       - uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: "rlqt-1"
 
       - uses: taiki-e/install-action@nextest
 
