@@ -753,6 +753,22 @@ fn build_obfuscation_stats_table(
             value: stats.vhosts_obfuscated.to_string(),
         },
         ObfuscationStatsRow {
+            metric: "Unique queues obfuscated",
+            value: stats.queues_obfuscated.to_string(),
+        },
+        ObfuscationStatsRow {
+            metric: "Unique exchanges obfuscated",
+            value: stats.exchanges_obfuscated.to_string(),
+        },
+        ObfuscationStatsRow {
+            metric: "Unique streams obfuscated",
+            value: stats.streams_obfuscated.to_string(),
+        },
+        ObfuscationStatsRow {
+            metric: "Unique policies obfuscated",
+            value: stats.policies_obfuscated.to_string(),
+        },
+        ObfuscationStatsRow {
             metric: "Unique IPv4 addresses obfuscated",
             value: stats.ipv4_addresses_obfuscated.to_string(),
         },

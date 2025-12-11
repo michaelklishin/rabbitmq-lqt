@@ -26,7 +26,7 @@ pub fn fixture_log_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
         .join("fixtures")
-        .join("rabbit@sunnyside.log")
+        .join("rabbit@fixture1.log")
 }
 
 pub fn fixture_directory_path() -> PathBuf {
@@ -39,7 +39,21 @@ pub fn fixture_log_path_hare() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
         .join("fixtures")
-        .join("hare@sunnyside.log")
+        .join("rabbit@fixture2.log")
+}
+
+pub fn fixture_log_path_cottontail() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join("rabbit@fixture3.log")
+}
+
+pub fn fixture_log_path_flopsy() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join("rabbit@fixture4.log")
 }
 
 pub fn parse_log_to_db(log_path: &str, db_path: &str) -> Result<(), Box<dyn Error>> {

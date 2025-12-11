@@ -238,10 +238,14 @@ fn test_obfuscate_virtual_host_variant() {
 fn test_stats_tracking() {
     let mut obfuscator = LogObfuscator::new();
 
-    obfuscator.obfuscate_line("rabbit@host1 connected");
-    obfuscator.obfuscate_line("rabbit@host2 connected");
+    obfuscator.obfuscate_line("rabbit@server1 connected");
+    obfuscator.obfuscate_line("rabbit@server2 connected");
     obfuscator.obfuscate_line("user 'admin' logged in");
     obfuscator.obfuscate_line("vhost 'test' created");
+    obfuscator.obfuscate_line("queue 'orders' created");
+    obfuscator.obfuscate_line("exchange 'events' created");
+    obfuscator.obfuscate_line("stream 'logs' created");
+    obfuscator.obfuscate_line("policy 'ha-all' applied");
     obfuscator.obfuscate_line("connection 192.168.1.1:1234");
     obfuscator.obfuscate_line("connection [::1]:1234");
     obfuscator.obfuscate_line("/home/user/data");
@@ -250,6 +254,10 @@ fn test_stats_tracking() {
     assert_eq!(stats.hostnames_obfuscated, 2);
     assert_eq!(stats.usernames_obfuscated, 1);
     assert_eq!(stats.vhosts_obfuscated, 1);
+    assert_eq!(stats.queues_obfuscated, 1);
+    assert_eq!(stats.exchanges_obfuscated, 1);
+    assert_eq!(stats.streams_obfuscated, 1);
+    assert_eq!(stats.policies_obfuscated, 1);
     assert_eq!(stats.ipv4_addresses_obfuscated, 1);
     assert_eq!(stats.ipv6_addresses_obfuscated, 1);
     assert_eq!(stats.directories_obfuscated, 1);
@@ -310,11 +318,12 @@ fn test_obfuscate_empty_line() {
 fn test_obfuscate_multiple_ips_same_line() {
     let mut obfuscator = LogObfuscator::new();
 
-    let input = "connection 192.168.1.1:5672 -> 192.168.1.2:5672 via 10.0.0.1";
+    let input = "connection 192.168.1.1:5672 -> 192.168.1.2:5672 via 172.16.0.1";
     let output = obfuscator.obfuscate_line(input);
 
     assert!(!output.contains("192.168.1.1"));
     assert!(!output.contains("192.168.1.2"));
+    assert!(!output.contains("172.16.0.1"));
     assert!(output.contains("10.0.0.1"));
     assert!(output.contains("10.0.0.2"));
     assert!(output.contains("10.0.0.3"));
@@ -350,4 +359,191 @@ fn test_ipv4_counter_rollover() {
 
     let output = obfuscator.obfuscate_line("connection 192.168.256.1");
     assert!(output.contains("10.0.1.1"));
+}
+
+#[test]
+fn test_double_obfuscation_prevented_username() {
+    let mut obfuscator1 = LogObfuscator::new();
+    let input = "user 'admin' logged in";
+    let first_pass = obfuscator1.obfuscate_line(input);
+    assert!(first_pass.contains("user 'user1'"));
+    assert_eq!(obfuscator1.stats().usernames_obfuscated, 1);
+
+    let mut obfuscator2 = LogObfuscator::new();
+    let second_pass = obfuscator2.obfuscate_line(&first_pass);
+    assert_eq!(first_pass, second_pass);
+    assert_eq!(obfuscator2.stats().usernames_obfuscated, 0);
+}
+
+#[test]
+fn test_double_obfuscation_prevented_vhost() {
+    let mut obfuscator1 = LogObfuscator::new();
+    let input = "vhost 'production' created";
+    let first_pass = obfuscator1.obfuscate_line(input);
+    assert!(first_pass.contains("vhost 'vhost1'"));
+    assert_eq!(obfuscator1.stats().vhosts_obfuscated, 1);
+
+    let mut obfuscator2 = LogObfuscator::new();
+    let second_pass = obfuscator2.obfuscate_line(&first_pass);
+    assert_eq!(first_pass, second_pass);
+    assert_eq!(obfuscator2.stats().vhosts_obfuscated, 0);
+}
+
+#[test]
+fn test_double_obfuscation_prevented_hostname() {
+    let mut obfuscator1 = LogObfuscator::new();
+    let input = "rabbit@sunnyside connected";
+    let first_pass = obfuscator1.obfuscate_line(input);
+    assert!(first_pass.contains("rabbit@host1"));
+    assert_eq!(obfuscator1.stats().hostnames_obfuscated, 1);
+
+    let mut obfuscator2 = LogObfuscator::new();
+    let second_pass = obfuscator2.obfuscate_line(&first_pass);
+    assert_eq!(first_pass, second_pass);
+    assert_eq!(obfuscator2.stats().hostnames_obfuscated, 0);
+}
+
+#[test]
+fn test_double_obfuscation_prevented_queue() {
+    let mut obfuscator1 = LogObfuscator::new();
+    let input = "queue 'events.incoming' created";
+    let first_pass = obfuscator1.obfuscate_line(input);
+    assert!(first_pass.contains("queue 'queue1'"));
+    assert_eq!(obfuscator1.stats().queues_obfuscated, 1);
+
+    let mut obfuscator2 = LogObfuscator::new();
+    let second_pass = obfuscator2.obfuscate_line(&first_pass);
+    assert_eq!(first_pass, second_pass);
+    assert_eq!(obfuscator2.stats().queues_obfuscated, 0);
+}
+
+#[test]
+fn test_double_obfuscation_prevented_exchange() {
+    let mut obfuscator1 = LogObfuscator::new();
+    let input = "exchange 'amq.topic' created";
+    let first_pass = obfuscator1.obfuscate_line(input);
+    assert!(first_pass.contains("exchange 'exchange1'"));
+    assert_eq!(obfuscator1.stats().exchanges_obfuscated, 1);
+
+    let mut obfuscator2 = LogObfuscator::new();
+    let second_pass = obfuscator2.obfuscate_line(&first_pass);
+    assert_eq!(first_pass, second_pass);
+    assert_eq!(obfuscator2.stats().exchanges_obfuscated, 0);
+}
+
+#[test]
+fn test_double_obfuscation_prevented_stream() {
+    let mut obfuscator1 = LogObfuscator::new();
+    let input = "stream 'logs.events' created";
+    let first_pass = obfuscator1.obfuscate_line(input);
+    assert!(first_pass.contains("stream 'stream1'"));
+    assert_eq!(obfuscator1.stats().streams_obfuscated, 1);
+
+    let mut obfuscator2 = LogObfuscator::new();
+    let second_pass = obfuscator2.obfuscate_line(&first_pass);
+    assert_eq!(first_pass, second_pass);
+    assert_eq!(obfuscator2.stats().streams_obfuscated, 0);
+}
+
+#[test]
+fn test_double_obfuscation_prevented_policy() {
+    let mut obfuscator1 = LogObfuscator::new();
+    let input = "policy 'ha-all' applied";
+    let first_pass = obfuscator1.obfuscate_line(input);
+    assert!(first_pass.contains("policy 'policy1'"));
+    assert_eq!(obfuscator1.stats().policies_obfuscated, 1);
+
+    let mut obfuscator2 = LogObfuscator::new();
+    let second_pass = obfuscator2.obfuscate_line(&first_pass);
+    assert_eq!(first_pass, second_pass);
+    assert_eq!(obfuscator2.stats().policies_obfuscated, 0);
+}
+
+#[test]
+fn test_double_obfuscation_prevented_ipv4() {
+    let mut obfuscator1 = LogObfuscator::new();
+    let input = "connection 192.168.1.100:5672";
+    let first_pass = obfuscator1.obfuscate_line(input);
+    assert!(first_pass.contains("10.0.0.1"));
+    assert_eq!(obfuscator1.stats().ipv4_addresses_obfuscated, 1);
+
+    let mut obfuscator2 = LogObfuscator::new();
+    let second_pass = obfuscator2.obfuscate_line(&first_pass);
+    assert_eq!(first_pass, second_pass);
+    assert_eq!(obfuscator2.stats().ipv4_addresses_obfuscated, 0);
+}
+
+#[test]
+fn test_double_obfuscation_prevented_ipv6() {
+    let mut obfuscator1 = LogObfuscator::new();
+    let input = "connection [::1]:5672";
+    let first_pass = obfuscator1.obfuscate_line(input);
+    assert!(first_pass.contains("[fd00::1]"));
+    assert_eq!(obfuscator1.stats().ipv6_addresses_obfuscated, 1);
+
+    let mut obfuscator2 = LogObfuscator::new();
+    let second_pass = obfuscator2.obfuscate_line(&first_pass);
+    assert_eq!(first_pass, second_pass);
+    assert_eq!(obfuscator2.stats().ipv6_addresses_obfuscated, 0);
+}
+
+#[test]
+fn test_double_obfuscation_prevented_directory() {
+    let mut obfuscator1 = LogObfuscator::new();
+    let input = "reading from /home/user/rabbitmq/data";
+    let first_pass = obfuscator1.obfuscate_line(input);
+    assert!(first_pass.contains("/data/path1"));
+    assert_eq!(obfuscator1.stats().directories_obfuscated, 1);
+
+    let mut obfuscator2 = LogObfuscator::new();
+    let second_pass = obfuscator2.obfuscate_line(&first_pass);
+    assert_eq!(first_pass, second_pass);
+    assert_eq!(obfuscator2.stats().directories_obfuscated, 0);
+}
+
+#[test]
+fn test_double_obfuscation_prevented_erlang_tuple() {
+    let mut obfuscator1 = LogObfuscator::new();
+    let input = "detected a new leader {'UnifiedPortal_up.request','rabbit@sunnyside'}";
+    let first_pass = obfuscator1.obfuscate_line(input);
+    assert!(first_pass.contains("{'queue1','rabbit@host1'}"));
+    assert_eq!(obfuscator1.stats().queues_obfuscated, 1);
+    assert_eq!(obfuscator1.stats().hostnames_obfuscated, 1);
+
+    let mut obfuscator2 = LogObfuscator::new();
+    let second_pass = obfuscator2.obfuscate_line(&first_pass);
+    assert_eq!(first_pass, second_pass);
+    assert_eq!(obfuscator2.stats().queues_obfuscated, 0);
+    assert_eq!(obfuscator2.stats().hostnames_obfuscated, 0);
+}
+
+#[test]
+fn test_partially_obfuscated_erlang_tuple_queue_only() {
+    let mut obfuscator1 = LogObfuscator::new();
+    // First obfuscator processes only the queue name pattern
+    obfuscator1.obfuscate_line("queue 'MyQueue' created");
+    assert_eq!(obfuscator1.stats().queues_obfuscated, 1);
+
+    // Now feed an Erlang tuple where the queue is already-obfuscated but the hostname is not
+    let mut obfuscator2 = LogObfuscator::new();
+    let input = "detected a new leader {'queue1','rabbit@sunnyside'}";
+    let output = obfuscator2.obfuscate_line(input);
+
+    // queue1 should be preserved, hostname should be obfuscated
+    assert!(output.contains("{'queue1','rabbit@host1'}"));
+    assert_eq!(obfuscator2.stats().queues_obfuscated, 0);
+    assert_eq!(obfuscator2.stats().hostnames_obfuscated, 1);
+}
+
+#[test]
+fn test_partially_obfuscated_erlang_tuple_hostname_only() {
+    let mut obfuscator = LogObfuscator::new();
+    // Erlang tuple where the hostname is already-obfuscated but the queue is not
+    let input = "detected a new leader {'MyRealQueue','rabbit@host1'}";
+    let output = obfuscator.obfuscate_line(input);
+
+    // Queue should be obfuscated, host1 should be preserved
+    assert!(output.contains("{'queue1','rabbit@host1'}"));
+    assert_eq!(obfuscator.stats().queues_obfuscated, 1);
+    assert_eq!(obfuscator.stats().hostnames_obfuscated, 0);
 }

@@ -239,7 +239,7 @@ fn parse_file_and_directory_containing_same_file_deduplicates() -> Result<(), Bo
         "--output-db-file-path",
         db_path,
     ])
-    .stderr(output_includes("930 log entries"));
+    .stderr(output_includes("2147 log entries"));
 
     Ok(())
 }
@@ -352,6 +352,52 @@ fn parse_overwrites_existing_database() -> Result<(), Box<dyn Error>> {
         (first_size as i64 - second_size as i64).abs() < 1000,
         "Database sizes should be comparable after this run"
     );
+
+    Ok(())
+}
+
+#[test]
+fn parse_fixture3_log_file() -> Result<(), Box<dyn Error>> {
+    let log_path = fixture_log_path_cottontail();
+    let db_file = NamedTempFile::new()?;
+    let db_path = db_file.path().to_str().unwrap();
+
+    run_succeeds([
+        "logs",
+        "parse",
+        "--input-log-file-path",
+        log_path.to_str().unwrap(),
+        "--output-db-file-path",
+        db_path,
+    ])
+    .stderr(output_includes("224 log entries"));
+
+    assert!(db_file.path().exists());
+    let file_metadata = metadata(db_file.path())?;
+    assert!(file_metadata.len() > 0, "Database file should not be empty");
+
+    Ok(())
+}
+
+#[test]
+fn parse_fixture4_log_file() -> Result<(), Box<dyn Error>> {
+    let log_path = fixture_log_path_flopsy();
+    let db_file = NamedTempFile::new()?;
+    let db_path = db_file.path().to_str().unwrap();
+
+    run_succeeds([
+        "logs",
+        "parse",
+        "--input-log-file-path",
+        log_path.to_str().unwrap(),
+        "--output-db-file-path",
+        db_path,
+    ])
+    .stderr(output_includes("993 log entries"));
+
+    assert!(db_file.path().exists());
+    let file_metadata = metadata(db_file.path())?;
+    assert!(file_metadata.len() > 0, "Database file should not be empty");
 
     Ok(())
 }

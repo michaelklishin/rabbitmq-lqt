@@ -613,7 +613,7 @@ fn test_real_rabbitmq_log_fixture_annotation() {
         .join("rlqt-cli")
         .join("tests")
         .join("fixtures")
-        .join("rabbit@sunnyside.log");
+        .join("rabbit@fixture1.log");
 
     let file =
         File::open(fixture_path).expect("Failed to open fixture log, ensure path is correct");

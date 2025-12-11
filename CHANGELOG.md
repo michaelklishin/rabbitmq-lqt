@@ -2,8 +2,18 @@
 
 ## 0.13.0 (in development)
 
-No changes yet.
+### Bug Fixes
 
+ * The parser did not handle Erlang/OTP SASL report headers, which can still be present
+   in real world RabbitMQ logs in some cases
+
+### Enhancements
+
+ * `logs obfuscate` now obfuscates queue names, exchange names, stream names, and policy names
+ * in addition, `logs obfuscate` now obfuscates queue and node names in Ra (Raft) member names
+ * `logs obfuscate` now avoids double-obfuscation when processing already-obfuscated (or partially obfuscated) log files
+ * An experimental preset subsystem. A preset is a collection of filters used together.
+ * Web UI now includes the first preset: Errors and Exceptions
 
 ## 0.12.0 (Dec 6, 2025)
 

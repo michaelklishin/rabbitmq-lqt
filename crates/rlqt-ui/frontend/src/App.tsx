@@ -181,16 +181,6 @@ function App() {
               Log Entry Filtering
             </button>
             <button
-              onClick={() => setActiveTab('preset_errors_or_crashes')}
-              className={`${
-                activeTab === 'preset_errors_or_crashes'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
-            >
-              Preset: Errors, Exceptions
-            </button>
-            <button
               onClick={() => setActiveTab('metadata')}
               className={`${
                 activeTab === 'metadata'
@@ -199,6 +189,16 @@ function App() {
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
             >
               File Set Overview
+            </button>
+            <button
+              onClick={() => setActiveTab('preset_errors_or_crashes')}
+              className={`${
+                activeTab === 'preset_errors_or_crashes'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
+            >
+              Preset 1: Errors, Exceptions
             </button>
           </nav>
         </div>

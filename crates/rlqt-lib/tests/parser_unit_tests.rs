@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use chrono::{TimeZone, Utc};
 use rlqt_lib::{Severity, parse_log_file};
 use std::io::BufReader;
 
@@ -225,4 +226,152 @@ fn test_parse_counts_lines_correctly_with_multiple_entries() {
     let result = parse_log_file(BufReader::new(input.as_bytes())).unwrap();
     assert_eq!(result.entries.len(), 3);
     assert_eq!(result.total_lines, 3);
+}
+
+#[test]
+fn test_parse_entry_with_ansi_color_codes() {
+    let input = "\x1b[38;5;214m2025-10-19 07:31:54.382157+00:00 [warning] <0.5734745.0> HTTP access denied: user 'default_user_dOLaJvyryUn2w047Ds8' - invalid credentials\x1b[0m";
+    let entries = parse_log_file(BufReader::new(input.as_bytes()))
+        .unwrap()
+        .entries;
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].severity, Severity::Warning);
+    assert_eq!(entries[0].process_id, "<0.5734745.0>");
+    assert_eq!(
+        entries[0].message,
+        "HTTP access denied: user 'default_user_dOLaJvyryUn2w047Ds8' - invalid credentials"
+    );
+}
+
+#[test]
+fn test_parse_entry_with_cyan_ansi_codes() {
+    let input = "\x1b[38;5;87m2025-10-19 17:57:15.187864+00:00 [notice] <0.84.0>     alarm_handler: {set,{system_memory_high_watermark,[]}}\x1b[0m";
+    let entries = parse_log_file(BufReader::new(input.as_bytes()))
+        .unwrap()
+        .entries;
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].severity, Severity::Notice);
+    assert_eq!(entries[0].process_id, "<0.84.0>");
+    assert!(entries[0].message.contains("alarm_handler"));
+}
+
+#[test]
+fn test_parse_multiple_entries_with_mixed_ansi_codes() {
+    let input = "\x1b[38;5;214m2025-10-19 07:31:54.382157+00:00 [warning] <0.5734745.0> Warning message\x1b[0m\n2025-10-19 07:35:01.277242+00:00 [info] <0.5737079.0> Info message\x1b[0m";
+    let entries = parse_log_file(BufReader::new(input.as_bytes()))
+        .unwrap()
+        .entries;
+    assert_eq!(entries.len(), 2);
+    assert_eq!(entries[0].severity, Severity::Warning);
+    assert_eq!(entries[1].severity, Severity::Info);
+}
+
+#[test]
+fn test_parse_sasl_info_report() {
+    let input = "=INFO REPORT==== 4-Dec-2025::19:22:30.888840 ===";
+    let entries = parse_log_file(BufReader::new(input.as_bytes()))
+        .unwrap()
+        .entries;
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].severity, Severity::Info);
+    assert_eq!(entries[0].process_id, "<0.0.0>");
+    assert_eq!(
+        entries[0].timestamp,
+        Utc.with_ymd_and_hms(2025, 12, 4, 19, 22, 30).unwrap()
+            + chrono::Duration::microseconds(888840)
+    );
+}
+
+#[test]
+fn test_parse_sasl_warning_report() {
+    let input = "=WARNING REPORT==== 15-Jan-2025::10:30:45.123456 ===";
+    let entries = parse_log_file(BufReader::new(input.as_bytes()))
+        .unwrap()
+        .entries;
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].severity, Severity::Warning);
+}
+
+#[test]
+fn test_parse_sasl_error_report() {
+    let input = "=ERROR REPORT==== 20-Mar-2025::08:15:00.000001 ===";
+    let entries = parse_log_file(BufReader::new(input.as_bytes()))
+        .unwrap()
+        .entries;
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].severity, Severity::Error);
+}
+
+#[test]
+fn test_parse_sasl_report_with_continuation() {
+    let input = "=INFO REPORT==== 4-Dec-2025::19:22:30.888840 ===\n    alarm_handler: {set,{system_memory_high_watermark,[]}}";
+    let entries = parse_log_file(BufReader::new(input.as_bytes()))
+        .unwrap()
+        .entries;
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].severity, Severity::Info);
+    assert!(entries[0].message.contains("alarm_handler"));
+}
+
+#[test]
+fn test_parse_sasl_report_followed_by_standard_entry() {
+    let input = "=INFO REPORT==== 4-Dec-2025::19:22:30.888840 ===\n    alarm_handler: {set,{system_memory_high_watermark,[]}}\n2025-12-04 19:22:32.792199+00:00 [warning] <0.153.0> Both disk_free_limit.absolute and disk_free_limit.relative are configured";
+    let entries = parse_log_file(BufReader::new(input.as_bytes()))
+        .unwrap()
+        .entries;
+    assert_eq!(entries.len(), 2);
+    assert_eq!(entries[0].severity, Severity::Info);
+    assert!(entries[0].message.contains("alarm_handler"));
+    assert_eq!(entries[1].severity, Severity::Warning);
+    assert!(entries[1].message.contains("disk_free_limit"));
+}
+
+#[test]
+fn test_parse_sasl_debug_report() {
+    let input = "=DEBUG REPORT==== 1-Jan-2025::00:00:00.000000 ===";
+    let entries = parse_log_file(BufReader::new(input.as_bytes()))
+        .unwrap()
+        .entries;
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].severity, Severity::Debug);
+}
+
+#[test]
+fn test_parse_sasl_critical_report() {
+    let input = "=CRITICAL REPORT==== 31-Dec-2025::23:59:59.999999 ===";
+    let entries = parse_log_file(BufReader::new(input.as_bytes()))
+        .unwrap()
+        .entries;
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].severity, Severity::Critical);
+}
+
+#[test]
+fn test_parse_entry_with_ansi_reset_only_at_end() {
+    let input =
+        "2025-10-19 07:31:54.382157+00:00 [warning] <0.5734745.0> HTTP access denied\x1b[0m";
+    let entries = parse_log_file(BufReader::new(input.as_bytes()))
+        .unwrap()
+        .entries;
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].message, "HTTP access denied");
+}
+
+#[test]
+fn test_parse_line_with_only_ansi_reset_is_orphaned() {
+    let input = "\x1b[0m";
+    let entries = parse_log_file(BufReader::new(input.as_bytes()))
+        .unwrap()
+        .entries;
+    assert_eq!(entries.len(), 0);
+}
+
+#[test]
+fn test_parse_sasl_notice_report() {
+    let input = "=NOTICE REPORT==== 15-Jun-2025::12:00:00.500000 ===";
+    let entries = parse_log_file(BufReader::new(input.as_bytes()))
+        .unwrap()
+        .entries;
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].severity, Severity::Notice);
 }
