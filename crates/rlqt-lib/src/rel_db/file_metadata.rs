@@ -123,4 +123,38 @@ impl FileMetadata {
 
         Ok(())
     }
+
+    pub fn upsert_metadata(db: &DatabaseConnection, metadata: Model) -> Result<(), DuckDbError> {
+        let conn = db.get().map_err(|e| {
+            DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))
+        })?;
+
+        let oldest_entry_at = metadata.oldest_entry_at.map(|dt| {
+            Value::Timestamp(duckdb::types::TimeUnit::Microsecond, dt.timestamp_micros())
+        });
+        let most_recent_entry_at = metadata.most_recent_entry_at.map(|dt| {
+            Value::Timestamp(duckdb::types::TimeUnit::Microsecond, dt.timestamp_micros())
+        });
+
+        conn.execute(
+            "INSERT OR REPLACE INTO file_metadata (file_path, rabbitmq_versions, erlang_versions, tls_library, oldest_entry_at, most_recent_entry_at, total_lines, total_entries, nodes, subsystems, labels, enabled_plugins)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            params![
+                metadata.file_path,
+                vec_to_json(&metadata.rabbitmq_versions),
+                vec_to_json(&metadata.erlang_versions),
+                metadata.tls_library,
+                oldest_entry_at,
+                most_recent_entry_at,
+                metadata.total_lines,
+                metadata.total_entries,
+                vec_to_json(&metadata.nodes),
+                vec_to_json(&metadata.subsystems),
+                vec_to_json(&metadata.labels),
+                vec_to_json(&metadata.enabled_plugins),
+            ],
+        )?;
+
+        Ok(())
+    }
 }

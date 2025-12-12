@@ -173,6 +173,18 @@ impl NodeLogEntry {
         Ok(count as u64)
     }
 
+    pub fn max_entry_id(db: &DatabaseConnection) -> Result<i64, DuckDbError> {
+        let conn = db.get().map_err(|e| {
+            DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))
+        })?;
+
+        let max_id: Option<i64> = conn
+            .query_row("SELECT MAX(id) FROM node_log_entries", [], |row| row.get(0))
+            .ok()
+            .flatten();
+        Ok(max_id.unwrap_or(0))
+    }
+
     pub fn query(db: &DatabaseConnection, ctx: &QueryContext) -> Result<Vec<Model>, DuckDbError> {
         let conn = db.get().map_err(|e| {
             DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))

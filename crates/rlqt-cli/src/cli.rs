@@ -26,7 +26,8 @@ pub fn clap_parser() -> Command {
 
     let about = format!(
         "RabbitMQ Log Query Toolkit (RLQT) {}: parse, query, analyze, obfuscate RabbitMQ log files",
-        env!("CARGO_PKG_VERSION"));
+        env!("CARGO_PKG_VERSION")
+    );
     Command::new("rabbitmq-lqt")
         .version(env!("CARGO_PKG_VERSION"))
         .long_about(&about)
@@ -99,6 +100,46 @@ fn logs_subcommands() -> Vec<Command> {
                 .required(true)
                 .value_name("PATH")
                 .help("Path to the output SQLite database file"),
+        )
+        .arg(
+            Arg::new("silent")
+                .long("silent")
+                .action(ArgAction::SetTrue)
+                .help("Suppress output messages"),
+        );
+
+    let merge_cmd = Command::new("merge")
+        .about("Merges additional log files into an existing database")
+        .arg(
+            Arg::new("input_log_file_path")
+                .long("input-log-file-path")
+                .value_name("PATH")
+                .action(ArgAction::Append)
+                .num_args(1..)
+                .help("Path to an input RabbitMQ log file. Can be provided multiple times"),
+        )
+        .arg(
+            Arg::new("input_log_dir_path")
+                .long("input-log-dir-path")
+                .short('d')
+                .value_name("DIRECTORY")
+                .action(ArgAction::Append)
+                .num_args(1..)
+                .help("Path(s) to a directory containing RabbitMQ log files (*.log)"),
+        )
+        .group(
+            clap::ArgGroup::new("input_log_files")
+                .args(["input_log_file_path", "input_log_dir_path"])
+                .required(true)
+                .multiple(true),
+        )
+        .arg(
+            Arg::new("db_file_path")
+                .long("db-file-path")
+                .short('i')
+                .required(true)
+                .value_name("PATH")
+                .help("Path to the existing database file to merge into"),
         )
         .arg(
             Arg::new("silent")
@@ -243,5 +284,5 @@ fn logs_subcommands() -> Vec<Command> {
                 .help("Disable colored output"),
         );
 
-    vec![parse_cmd, obfuscate_cmd, query_cmd, overview_cmd]
+    vec![parse_cmd, merge_cmd, obfuscate_cmd, query_cmd, overview_cmd]
 }

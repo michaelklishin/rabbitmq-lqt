@@ -81,6 +81,21 @@ pub fn handle_overview_command(args: &ArgMatches) -> ExitCode {
     }
 }
 
+pub fn handle_merge_command(args: &ArgMatches) -> ExitCode {
+    match merge_logs(args) {
+        Ok(_) => {
+            if !args.get_flag("silent") {
+                println!("Done");
+            }
+            ExitCode::Ok
+        }
+        Err(e) => {
+            log::error!("Failed to merge logs: {}", e);
+            ExitCode::Software
+        }
+    }
+}
+
 pub fn handle_obfuscate_command(args: &ArgMatches) -> ExitCode {
     match obfuscate_log(args) {
         Ok(_) => {
@@ -256,9 +271,7 @@ enum InsertionTask {
     },
 }
 
-fn parse_logs(args: &ArgMatches) -> Result<()> {
-    let start_time = Instant::now();
-
+fn collect_log_paths_from_args(args: &ArgMatches) -> Result<Vec<PathBuf>> {
     let mut log_paths: Vec<PathBuf> = Vec::new();
 
     if let Some(file_paths) = args.get_many::<String>("input_log_file_path") {
@@ -272,7 +285,111 @@ fn parse_logs(args: &ArgMatches) -> Result<()> {
         }
     }
 
-    log_paths = deduplicate_paths(log_paths);
+    Ok(deduplicate_paths(log_paths))
+}
+
+fn process_log_file(log_path: &Path, tx: &mpsc::Sender<InsertionTask>, silent: bool) -> Result<()> {
+    let file_progress = if !silent {
+        let pb = ProgressBar::new_spinner();
+        pb.set_style(
+            ProgressStyle::default_spinner()
+                .template("{spinner:.green} {msg}")
+                .unwrap()
+                .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]),
+        );
+        pb.set_message(format!("Parsing {}", log_path.display()));
+        pb.enable_steady_tick(Duration::from_millis(100));
+        Some(pb)
+    } else {
+        None
+    };
+
+    let node_name = extract_node_name(log_path)?;
+
+    if let Some(pb) = &file_progress {
+        pb.set_message(format!("Reading {}", log_path.display()));
+    }
+
+    let file = File::open(log_path).map_err(|e| {
+        CommandRunError::Library(rlqt_lib::Error::Io(IoError::new(
+            e.kind(),
+            format!("Failed to open log file '{}': {}", log_path.display(), e),
+        )))
+    })?;
+    let reader = BufReader::new(file);
+
+    if let Some(pb) = &file_progress {
+        pb.set_message(format!("Parsing {}", log_path.display()));
+    }
+
+    let parse_result = parse_log_file(reader)?;
+    let total_lines = parse_result.total_lines;
+    let entries = parse_result.entries;
+
+    if let Some(pb) = &file_progress {
+        pb.set_message(format!("Processing {} entries", entries.len()));
+    }
+
+    let chunks: Vec<_> = entries
+        .chunks(PIPELINE_CHUNK_SIZE)
+        .map(|c| c.to_vec())
+        .collect();
+
+    for mut chunk in chunks {
+        chunk
+            .par_iter_mut()
+            .for_each(rlqt_lib::entry_metadata::annotate_entry);
+        chunk.sort_by_key(|e| e.sequence_id);
+
+        tx.send(InsertionTask::EntriesChunk {
+            node_name: node_name.clone(),
+            entries: chunk,
+        })
+        .map_err(|e| {
+            CommandRunError::Library(rlqt_lib::Error::Io(IoError::other(format!(
+                "Failed to send entries for insertion: {}",
+                e
+            ))))
+        })?;
+    }
+
+    tx.send(InsertionTask::FileCompletionMarker {
+        node_name: node_name.clone(),
+        file_path: log_path.to_path_buf(),
+        total_lines,
+    })
+    .map_err(|e| {
+        CommandRunError::Library(rlqt_lib::Error::Io(IoError::other(format!(
+            "Failed to send a file completion marker: {}",
+            e
+        ))))
+    })?;
+
+    if let Some(pb) = &file_progress {
+        pb.finish_with_message(format!("✓ Parsed {}", log_path.display()));
+    }
+
+    Ok(())
+}
+
+fn wait_for_insertion_thread(
+    insert_thread: thread::JoinHandle<std::result::Result<(), duckdb::Error>>,
+) -> Result<()> {
+    insert_thread
+        .join()
+        .map_err(|_| {
+            CommandRunError::Library(rlqt_lib::Error::Io(IoError::other(
+                "Insertion thread panicked",
+            )))
+        })?
+        .map_err(|e| CommandRunError::Library(rlqt_lib::Error::Database(e)))?;
+    Ok(())
+}
+
+fn parse_logs(args: &ArgMatches) -> Result<()> {
+    let start_time = Instant::now();
+
+    let log_paths = collect_log_paths_from_args(args)?;
 
     let db_path: PathBuf = args
         .get_one::<String>("output_db_file_path")
@@ -283,105 +400,18 @@ fn parse_logs(args: &ArgMatches) -> Result<()> {
     validate_database_path(&db_path)?;
 
     let db = create_database_for_bulk_import(&db_path)?;
-
     let silent = args.get_flag("silent");
 
     let (tx, rx) = mpsc::channel::<InsertionTask>();
-
     let db_clone = db.clone();
     let insert_thread = thread::spawn(move || insert_entries_thread(db_clone, rx));
 
     for log_path in &log_paths {
-        let file_progress = if !silent {
-            let pb = ProgressBar::new_spinner();
-            pb.set_style(
-                ProgressStyle::default_spinner()
-                    .template("{spinner:.green} {msg}")
-                    .unwrap()
-                    .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]),
-            );
-            pb.set_message(format!("Parsing {}", log_path.display()));
-            pb.enable_steady_tick(Duration::from_millis(100));
-            Some(pb)
-        } else {
-            None
-        };
-
-        let node_name = extract_node_name(log_path)?;
-
-        if let Some(pb) = &file_progress {
-            pb.set_message(format!("Reading {}", log_path.display()));
-        }
-
-        let file = File::open(log_path).map_err(|e| {
-            CommandRunError::Library(rlqt_lib::Error::Io(IoError::new(
-                e.kind(),
-                format!("Failed to open log file '{}': {}", log_path.display(), e),
-            )))
-        })?;
-        let reader = BufReader::new(file);
-
-        if let Some(pb) = &file_progress {
-            pb.set_message(format!("Parsing {}", log_path.display()));
-        }
-
-        let parse_result = parse_log_file(reader)?;
-        let total_lines = parse_result.total_lines;
-        let entries = parse_result.entries;
-
-        if let Some(pb) = &file_progress {
-            pb.set_message(format!("Processing {} entries", entries.len()));
-        }
-
-        let chunks: Vec<_> = entries
-            .chunks(PIPELINE_CHUNK_SIZE)
-            .map(|c| c.to_vec())
-            .collect();
-
-        for mut chunk in chunks {
-            chunk
-                .par_iter_mut()
-                .for_each(rlqt_lib::entry_metadata::annotate_entry);
-            chunk.sort_by_key(|e| e.sequence_id);
-
-            tx.send(InsertionTask::EntriesChunk {
-                node_name: node_name.clone(),
-                entries: chunk,
-            })
-            .map_err(|e| {
-                CommandRunError::Library(rlqt_lib::Error::Io(IoError::other(format!(
-                    "Failed to send entries for insertion: {}",
-                    e
-                ))))
-            })?;
-        }
-
-        tx.send(InsertionTask::FileCompletionMarker {
-            node_name: node_name.clone(),
-            file_path: log_path.clone(),
-            total_lines,
-        })
-        .map_err(|e| {
-            CommandRunError::Library(rlqt_lib::Error::Io(IoError::other(format!(
-                "Failed to send a file completion marker: {}",
-                e
-            ))))
-        })?;
-
-        if let Some(pb) = &file_progress {
-            pb.finish_with_message(format!("✓ Parsed {}", log_path.display()));
-        }
+        process_log_file(log_path, &tx, silent)?;
     }
 
     drop(tx);
-    insert_thread
-        .join()
-        .map_err(|_| {
-            CommandRunError::Library(rlqt_lib::Error::Io(IoError::other(
-                "Insertion thread panicked",
-            )))
-        })?
-        .map_err(|e| CommandRunError::Library(rlqt_lib::Error::Database(e)))?;
+    wait_for_insertion_thread(insert_thread)?;
 
     let index_progress = if !silent {
         let pb = ProgressBar::new_spinner();
@@ -417,11 +447,113 @@ fn parse_logs(args: &ArgMatches) -> Result<()> {
     Ok(())
 }
 
+fn validate_existing_database_path(db_path: &Path) -> Result<()> {
+    if !db_path.exists() {
+        return Err(CommandRunError::Library(rlqt_lib::Error::Io(IoError::new(
+            ErrorKind::NotFound,
+            format!(
+                "Database file not found: {}\n\n\
+                Make sure:\n\
+                • The database file path is correct\n\
+                • You have read permissions for the file\n\
+                • Use 'logs parse' to create a new database",
+                db_path.display()
+            ),
+        ))));
+    }
+
+    let metadata = db_path.metadata()?;
+    if !metadata.is_file() {
+        return Err(CommandRunError::Library(rlqt_lib::Error::Io(IoError::new(
+            ErrorKind::InvalidInput,
+            format!(
+                "Database path is not a file: {}\n\
+                \n\
+                The path points to a directory or special file.\n\
+                Provide a path to an existing database file.",
+                db_path.display()
+            ),
+        ))));
+    }
+
+    Ok(())
+}
+
+fn merge_logs(args: &ArgMatches) -> Result<()> {
+    let start_time = Instant::now();
+
+    let log_paths = collect_log_paths_from_args(args)?;
+
+    let db_path: PathBuf = args
+        .get_one::<String>("db_file_path")
+        .expect("db_file_path is a required argument")
+        .into();
+
+    validate_file_paths(&log_paths)?;
+    validate_existing_database_path(&db_path)?;
+
+    let db = open_database(&db_path)?;
+    let count_before = NodeLogEntry::count_all(&db)?;
+    let start_id = NodeLogEntry::max_entry_id(&db)? + 1;
+    let silent = args.get_flag("silent");
+
+    let (tx, rx) = mpsc::channel::<InsertionTask>();
+    let db_clone = db.clone();
+    let insert_thread =
+        thread::spawn(move || merge_entries_thread_with_start_id(db_clone, rx, start_id));
+
+    for log_path in &log_paths {
+        process_log_file(log_path, &tx, silent)?;
+    }
+
+    drop(tx);
+    wait_for_insertion_thread(insert_thread)?;
+
+    let count_after = NodeLogEntry::count_all(&db)?;
+    let entries_added = count_after - count_before;
+    let elapsed = start_time.elapsed();
+    let elapsed_secs = elapsed.as_secs_f64();
+
+    log::info!(
+        "Merged {} new log entries (total: {}) in {:.2}s",
+        entries_added,
+        count_after,
+        elapsed_secs
+    );
+
+    Ok(())
+}
+
 fn insert_entries_thread(
     db: DatabaseConnection,
     rx: mpsc::Receiver<InsertionTask>,
 ) -> std::result::Result<(), duckdb::Error> {
-    let mut next_id = 1i64;
+    insert_entries_thread_with_start_id(db, rx, 1)
+}
+
+fn insert_entries_thread_with_start_id(
+    db: DatabaseConnection,
+    rx: mpsc::Receiver<InsertionTask>,
+    start_id: i64,
+) -> std::result::Result<(), duckdb::Error> {
+    insert_entries_thread_impl(db, rx, start_id, false)
+}
+
+fn merge_entries_thread_with_start_id(
+    db: DatabaseConnection,
+    rx: mpsc::Receiver<InsertionTask>,
+    start_id: i64,
+) -> std::result::Result<(), duckdb::Error> {
+    insert_entries_thread_impl(db, rx, start_id, true)
+}
+
+fn insert_entries_thread_impl(
+    db: DatabaseConnection,
+    rx: mpsc::Receiver<InsertionTask>,
+    start_id: i64,
+    use_upsert: bool,
+) -> std::result::Result<(), duckdb::Error> {
+    let mut next_id = start_id;
     let mut current_file_entries: Vec<ParsedLogEntry> = Vec::new();
 
     while let Ok(job) = rx.recv() {
@@ -451,7 +583,11 @@ fn insert_entries_thread(
                     &node_name,
                     total_lines as i64,
                 );
-                FileMetadata::insert_metadata(&db, file_metadata)?;
+                if use_upsert {
+                    FileMetadata::upsert_metadata(&db, file_metadata)?;
+                } else {
+                    FileMetadata::insert_metadata(&db, file_metadata)?;
+                }
                 current_file_entries.clear();
             }
         }

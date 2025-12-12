@@ -39,6 +39,7 @@ async fn dispatch_command(cli: &clap::ArgMatches) -> sysexits::ExitCode {
     match cli.subcommand() {
         Some(("logs", logs_args)) => match logs_args.subcommand() {
             Some(("parse", args)) => commands::handle_parse_command(args),
+            Some(("merge", args)) => commands::handle_merge_command(args),
             Some(("obfuscate", args)) => commands::handle_obfuscate_command(args),
             Some(("query", args)) => commands::handle_query_command(args),
             Some(("overview", args)) => commands::handle_overview_command(args),

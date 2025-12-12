@@ -98,3 +98,22 @@ fn logs_parse_requires_subcommand() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+#[test]
+fn show_merge_command_help() -> Result<(), Box<dyn Error>> {
+    run_succeeds(["logs", "merge", "--help"])
+        .stdout(output_includes("Merges additional log files"))
+        .stdout(output_includes("--input-log-file-path"))
+        .stdout(output_includes("--db-file-path"));
+
+    Ok(())
+}
+
+#[test]
+fn show_obfuscate_command_help() -> Result<(), Box<dyn Error>> {
+    run_succeeds(["logs", "obfuscate", "--help"])
+        .stdout(output_includes("--input-log-file-path"))
+        .stdout(output_includes("--output-log-file-path"));
+
+    Ok(())
+}
