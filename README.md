@@ -105,6 +105,32 @@ rabbitmq-lqt web serve -i /tmp/log_set_abc.rlqt
 then navigate to `http://127.0.0.1:15692`.
 
 
+### Obfuscating Log Files
+
+`rabbitmq-lqt logs obfuscate` removes sensitive information from log files, making them safe to share
+for debugging or use as test fixtures. It replaces:
+
+ * Node names and hostnames
+ * IPv4 and IPv6 addresses
+ * Usernames
+ * Virtual host names
+ * Queue, exchange, and stream names
+ * Policy names
+ * File system paths
+
+```shell
+rabbitmq-lqt logs obfuscate --input-log-file-path /path/to/rabbit@prod-server.log \
+                            --output-log-file-path /path/to/obfuscated.log
+```
+
+Obfuscation is deterministic: the same input value always maps to the same obfuscated value
+within a single run, preserving correlations in the log data to the extent possible.
+In rare ambiguous cases virtual hosts, users, queue or stream names that follow
+the obfuscated pattern (such as 'queue-{n}') can be mapped incorrectly.
+Note that this does not have any effect on log annotation quality but might be important
+for certain RCA (Root Cause Analysis) investigations.
+
+
 ### Working with Log File Updates
 
 When log files change, the annotation database must be deleted and re-created using the `logs parse` command.
