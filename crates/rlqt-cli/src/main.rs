@@ -18,8 +18,10 @@ mod errors;
 mod output;
 
 use std::io::stderr;
-use std::path::PathBuf;
 use std::process::exit;
+
+#[cfg(feature = "web-ui")]
+use std::path::PathBuf;
 
 #[tokio::main]
 async fn main() {
@@ -52,6 +54,7 @@ async fn dispatch_command(cli: &clap::ArgMatches) -> sysexits::ExitCode {
                 sysexits::ExitCode::Usage
             }
         },
+        #[cfg(feature = "web-ui")]
         Some(("web", web_args)) => match web_args.subcommand() {
             Some(("serve", args)) => handle_web_serve_command(args).await,
             _ => {
@@ -74,6 +77,7 @@ async fn dispatch_command(cli: &clap::ArgMatches) -> sysexits::ExitCode {
     }
 }
 
+#[cfg(feature = "web-ui")]
 async fn handle_web_serve_command(args: &clap::ArgMatches) -> sysexits::ExitCode {
     let db_path: PathBuf = args
         .get_one::<String>("input_db_file_path")

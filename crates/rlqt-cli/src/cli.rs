@@ -19,24 +19,30 @@ pub fn clap_parser() -> Command {
         .subcommand_required(true)
         .subcommands(logs_subcommands());
 
-    let web_group = Command::new("web")
-        .about("Web UI operations")
-        .subcommand_required(true)
-        .subcommands(web_subcommands());
-
     let about = format!(
         "RabbitMQ Log Query Toolkit (RLQT) {}: parse, query, analyze, obfuscate RabbitMQ log files",
         env!("CARGO_PKG_VERSION")
     );
-    Command::new("rabbitmq-lqt")
+    let cmd = Command::new("rabbitmq-lqt")
         .version(env!("CARGO_PKG_VERSION"))
         .long_about(&about)
         .about(&about)
         .subcommand_required(true)
-        .subcommand(logs_group)
-        .subcommand(web_group)
+        .subcommand(logs_group);
+
+    #[cfg(feature = "web-ui")]
+    let cmd = {
+        let web_group = Command::new("web")
+            .about("Web UI operations")
+            .subcommand_required(true)
+            .subcommands(web_subcommands());
+        cmd.subcommand(web_group)
+    };
+
+    cmd
 }
 
+#[cfg(feature = "web-ui")]
 fn web_subcommands() -> Vec<Command> {
     let serve_cmd = Command::new("serve")
         .about("Start the web server for log querying")
