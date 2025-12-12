@@ -1,7 +1,7 @@
 # RabbitMQ Log Querying Tools
 
-RabbitMQ Log Querying Tools (RLQT), as the name suggests, are a set of tools designed for parsing and annotating
-RabbitMQ log files for more efficient analysis.
+RabbitMQ Log Querying Tools (RLQT), as the name suggests, are a set of tools designed for parsing, annotating,
+and (optionally) obfuscating RabbitMQ log files for more efficient analysis.
 
 This tool is intended for local use, including offline or air gapped environments. Its inputs are RabbitMQ log files
 and its annotated data store is entirely local.
