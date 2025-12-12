@@ -2,7 +2,9 @@
 
 ## 0.14.0 (in development)
 
-No changes yet.
+### Enhancements
+
+ * New command: `logs merge` merges additional log files into an existing database
 
 
 ## 0.13.0 (Dec 11, 2025)
