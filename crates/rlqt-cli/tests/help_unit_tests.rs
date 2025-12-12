@@ -104,6 +104,7 @@ fn show_merge_command_help() -> Result<(), Box<dyn Error>> {
     run_succeeds(["logs", "merge", "--help"])
         .stdout(output_includes("Merges additional log files"))
         .stdout(output_includes("--input-log-file-path"))
+        .stdout(output_includes("--input-log-dir-path"))
         .stdout(output_includes("--db-file-path"));
 
     Ok(())
