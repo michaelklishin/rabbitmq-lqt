@@ -276,28 +276,28 @@ pub fn display_file_metadata(
         if !metadata.nodes.is_empty() {
             println!("  Nodes:");
             for node in &metadata.nodes {
-                println!("    - {}", node);
+                println!("    * {}", node);
             }
         }
 
         if !metadata.subsystems.is_empty() {
             println!("  Subsystems:");
             for subsystem in &metadata.subsystems {
-                println!("    - {}", subsystem);
+                println!("    * {}", subsystem);
             }
         }
 
         if !metadata.labels.is_empty() {
             println!("  Labels:");
             for label in &metadata.labels {
-                println!("    - {}", label);
+                println!("    * {}", label);
             }
         }
 
         if !metadata.enabled_plugins.is_empty() {
             println!("  Enabled Plugins ({}):", metadata.enabled_plugins.len());
             for plugin in &metadata.enabled_plugins {
-                println!("    - {}", plugin);
+                println!("    * {}", plugin);
             }
         }
     }
