@@ -127,6 +127,8 @@ async fn root_handler() -> impl IntoResponse {
 async fn assets_handler(AxumPath(path): AxumPath<String>) -> impl IntoResponse {
     let content_type = if path.ends_with(".js") {
         "application/javascript"
+    } else if path.ends_with(".wasm") {
+        "application/wasm"
     } else if path.ends_with(".css") {
         "text/css"
     } else if path.ends_with(".woff2") {
