@@ -15,7 +15,7 @@ name = "rlqt_ql"
 path = "src/lib.rs"
 
 [dependencies]
-rlqt-ql-core = { path = "../rlqt-ql-core" }
+rlqt-ql-core = { version = "0.15.0", path = "../rlqt-ql-core" }
 thiserror = { workspace = true }
 chrono = { workspace = true }
 chrono-english = { workspace = true }
