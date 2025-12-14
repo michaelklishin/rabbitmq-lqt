@@ -4,7 +4,21 @@
 
 ### Enhancements
 
- * TBD
+ * Introduce a QL (Query Language) for more flexible filtering and sorting.
+   This includes both a CLI command and a new Web UI tab.
+
+   Example queries:
+
+    - `:errors` — all error logs using the errors preset
+    - `@24h subsystem == "connections"` — connection logs from the last 24 hours
+    - `:crashes | sort timestamp desc` — crashes preset, sorted newest first
+    - `message contains "timeout" | limit 50` — messages containing "timeout", limited to 50
+    - `@1h severity == "warning" or severity == "error"` — warnings or errors from the last hour
+    - `labels any ["tls", "disconnects"]` — entries with TLS or disconnect labels
+
+ * QL supports time ranges (`@1h`, `@24h`, `@7d`), presets (`:errors`, `:crashes`),
+   field filters (`severity ==`, `subsystem ==`, `message contains`), boolean logic
+   (`and`, `or`, `not`), grouping with parentheses, and pipeline stages (`| limit`, `| sort`)
 
 
 ## 0.14.0 (Dec 11, 2025)
