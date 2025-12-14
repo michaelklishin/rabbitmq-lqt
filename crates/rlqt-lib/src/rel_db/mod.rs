@@ -22,6 +22,7 @@ pub use presets::QueryPreset;
 use duckdb::Error as DuckDbError;
 use r2d2::{Pool, PooledConnection};
 use r2d2_duckdb::DuckDbConnectionManager;
+use std::io::Error as IoError;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
@@ -92,11 +93,11 @@ fn create_database_with_options(
         .connection_timeout(Duration::from_secs(1))
         .build(manager)
         .map_err(|e| {
-            DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))
+            DuckDbError::ToSqlConversionFailure(Box::new(IoError::other(e.to_string())))
         })?;
 
     let conn = pool.get().map_err(|e| {
-        DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))
+        DuckDbError::ToSqlConversionFailure(Box::new(IoError::other(e.to_string())))
     })?;
 
     conn.execute_batch(
@@ -142,7 +143,7 @@ pub fn finalize_bulk_import(_db: &DatabaseConnection) -> Result<(), DuckDbError>
 
 pub fn post_insertion_operations(db: &DatabaseConnection) -> Result<(), DuckDbError> {
     let conn = db.get().map_err(|e| {
-        DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))
+        DuckDbError::ToSqlConversionFailure(Box::new(IoError::other(e.to_string())))
     })?;
 
     conn.execute_batch(
@@ -174,7 +175,7 @@ pub fn open_database(db_path: &Path) -> Result<DatabaseConnection, DuckDbError> 
         .connection_timeout(Duration::from_secs(1))
         .build(manager)
         .map_err(|e| {
-            DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))
+            DuckDbError::ToSqlConversionFailure(Box::new(IoError::other(e.to_string())))
         })?;
 
     Ok(DatabaseConnection {

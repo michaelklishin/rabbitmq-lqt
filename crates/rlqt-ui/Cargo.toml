@@ -13,6 +13,7 @@ path = "src/lib.rs"
 
 [dependencies]
 rlqt-lib = { path = "../rlqt-lib" }
+rlqt-ql = { path = "../rlqt-ql" }
 clap = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }

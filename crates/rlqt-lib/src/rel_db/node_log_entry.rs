@@ -19,6 +19,15 @@ use chrono::{DateTime, Utc};
 use duckdb::types::Value;
 use duckdb::{Error as DuckDbError, params};
 use serde::{Deserialize, Serialize};
+use std::fmt::Display;
+use std::io::Error as IoError;
+
+fn pool_error_to_duckdb(e: impl Display) -> DuckDbError {
+    DuckDbError::ToSqlConversionFailure(Box::new(IoError::other(format!(
+        "Connection pool error: {}",
+        e
+    ))))
+}
 
 pub struct NodeLogEntry;
 
@@ -39,6 +48,7 @@ pub struct QueryContext {
     pub(crate) has_resolution_or_discussion_url: bool,
     pub(crate) has_doc_url: bool,
     pub(crate) preset: Option<QueryPreset>,
+    pub(crate) raw_where_clauses: Vec<String>,
 }
 
 impl QueryContext {
@@ -119,6 +129,34 @@ impl QueryContext {
         self.preset = Some(preset);
         self
     }
+
+    /// Adds a raw SQL WHERE clause fragment.
+    ///
+    /// ## Safety
+    ///
+    /// Only use with trusted, pre-validated input such as output from the QL compiler.
+    /// User input must be properly escaped before being included in the clause.
+    ///
+    /// The QL compiler (`rlqt_ql::compiler`) uses `escape_sql_string()` and
+    /// `escape_like_pattern()` to sanitize user-provided values before generating
+    /// SQL fragments that are passed to this method.
+    #[must_use]
+    pub fn raw_where(mut self, clause: impl Into<String>) -> Self {
+        self.raw_where_clauses.push(clause.into());
+        self
+    }
+
+    /// Sets multiple raw SQL WHERE clause fragments.
+    ///
+    /// ## Safety
+    ///
+    /// **This method accepts raw SQL that is concatenated directly into the query.**
+    /// See [`raw_where`](Self::raw_where).
+    #[must_use]
+    pub fn raw_where_clauses(mut self, clauses: Vec<String>) -> Self {
+        self.raw_where_clauses = clauses;
+        self
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -164,9 +202,7 @@ impl Model {
 
 impl NodeLogEntry {
     pub fn count_all(db: &DatabaseConnection) -> Result<u64, DuckDbError> {
-        let conn = db.get().map_err(|e| {
-            DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))
-        })?;
+        let conn = db.get().map_err(pool_error_to_duckdb)?;
 
         let mut stmt = conn.prepare("SELECT COUNT(*) FROM node_log_entries")?;
         let count: i64 = stmt.query_row([], |row| row.get(0))?;
@@ -174,9 +210,7 @@ impl NodeLogEntry {
     }
 
     pub fn max_entry_id(db: &DatabaseConnection) -> Result<i64, DuckDbError> {
-        let conn = db.get().map_err(|e| {
-            DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))
-        })?;
+        let conn = db.get().map_err(pool_error_to_duckdb)?;
 
         let max_id: Option<i64> = conn
             .query_row("SELECT MAX(id) FROM node_log_entries", [], |row| row.get(0))
@@ -186,9 +220,7 @@ impl NodeLogEntry {
     }
 
     pub fn query(db: &DatabaseConnection, ctx: &QueryContext) -> Result<Vec<Model>, DuckDbError> {
-        let conn = db.get().map_err(|e| {
-            DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))
-        })?;
+        let conn = db.get().map_err(pool_error_to_duckdb)?;
 
         let mut conditions = Vec::new();
         let mut params: Vec<Value> = Vec::new();
@@ -277,6 +309,10 @@ impl NodeLogEntry {
             conditions.push("doc_url_id IS NOT NULL".to_string());
         }
 
+        for clause in &ctx.raw_where_clauses {
+            conditions.push(clause.clone());
+        }
+
         let effective_limit = ctx.limit.unwrap_or(DEFAULT_MAX_QUERY_LIMIT);
 
         let where_clause = if conditions.is_empty() {
@@ -333,9 +369,7 @@ impl NodeLogEntry {
             return Ok(());
         }
 
-        let conn = db.get().map_err(|e| {
-            DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))
-        })?;
+        let conn = db.get().map_err(pool_error_to_duckdb)?;
 
         let needs_auto_id = entries.iter().any(|e| e.explicit_id.is_none());
         let mut running_id = if needs_auto_id {
@@ -380,9 +414,7 @@ impl NodeLogEntry {
     }
 
     pub fn find_all(db: &DatabaseConnection) -> Result<Vec<Model>, DuckDbError> {
-        let conn = db.get().map_err(|e| {
-            DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))
-        })?;
+        let conn = db.get().map_err(pool_error_to_duckdb)?;
 
         let mut stmt = conn.prepare(
             "SELECT id, node, timestamp, severity, erlang_pid, subsystem_id, message, labels, resolution_or_discussion_url_id, doc_url_id
@@ -417,9 +449,7 @@ impl NodeLogEntry {
     }
 
     pub fn get_node_counts(db: &DatabaseConnection) -> Result<Vec<(String, i64)>, DuckDbError> {
-        let conn = db.get().map_err(|e| {
-            DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))
-        })?;
+        let conn = db.get().map_err(pool_error_to_duckdb)?;
 
         let mut stmt = conn.prepare(
             "SELECT node, COUNT(*) as count FROM node_log_entries GROUP BY node ORDER BY node ASC",

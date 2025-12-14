@@ -16,6 +16,7 @@ use crate::errors::CommandRunError;
 use crate::output;
 use chrono::{DateTime, Utc};
 use clap::ArgMatches;
+use duckdb::Error as DuckDbError;
 use indicatif::{ProgressBar, ProgressStyle};
 use rayon::prelude::*;
 use rlqt_lib::file_set_metadata::extract_file_metadata;
@@ -373,7 +374,7 @@ fn process_log_file(log_path: &Path, tx: &mpsc::Sender<InsertionTask>, silent: b
 }
 
 fn wait_for_insertion_thread(
-    insert_thread: thread::JoinHandle<std::result::Result<(), duckdb::Error>>,
+    insert_thread: thread::JoinHandle<std::result::Result<(), DuckDbError>>,
 ) -> Result<()> {
     insert_thread
         .join()
@@ -527,7 +528,7 @@ fn merge_logs(args: &ArgMatches) -> Result<()> {
 fn insert_entries_thread(
     db: DatabaseConnection,
     rx: mpsc::Receiver<InsertionTask>,
-) -> std::result::Result<(), duckdb::Error> {
+) -> std::result::Result<(), DuckDbError> {
     insert_entries_thread_with_start_id(db, rx, 1)
 }
 
@@ -535,7 +536,7 @@ fn insert_entries_thread_with_start_id(
     db: DatabaseConnection,
     rx: mpsc::Receiver<InsertionTask>,
     start_id: i64,
-) -> std::result::Result<(), duckdb::Error> {
+) -> std::result::Result<(), DuckDbError> {
     insert_entries_thread_impl(db, rx, start_id, false)
 }
 
@@ -543,7 +544,7 @@ fn merge_entries_thread_with_start_id(
     db: DatabaseConnection,
     rx: mpsc::Receiver<InsertionTask>,
     start_id: i64,
-) -> std::result::Result<(), duckdb::Error> {
+) -> std::result::Result<(), DuckDbError> {
     insert_entries_thread_impl(db, rx, start_id, true)
 }
 
@@ -552,7 +553,7 @@ fn insert_entries_thread_impl(
     rx: mpsc::Receiver<InsertionTask>,
     start_id: i64,
     use_upsert: bool,
-) -> std::result::Result<(), duckdb::Error> {
+) -> std::result::Result<(), DuckDbError> {
     let mut next_id = start_id;
     let mut current_file_entries: Vec<ParsedLogEntry> = Vec::new();
 

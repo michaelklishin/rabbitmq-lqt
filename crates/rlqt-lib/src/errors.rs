@@ -24,6 +24,9 @@ pub enum Error {
     #[error("IO error: {0}")]
     Io(#[from] IoError),
 
+    #[error("Database connection pool error: {0}")]
+    ConnectionPool(String),
+
     #[error("Failed to parse log entry at line {line}: {reason}")]
     ParseEntry { line: usize, reason: String },
 

@@ -86,6 +86,7 @@ pub async fn run_server(db_path: &Path, host: &str, port: u16) -> Result<(), Ser
 fn create_router(state: AppState) -> Router {
     let api_routes = Router::new()
         .route("/logs", get(logs::query_logs))
+        .route("/logs/ql", get(logs::query_logs_by_ql))
         .route("/logs/preset/{preset}", get(logs::query_logs_by_preset))
         .route("/metadata", get(metadata::get_metadata))
         .route("/stats", get(metadata::get_stats))
@@ -105,6 +106,7 @@ pub fn create_router_for_testing(db: Arc<DatabaseConnection>) -> Router {
     let state = AppState { db };
     let api_routes = Router::new()
         .route("/logs", get(logs::query_logs))
+        .route("/logs/ql", get(logs::query_logs_by_ql))
         .route("/logs/preset/{preset}", get(logs::query_logs_by_preset))
         .route("/metadata", get(metadata::get_metadata))
         .route("/stats", get(metadata::get_stats))

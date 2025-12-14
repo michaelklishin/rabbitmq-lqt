@@ -21,6 +21,7 @@ use rlqt_lib::entry_metadata::labels::LABEL_NAMES;
 use rlqt_lib::rel_db::{FileMetadata, NodeLogEntry};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+use std::io::Error as IoError;
 
 #[derive(Debug, Serialize)]
 pub struct MetadataResponse {
@@ -59,7 +60,7 @@ pub async fn get_metadata(
     let db = state.db.clone();
     let file_metadata_list = tokio::task::spawn_blocking(move || FileMetadata::find_all(&db))
         .await
-        .map_err(|e| ServerError::Io(std::io::Error::other(format!("Task join error: {}", e))))??;
+        .map_err(|e| ServerError::Io(IoError::other(format!("Task join error: {}", e))))??;
 
     let mut nodes_set = HashSet::new();
     let mut subsystems_set = HashSet::new();
@@ -90,7 +91,7 @@ pub async fn get_stats(State(state): State<AppState>) -> Result<Json<StatsRespon
         Ok::<_, duckdb::Error>((total, node_counts))
     })
     .await
-    .map_err(|e| ServerError::Io(std::io::Error::other(format!("Task join error: {}", e))))??;
+    .map_err(|e| ServerError::Io(IoError::other(format!("Task join error: {}", e))))??;
 
     let nodes = node_counts
         .into_iter()
@@ -147,7 +148,7 @@ pub async fn get_file_metadata(
     let db = state.db.clone();
     let metadata_list = tokio::task::spawn_blocking(move || FileMetadata::find_all(&db))
         .await
-        .map_err(|e| ServerError::Io(std::io::Error::other(format!("Task join error: {}", e))))??;
+        .map_err(|e| ServerError::Io(IoError::other(format!("Task join error: {}", e))))??;
 
     let response = metadata_list
         .into_iter()

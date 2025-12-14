@@ -135,3 +135,26 @@ export async function queryLogsByPreset(
 
   return response.json()
 }
+
+export interface QLQueryParams {
+  query: string
+  limit?: number
+}
+
+export async function queryLogsByQL(params: QLQueryParams): Promise<LogQueryResponse> {
+  const queryString = new URLSearchParams(
+    Object.entries(params)
+      .filter(([_, v]) => v !== undefined && v !== null && v !== '')
+      .map(([k, v]) => [k, String(v)])
+  ).toString()
+
+  const url = `${API_BASE}/logs/ql?${queryString}`
+  const response = await fetch(url)
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}))
+    throw new Error(errorBody.error || `Failed to query logs by QL: ${response.statusText}`)
+  }
+
+  return response.json()
+}

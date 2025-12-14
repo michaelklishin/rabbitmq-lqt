@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { MetadataResponse, QueryParams } from '../api/client'
 
 interface FilterPanelProps {
@@ -7,19 +8,29 @@ interface FilterPanelProps {
 }
 
 export function FilterPanel({ metadata, filters, onFilterChange }: FilterPanelProps) {
-  const updateFilter = (key: keyof QueryParams, value: any) => {
+  const updateFilter = <K extends keyof QueryParams>(key: K, value: QueryParams[K]) => {
     onFilterChange({
       ...filters,
       [key]: value,
     })
   }
 
+  // Memoize parsed labels to avoid repeated string splitting
+  const currentLabels = useMemo(
+    () => filters.labels?.split(',').filter(Boolean) || [],
+    [filters.labels]
+  )
+
+  const currentLabelsSet = useMemo(
+    () => new Set(currentLabels),
+    [currentLabels]
+  )
+
   const handleLabelChange = (label: string, checked: boolean) => {
-    const currentLabels = filters.labels?.split(',').filter(Boolean) || []
     const newLabels = checked
       ? [...currentLabels, label]
       : currentLabels.filter((l) => l !== label)
-    updateFilter('labels', newLabels.join(','))
+    updateFilter('labels', newLabels.length > 0 ? newLabels.join(',') : undefined)
   }
 
   const clearFilters = () => {
@@ -156,24 +167,21 @@ export function FilterPanel({ metadata, filters, onFilterChange }: FilterPanelPr
               Labels
             </label>
             <div className="space-y-2 max-h-96 overflow-y-auto">
-              {metadata?.labels.map((label) => {
-                const isChecked = filters.labels?.split(',').includes(label) || false
-                return (
-                  <label key={label} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={isChecked}
-                      onChange={(e) => handleLabelChange(label, e.target.checked)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="text-sm text-gray-700">{label}</span>
-                  </label>
-                )
-              })}
+              {metadata?.labels.map((label) => (
+                <label key={label} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={currentLabelsSet.has(label)}
+                    onChange={(e) => handleLabelChange(label, e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">{label}</span>
+                </label>
+              ))}
             </div>
           </div>
 
-          {filters.labels && filters.labels.split(',').filter(Boolean).length > 1 && (
+          {currentLabels.length > 1 && (
             <div className="mt-4">
               <label className="flex items-center space-x-2">
                 <input

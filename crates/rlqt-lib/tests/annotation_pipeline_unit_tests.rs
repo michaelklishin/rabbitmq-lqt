@@ -17,6 +17,7 @@ mod test_helpers;
 use chrono::Utc;
 use rlqt_lib::constants::{ALARMS_DOC_URL_ID, METADATA_STORE_DOC_URL_ID};
 use rlqt_lib::entry_metadata::Annotator;
+use rlqt_lib::entry_metadata::annotate_entry;
 use rlqt_lib::entry_metadata::annotate_labels;
 use rlqt_lib::entry_metadata::doc_url_annotators::{
     DocUrlAnnotator, FreeDiskSpaceAlarmDocAnnotator, MetadataStoreDocAnnotator, annotate_doc_urls,
@@ -1098,8 +1099,6 @@ fn test_annotation_order_subsystem_then_urls() {
 
 #[test]
 fn test_annotate_entry_sets_unlabelled_label_when_no_labels() {
-    use rlqt_lib::entry_metadata::annotate_entry;
-
     let mut entry = create_test_entry("Some generic log message", Severity::Info);
 
     annotate_entry(&mut entry);
@@ -1109,8 +1108,6 @@ fn test_annotate_entry_sets_unlabelled_label_when_no_labels() {
 
 #[test]
 fn test_annotate_entry_does_not_set_unlabelled_label_when_labels_exist() {
-    use rlqt_lib::entry_metadata::annotate_entry;
-
     let mut entry = create_test_entry("User authenticated successfully by backend", Severity::Info);
 
     annotate_entry(&mut entry);

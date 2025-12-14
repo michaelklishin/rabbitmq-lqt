@@ -17,6 +17,7 @@ use chrono::{DateTime, Utc};
 use duckdb::types::Value;
 use duckdb::{Error as DuckDbError, params};
 use serde::{Deserialize, Serialize};
+use std::io::Error as IoError;
 
 pub struct FileMetadata;
 
@@ -47,7 +48,7 @@ fn vec_to_json(vec: &[String]) -> String {
 impl FileMetadata {
     pub fn find_all(db: &DatabaseConnection) -> Result<Vec<Model>, DuckDbError> {
         let conn = db.get().map_err(|e| {
-            DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))
+            DuckDbError::ToSqlConversionFailure(Box::new(IoError::other(e.to_string())))
         })?;
 
         let mut stmt = conn.prepare(
@@ -83,16 +84,12 @@ impl FileMetadata {
             })
         })?;
 
-        let mut results = Vec::new();
-        for row_result in rows {
-            results.push(row_result?);
-        }
-        Ok(results)
+        rows.collect()
     }
 
     pub fn insert_metadata(db: &DatabaseConnection, metadata: Model) -> Result<(), DuckDbError> {
         let conn = db.get().map_err(|e| {
-            DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))
+            DuckDbError::ToSqlConversionFailure(Box::new(IoError::other(e.to_string())))
         })?;
 
         let oldest_entry_at = metadata.oldest_entry_at.map(|dt| {
@@ -126,7 +123,7 @@ impl FileMetadata {
 
     pub fn upsert_metadata(db: &DatabaseConnection, metadata: Model) -> Result<(), DuckDbError> {
         let conn = db.get().map_err(|e| {
-            DuckDbError::ToSqlConversionFailure(Box::new(std::io::Error::other(e.to_string())))
+            DuckDbError::ToSqlConversionFailure(Box::new(IoError::other(e.to_string())))
         })?;
 
         let oldest_entry_at = metadata.oldest_entry_at.map(|dt| {

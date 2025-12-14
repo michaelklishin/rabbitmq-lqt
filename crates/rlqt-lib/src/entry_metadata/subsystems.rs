@@ -58,6 +58,7 @@ pub enum Subsystem {
     Logging = 23,
     Streams = 24,
     Queues = 25,
+    #[strum(serialize = "oauth2")]
     OAuth2 = 26,
     Management = 27,
     Metrics = 28,

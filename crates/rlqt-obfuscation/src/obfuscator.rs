@@ -236,9 +236,9 @@ impl LogObfuscator {
             Entry::Vacant(e) => {
                 self.hostname_counter += 1;
                 self.stats.hostnames_obfuscated += 1;
-                ObfuscatedString::original(
-                    e.insert(format!("host{}", self.hostname_counter)).clone(),
-                )
+                let value = format!("host{}", self.hostname_counter);
+                e.insert(value.clone());
+                ObfuscatedString::original(value)
             }
         }
     }
@@ -253,10 +253,9 @@ impl LogObfuscator {
             Entry::Vacant(e) => {
                 self.directory_counter += 1;
                 self.stats.directories_obfuscated += 1;
-                ObfuscatedString::original(
-                    e.insert(format!("/data/path{}", self.directory_counter))
-                        .clone(),
-                )
+                let value = format!("/data/path{}", self.directory_counter);
+                e.insert(value.clone());
+                ObfuscatedString::original(value)
             }
         }
     }
@@ -271,9 +270,9 @@ impl LogObfuscator {
             Entry::Vacant(e) => {
                 self.username_counter += 1;
                 self.stats.usernames_obfuscated += 1;
-                ObfuscatedString::original(
-                    e.insert(format!("user{}", self.username_counter)).clone(),
-                )
+                let value = format!("user{}", self.username_counter);
+                e.insert(value.clone());
+                ObfuscatedString::original(value)
             }
         }
     }
@@ -288,7 +287,9 @@ impl LogObfuscator {
             Entry::Vacant(e) => {
                 self.vhost_counter += 1;
                 self.stats.vhosts_obfuscated += 1;
-                ObfuscatedString::original(e.insert(format!("vhost{}", self.vhost_counter)).clone())
+                let value = format!("vhost{}", self.vhost_counter);
+                e.insert(value.clone());
+                ObfuscatedString::original(value)
             }
         }
     }
@@ -303,7 +304,9 @@ impl LogObfuscator {
             Entry::Vacant(e) => {
                 self.queue_counter += 1;
                 self.stats.queues_obfuscated += 1;
-                ObfuscatedString::original(e.insert(format!("queue{}", self.queue_counter)).clone())
+                let value = format!("queue{}", self.queue_counter);
+                e.insert(value.clone());
+                ObfuscatedString::original(value)
             }
         }
     }
@@ -318,10 +321,9 @@ impl LogObfuscator {
             Entry::Vacant(e) => {
                 self.exchange_counter += 1;
                 self.stats.exchanges_obfuscated += 1;
-                ObfuscatedString::original(
-                    e.insert(format!("exchange{}", self.exchange_counter))
-                        .clone(),
-                )
+                let value = format!("exchange{}", self.exchange_counter);
+                e.insert(value.clone());
+                ObfuscatedString::original(value)
             }
         }
     }
@@ -336,9 +338,9 @@ impl LogObfuscator {
             Entry::Vacant(e) => {
                 self.stream_counter += 1;
                 self.stats.streams_obfuscated += 1;
-                ObfuscatedString::original(
-                    e.insert(format!("stream{}", self.stream_counter)).clone(),
-                )
+                let value = format!("stream{}", self.stream_counter);
+                e.insert(value.clone());
+                ObfuscatedString::original(value)
             }
         }
     }
@@ -353,9 +355,9 @@ impl LogObfuscator {
             Entry::Vacant(e) => {
                 self.policy_counter += 1;
                 self.stats.policies_obfuscated += 1;
-                ObfuscatedString::original(
-                    e.insert(format!("policy{}", self.policy_counter)).clone(),
-                )
+                let value = format!("policy{}", self.policy_counter);
+                e.insert(value.clone());
+                ObfuscatedString::original(value)
             }
         }
     }
@@ -376,7 +378,9 @@ impl LogObfuscator {
                 self.stats.ipv4_addresses_obfuscated += 1;
                 let octet4 = ((self.ipv4_counter - 1) % 255) + 1;
                 let octet3 = (self.ipv4_counter - 1) / 255;
-                ObfuscatedString::original(e.insert(format!("10.0.{}.{}", octet3, octet4)).clone())
+                let value = format!("10.0.{}.{}", octet3, octet4);
+                e.insert(value.clone());
+                ObfuscatedString::original(value)
             }
         }
     }
@@ -391,7 +395,9 @@ impl LogObfuscator {
             Entry::Vacant(e) => {
                 self.ipv6_counter += 1;
                 self.stats.ipv6_addresses_obfuscated += 1;
-                ObfuscatedString::original(e.insert(format!("fd00::{}", self.ipv6_counter)).clone())
+                let value = format!("fd00::{}", self.ipv6_counter);
+                e.insert(value.clone());
+                ObfuscatedString::original(value)
             }
         }
     }

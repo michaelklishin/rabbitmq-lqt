@@ -12,28 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use thiserror::Error;
+//! Core query language parser and autocomplete for RLQT.
+//!
+//! This crate provides the parser, AST types, autocomplete data, and error types
+//! for the RLQT Query Language. It has no dependencies on `rlqt-lib` and can be
+//! compiled to WebAssembly.
 
-#[derive(Debug, Error)]
-pub enum ServerError {
-    #[error("Database error: {0}")]
-    Database(#[from] duckdb::Error),
+pub mod ast;
+pub mod autocomplete;
+pub mod errors;
+mod parser;
+pub mod presets;
 
-    #[error("Library error: {0}")]
-    Library(#[from] rlqt_lib::Error),
-
-    #[error("IO error: {0}")]
-    Io(#[from] std::io::Error),
-
-    #[error("Serialization error: {0}")]
-    Serialization(#[from] serde_json::Error),
-
-    #[error("Invalid datetime format: {0}")]
-    DateTimeParse(String),
-
-    #[error("Invalid preset: {0}")]
-    InvalidPreset(String),
-
-    #[error("Invalid query: {0}")]
-    InvalidQuery(String),
-}
+pub use ast::{
+    Duration, DurationUnit, Field, FilterExpr, LabelMatcher, MatchOp, PipelineStage, Query,
+    Selector, SortDirection, SortSpec, Value,
+};
+pub use errors::{Diagnostic, ParseError, Span};
+pub use parser::{parse, parse_filter_only};
+pub use presets::PresetName;

@@ -9,3 +9,4 @@ benchmarks/*
 # Frontend build artifacts
 crates/rlqt-ui/frontend/node_modules
 crates/rlqt-ui/frontend/dist
+crates/rlqt-ui/frontend/src/wasm/pkg

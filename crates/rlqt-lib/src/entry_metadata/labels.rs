@@ -68,7 +68,7 @@ pub const LABEL_KHEPRI: &str = "khepri";
 pub const LABEL_RUNTIME_PARAMETERS: &str = "runtime_parameters";
 pub const LABEL_HTTP: &str = "http";
 pub const LABEL_SESSIONS: &str = "sessions";
-pub const LABEL_AMQP10: &str = "amqp1_0";
+pub const LABEL_AMQP10: &str = "amqp10";
 pub const LABEL_OAUTH2: &str = "oauth2";
 pub const LABEL_SQL: &str = "sql";
 

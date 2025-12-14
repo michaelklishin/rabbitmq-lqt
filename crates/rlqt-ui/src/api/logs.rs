@@ -25,6 +25,7 @@ use rlqt_lib::rel_db::presets::QueryPreset;
 use rlqt_lib::{NodeLogEntry, QueryContext};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::io::Error as IoError;
 
 #[derive(Debug, Deserialize)]
 pub struct LogQueryParams {
@@ -109,6 +110,7 @@ impl IntoResponse for ServerError {
             ServerError::Serialization(ref e) => (StatusCode::BAD_REQUEST, e.to_string()),
             ServerError::DateTimeParse(ref e) => (StatusCode::BAD_REQUEST, e.clone()),
             ServerError::InvalidPreset(ref e) => (StatusCode::BAD_REQUEST, e.clone()),
+            ServerError::InvalidQuery(ref e) => (StatusCode::BAD_REQUEST, e.clone()),
         };
 
         (status, Json(serde_json::json!({ "error": message }))).into_response()
@@ -195,7 +197,7 @@ pub async fn query_logs(
     let db = state.db.clone();
     let models = tokio::task::spawn_blocking(move || NodeLogEntry::query(&db, &ctx))
         .await
-        .map_err(|e| ServerError::Io(std::io::Error::other(format!("Task join error: {}", e))))??;
+        .map_err(|e| ServerError::Io(IoError::other(format!("Task join error: {}", e))))??;
 
     let total = models.len();
     let entries: Vec<LogEntry> = models.into_iter().map(LogEntry::from).collect();
@@ -257,7 +259,37 @@ pub async fn query_logs_by_preset(
     let db = state.db.clone();
     let models = tokio::task::spawn_blocking(move || NodeLogEntry::query(&db, &ctx))
         .await
-        .map_err(|e| ServerError::Io(std::io::Error::other(format!("Task join error: {}", e))))??;
+        .map_err(|e| ServerError::Io(IoError::other(format!("Task join error: {}", e))))??;
+
+    let total = models.len();
+    let entries: Vec<LogEntry> = models.into_iter().map(LogEntry::from).collect();
+
+    Ok(Json(LogQueryResponse { entries, total }))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct QLQueryParams {
+    query: String,
+    limit: Option<u64>,
+}
+
+pub async fn query_logs_by_ql(
+    State(state): State<AppState>,
+    Query(params): Query<QLQueryParams>,
+) -> Result<Json<LogQueryResponse>, ServerError> {
+    let mut ctx = rlqt_ql::to_query_context(&params.query)
+        .map_err(|e| ServerError::InvalidQuery(e.to_string()))?;
+
+    if let Some(l) = params.limit
+        && l > 0
+    {
+        ctx = ctx.limit(l);
+    }
+
+    let db = state.db.clone();
+    let models = tokio::task::spawn_blocking(move || NodeLogEntry::query(&db, &ctx))
+        .await
+        .map_err(|e| ServerError::Io(IoError::other(format!("Task join error: {}", e))))??;
 
     let total = models.len();
     let entries: Vec<LogEntry> = models.into_iter().map(LogEntry::from).collect();

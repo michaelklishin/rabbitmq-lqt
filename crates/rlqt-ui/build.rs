@@ -19,13 +19,95 @@ use std::process::Command;
 
 fn npm_command() -> Command {
     if cfg!(windows) {
-        // On Windows, npm is a script
         let mut cmd = Command::new("cmd");
         cmd.args(["/C", "npm"]);
         cmd
     } else {
         Command::new("npm")
     }
+}
+
+fn build_wasm(manifest_dir: &Path, frontend_dir: &Path) {
+    let wasm_crate_dir = manifest_dir.join("../rlqt-ql-wasm");
+    let wasm_output_dir = frontend_dir.join("src/wasm/pkg");
+    let wasm_file = wasm_output_dir.join("rlqt_ql_wasm_bg.wasm");
+
+    for file in ["Cargo.toml", "src/lib.rs"] {
+        println!(
+            "cargo:rerun-if-changed={}",
+            wasm_crate_dir.join(file).display()
+        );
+    }
+
+    let ql_core_dir = manifest_dir.join("../rlqt-ql-core/src");
+    if ql_core_dir.exists() {
+        for entry in fs::read_dir(&ql_core_dir).into_iter().flatten().flatten() {
+            println!("cargo:rerun-if-changed={}", entry.path().display());
+        }
+    }
+
+    // Skip WASM build if the output already exists
+    // Users need to run `wasm-pack build` manually before `cargo build` to create the initial WASM output,
+    // or re-run it after changing rlqt-ql-core or rlqt-ql-wasm sources.
+    // Running wasm-pack from within a cargo build script causes lock conflicts.
+    if wasm_file.exists() {
+        return;
+    }
+
+    if !wasm_crate_dir.exists() {
+        println!(
+            "cargo:warning=WASM crate not found at {:?}, skipping WASM build",
+            wasm_crate_dir
+        );
+        return;
+    }
+
+    let wasm_pack = which_wasm_pack();
+    if wasm_pack.is_none() {
+        println!(
+            "cargo:warning=wasm-pack not found, skipping WASM build. Install with: cargo install wasm-pack"
+        );
+        return;
+    }
+
+    // Use a separate target directory to avoid Cargo.lock conflicts
+    let wasm_target_dir = manifest_dir.join("../target-wasm");
+
+    // Clear environment variables that interfere with wasm-pack's build process
+    // when running from within a cargo build script
+    let status = Command::new(wasm_pack.unwrap())
+        .args(["build", "--target", "web", "--out-dir"])
+        .arg(&wasm_output_dir)
+        .arg(&wasm_crate_dir)
+        .env_remove("CARGO_ENCODED_RUSTFLAGS")
+        .env_remove("RUSTFLAGS")
+        .env_remove("CARGO_BUILD_RUSTFLAGS")
+        .env("CARGO_TARGET_DIR", &wasm_target_dir)
+        .status()
+        .expect("Failed to run wasm-pack");
+
+    if !status.success() {
+        panic!("wasm-pack build failed");
+    }
+}
+
+fn which_wasm_pack() -> Option<String> {
+    let home = env::var("HOME").ok()?;
+    let cargo_bin = Path::new(&home).join(".cargo/bin/wasm-pack");
+    if cargo_bin.exists() {
+        return Some(cargo_bin.to_string_lossy().to_string());
+    }
+
+    let output = Command::new("which").arg("wasm-pack").output().ok()?;
+
+    if output.status.success() {
+        let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        if !path.is_empty() {
+            return Some(path);
+        }
+    }
+
+    None
 }
 
 fn watch_directory(dir: &Path) {
@@ -49,7 +131,8 @@ fn watch_directory(dir: &Path) {
 
 fn main() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let frontend_dir = Path::new(&manifest_dir).join("frontend");
+    let manifest_path = Path::new(&manifest_dir);
+    let frontend_dir = manifest_path.join("frontend");
 
     watch_directory(&frontend_dir.join("src"));
 
@@ -77,6 +160,8 @@ fn main() {
         "cargo:rerun-if-changed={}",
         frontend_dir.join("postcss.config.js").display()
     );
+
+    build_wasm(manifest_path, &frontend_dir);
 
     if !frontend_dir.join("node_modules").exists() {
         let status = npm_command()

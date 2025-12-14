@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { FilterPanel } from './components/FilterPanel'
 import { LogTable } from './components/LogTable'
 import { FileMetadataTab } from './components/FileMetadataTab'
 import { MetadataHeader } from './components/MetadataHeader'
 import { PresetFilterPanel } from './components/PresetFilterPanel'
+import { QLPanel } from './components/QLPanel'
 import {
   queryLogs,
   queryLogsByPreset,
+  queryLogsByQL,
   getMetadata,
   getStats,
   getFileMetadata,
@@ -16,14 +18,28 @@ import {
 } from './api/client'
 import { formatDate } from './utils/dateFormat'
 
-type Tab = 'logs' | 'metadata' | 'preset_errors_or_crashes'
+type Tab = 'filters' | 'ql' | 'metadata' | 'preset_errors_or_crashes'
 
 function tabFromURL(): Tab {
   const params = new URLSearchParams(window.location.search)
   const tab = params.get('tab')
+  if (tab === 'ql') return 'ql'
   if (tab === 'metadata') return 'metadata'
   if (tab === 'preset_errors_or_crashes') return 'preset_errors_or_crashes'
-  return 'logs'
+  return 'filters'
+}
+
+interface QLState {
+  query: string
+  limit: number
+}
+
+function qlStateFromURL(): QLState {
+  const params = new URLSearchParams(window.location.search)
+  return {
+    query: params.get('ql_query') || '',
+    limit: parseInt(params.get('ql_limit') || '1000'),
+  }
 }
 
 function filtersFromURL(): QueryParams {
@@ -59,12 +75,12 @@ function presetFiltersFromURL(): PresetQueryParams {
   return filters
 }
 
-function stateToURL(filters: QueryParams, presetFilters: PresetQueryParams, tab: Tab): string {
+function stateToURL(filters: QueryParams, presetFilters: PresetQueryParams, qlState: QLState, tab: Tab): string {
   const params = new URLSearchParams()
 
-  if (tab !== 'logs') params.set('tab', tab)
+  if (tab !== 'filters') params.set('tab', tab)
 
-  if (tab === 'logs') {
+  if (tab === 'filters') {
     if (filters.limit) params.set('limit', filters.limit.toString())
     if (filters.since_time) params.set('since_time', filters.since_time)
     if (filters.to_time) params.set('to_time', filters.to_time)
@@ -76,6 +92,9 @@ function stateToURL(filters: QueryParams, presetFilters: PresetQueryParams, tab:
     if (filters.matching_all_labels) params.set('matching_all_labels', 'true')
     if (filters.has_resolution_or_discussion_url) params.set('has_resolution_or_discussion_url', 'true')
     if (filters.has_doc_url) params.set('has_doc_url', 'true')
+  } else if (tab === 'ql') {
+    if (qlState.query) params.set('ql_query', qlState.query)
+    if (qlState.limit !== 1000) params.set('ql_limit', qlState.limit.toString())
   } else if (tab === 'preset_errors_or_crashes') {
     if (presetFilters.limit) params.set('preset_limit', presetFilters.limit.toString())
     if (presetFilters.since_time) params.set('preset_since_time', presetFilters.since_time)
@@ -89,12 +108,15 @@ function stateToURL(filters: QueryParams, presetFilters: PresetQueryParams, tab:
 function App() {
   const [filters, setFilters] = useState<QueryParams>(() => filtersFromURL())
   const [presetFilters, setPresetFilters] = useState<PresetQueryParams>(() => presetFiltersFromURL())
+  const [qlState, setQLState] = useState<QLState>(() => qlStateFromURL())
   const [activeTab, setActiveTab] = useState<Tab>(() => tabFromURL())
+  const [qlQueryTrigger, setQLQueryTrigger] = useState(0)
 
   useEffect(() => {
     const handlePopState = () => {
       setFilters(filtersFromURL())
       setPresetFilters(presetFiltersFromURL())
+      setQLState(qlStateFromURL())
       setActiveTab(tabFromURL())
     }
 
@@ -103,10 +125,10 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const queryString = stateToURL(filters, presetFilters, activeTab)
+    const queryString = stateToURL(filters, presetFilters, qlState, activeTab)
     const newURL = queryString ? `?${queryString}` : window.location.pathname
     window.history.pushState({}, '', newURL)
-  }, [filters, presetFilters, activeTab])
+  }, [filters, presetFilters, qlState, activeTab])
 
   const handlePidFilterClick = (pid: string) => {
     setFilters((prev) => ({
@@ -137,7 +159,7 @@ function App() {
   } = useQuery({
     queryKey: ['logs', filters],
     queryFn: () => queryLogs(filters),
-    enabled: activeTab === 'logs',
+    enabled: activeTab === 'filters',
   })
 
   const {
@@ -149,6 +171,20 @@ function App() {
     queryFn: () => queryLogsByPreset('errors_or_crashes', presetFilters),
     enabled: activeTab === 'preset_errors_or_crashes',
   })
+
+  const {
+    data: qlLogsData,
+    isLoading: isQLLoading,
+    error: qlError,
+  } = useQuery({
+    queryKey: ['ql', qlState.query, qlState.limit, qlQueryTrigger],
+    queryFn: () => queryLogsByQL({ query: qlState.query, limit: qlState.limit }),
+    enabled: activeTab === 'ql' && qlState.query.trim().length > 0 && qlQueryTrigger > 0,
+  })
+
+  const handleRunQLQuery = useCallback(() => {
+    setQLQueryTrigger((prev) => prev + 1)
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -171,14 +207,24 @@ function App() {
         <div className="border-b border-gray-200 mb-6">
           <nav className="-mb-px flex space-x-8">
             <button
-              onClick={() => setActiveTab('logs')}
+              onClick={() => setActiveTab('filters')}
               className={`${
-                activeTab === 'logs'
+                activeTab === 'filters'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
             >
-              Log Entry Filtering
+              Filters
+            </button>
+            <button
+              onClick={() => setActiveTab('ql')}
+              className={`${
+                activeTab === 'ql'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
+            >
+              QL
             </button>
             <button
               onClick={() => setActiveTab('metadata')}
@@ -226,7 +272,7 @@ function App() {
           </div>
         )}
 
-        {activeTab === 'logs' && (
+        {activeTab === 'filters' && (
           <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
             <div className="lg:col-span-1">
               <FilterPanel metadata={metadata || null} filters={filters} onFilterChange={setFilters} />
@@ -279,6 +325,62 @@ function App() {
 
               <LogTable data={logsData?.entries || []} onPidFilterClick={handlePidFilterClick} />
             </div>
+          </div>
+        )}
+
+        {activeTab === 'ql' && (
+          <div className="space-y-4">
+            <QLPanel
+              query={qlState.query}
+              limit={qlState.limit}
+              onQueryChange={(query) => setQLState((prev) => ({ ...prev, query }))}
+              onLimitChange={(limit) => setQLState((prev) => ({ ...prev, limit }))}
+              onRunQuery={handleRunQLQuery}
+              isLoading={isQLLoading}
+            />
+
+            <div className="bg-white shadow-sm border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-700">
+                  {isQLLoading ? (
+                    <span className="flex items-center gap-2">
+                      <svg
+                        className="animate-spin h-4 w-4 text-blue-600"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      Running query...
+                    </span>
+                  ) : qlError ? (
+                    <span className="text-red-600">Error: {(qlError as Error).message}</span>
+                  ) : qlLogsData ? (
+                    <span>
+                      Showing <span className="font-semibold">{qlLogsData.total}</span> matching{' '}
+                      {qlLogsData.total === 1 ? 'entry' : 'entries'}
+                    </span>
+                  ) : (
+                    <span className="text-gray-500">Enter a query and click Run</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <LogTable data={qlLogsData?.entries || []} onPidFilterClick={handlePidFilterClick} />
           </div>
         )}
 
