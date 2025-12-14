@@ -21,7 +21,8 @@ use axum::response::IntoResponse;
 use axum::routing::get;
 use clap::ArgMatches;
 use include_dir::{Dir, include_dir};
-use rlqt_lib::{DatabaseConnection, open_database};
+use rlqt_lib::rel_db::FileMetadata;
+use rlqt_lib::{DatabaseConnection, NodeLogEntry, open_database};
 use std::io::{Error as IoError, ErrorKind};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -70,13 +71,48 @@ pub async fn run_server(db_path: &Path, host: &str, port: u16) -> Result<(), Ser
     }
 
     let db = open_database(db_path)?;
+
+    log::info!("rabbitmq-lqt v{}", env!("CARGO_PKG_VERSION"));
+
+    let entry_count = NodeLogEntry::count_all(&db).unwrap_or(0);
+    log::info!(
+        "Database at {} contains {} log entries",
+        db_path.display(),
+        entry_count
+    );
+
+    if let Ok(file_metadata_list) = FileMetadata::find_all(&db) {
+        let oldest = file_metadata_list
+            .iter()
+            .filter_map(|m| m.oldest_entry_at)
+            .min();
+        let newest = file_metadata_list
+            .iter()
+            .filter_map(|m| m.most_recent_entry_at)
+            .max();
+
+        if let (Some(oldest_dt), Some(newest_dt)) = (oldest, newest) {
+            log::info!(
+                "Date range: {} to {}",
+                oldest_dt.format("%Y-%m-%d %H:%M:%S UTC"),
+                newest_dt.format("%Y-%m-%d %H:%M:%S UTC")
+            );
+        }
+    }
+
     let state = AppState { db: Arc::new(db) };
     let app = create_router(state);
 
     let addr = format!("{}:{}", host, port);
     let listener = tokio::net::TcpListener::bind(&addr).await?;
 
-    log::info!("Server listening on http://{}", addr);
+    let url = format!("http://{}", addr);
+    log::info!("");
+    log::info!("Server listening on {}", url);
+
+    if let Err(e) = opener::open(&url) {
+        log::warn!("Could not open browser: {}", e);
+    }
 
     axum::serve(listener, app).await?;
 
