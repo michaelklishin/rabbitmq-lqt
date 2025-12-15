@@ -723,6 +723,7 @@ impl Annotator for ClusteringAnnotator {
             || msg_lower.contains("draining")
             || msg_lower.starts_with("prevent_startup_if_node_was_reset")
             || msg_lower.starts_with("peer discovery:")
+            || msg_lower.starts_with("mirrored supervisor")
     }
 }
 

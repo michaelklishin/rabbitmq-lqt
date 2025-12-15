@@ -112,6 +112,16 @@ pub fn handle_obfuscate_command(args: &ArgMatches) -> ExitCode {
     }
 }
 
+pub fn handle_ql_command(args: &ArgMatches) -> ExitCode {
+    match ql_query(args) {
+        Ok(_) => ExitCode::Ok,
+        Err(e) => {
+            log::error!("Failed to execute QL query: {}", e);
+            ExitCode::Software
+        }
+    }
+}
+
 fn validate_file_paths(log_paths: &[PathBuf]) -> Result<()> {
     let missing_files: Vec<_> = log_paths.iter().filter(|p| !p.exists()).collect();
 
@@ -714,6 +724,28 @@ fn query_logs(args: &ArgMatches) -> Result<()> {
 
 fn parse_datetime_flexible(s: &str) -> Result<DateTime<Utc>> {
     rlqt_lib::datetime::parse_datetime_flexible(s).map_err(CommandRunError::DateTimeParse)
+}
+
+fn ql_query(args: &ArgMatches) -> Result<()> {
+    let db_path: PathBuf = args
+        .get_one::<String>("input_db_file_path")
+        .expect("input_db_file_path is a required argument")
+        .into();
+
+    let query_str = args
+        .get_one::<String>("query")
+        .expect("query is a required argument");
+
+    let ctx = rlqt_ql::to_query_context(query_str)?;
+
+    let db = open_database(&db_path)?;
+    let entries = NodeLogEntry::query(&db, &ctx)?;
+    log::info!("Found {} matching entries", entries.len());
+
+    let without_colors = args.get_flag("without_colors");
+    output::display_log_entries(entries, without_colors)?;
+
+    Ok(())
 }
 
 fn obfuscate_log(args: &ArgMatches) -> Result<()> {

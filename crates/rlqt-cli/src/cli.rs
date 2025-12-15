@@ -290,5 +290,37 @@ fn logs_subcommands() -> Vec<Command> {
                 .help("Disable colored output"),
         );
 
-    vec![parse_cmd, merge_cmd, obfuscate_cmd, query_cmd, overview_cmd]
+    let ql_cmd = Command::new("ql")
+        .about("Query log entries using RQL (RLQT Query Language)")
+        .arg(
+            Arg::new("input_db_file_path")
+                .long("input-db-file-path")
+                .short('i')
+                .required(true)
+                .value_name("PATH")
+                .help("Path to the SQLite database file"),
+        )
+        .arg(
+            Arg::new("query")
+                .long("query")
+                .short('q')
+                .required(true)
+                .value_name("QUERY")
+                .help("RQL query string (e.g., 'severity == \"error\" | limit 100')"),
+        )
+        .arg(
+            Arg::new("without_colors")
+                .long("without-colors")
+                .action(ArgAction::SetTrue)
+                .help("Disable colored output"),
+        );
+
+    vec![
+        parse_cmd,
+        merge_cmd,
+        obfuscate_cmd,
+        query_cmd,
+        overview_cmd,
+        ql_cmd,
+    ]
 }

@@ -2,7 +2,10 @@
 
 ## 0.16.0 (in development)
 
-No changes yet.
+### Enhancements
+
+ * New command: `logs ql` is the CLI equivalent of the QL (for "query language") tab in the UI
+ * `web serve` now automatically opens server URL in the browser
 
 
 ## 0.15.0 (Dec 13, 2025)

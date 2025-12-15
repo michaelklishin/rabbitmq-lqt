@@ -178,3 +178,13 @@ fn test_boot_starting_rabbit_node_monitor() {
     annotate_subsystems(&mut entry);
     assert_eq!(entry.subsystem_id, Some(Subsystem::Boot.to_id()));
 }
+
+#[test]
+fn test_boot_seeding_cluster_tags() {
+    let mut entry = create_test_entry(
+        "Seeding cluster tags from application environment",
+        Severity::Info,
+    );
+    annotate_subsystems(&mut entry);
+    assert_eq!(entry.subsystem_id, Some(Subsystem::Boot.to_id()));
+}

@@ -228,3 +228,33 @@ fn test_found_metadata_store_members() {
     assert!(labels.contains(LogEntryLabels::KHEPRI));
     assert!(labels.contains(LogEntryLabels::CLUSTERING));
 }
+
+#[test]
+fn test_mirrored_supervisor_initializing() {
+    let entry = create_test_entry(
+        "Mirrored supervisor: initializing, overall supervisor <0.400.0> joined group rabbit_federation_queue_link_sup_sup",
+        Severity::Debug,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::CLUSTERING));
+}
+
+#[test]
+fn test_mirrored_supervisor_known_group_members() {
+    let entry = create_test_entry(
+        "Mirrored supervisor: known group rabbit_shovel_dyn_worker_sup_sup members: [<14931.779.0>] on nodes [rabbit@sunnyside]",
+        Severity::Debug,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::CLUSTERING));
+}
+
+#[test]
+fn test_mirrored_supervisor_no_known_peer_members() {
+    let entry = create_test_entry(
+        "Mirrored supervisor: no known peer members in group rabbit_federation_exchange_link_sup_sup, will delete all child records for it",
+        Severity::Debug,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::CLUSTERING));
+}

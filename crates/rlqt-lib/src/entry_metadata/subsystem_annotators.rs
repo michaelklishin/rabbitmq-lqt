@@ -129,6 +129,7 @@ impl Annotator for BootAnnotator {
             || msg_lower.starts_with("applying definitions from file")
             || msg_lower.contains("[rabbit_quorum_queue:system_recover/1] rabbit not booted")
             || msg_lower.starts_with("running rabbit_prelaunch:shutdown_func()")
+            || msg_lower.starts_with("seeding cluster tags from application environment")
     }
 }
 
@@ -460,6 +461,7 @@ impl Annotator for ClusteringSubsystemAnnotator {
         msg_lower.starts_with("autoheal:")
             || msg_lower.starts_with("autoheal request")
             || msg_lower.starts_with("autoheal finished")
+            || msg_lower.starts_with("mirrored supervisor")
     }
 }
 

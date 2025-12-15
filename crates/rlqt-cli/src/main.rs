@@ -45,6 +45,7 @@ async fn dispatch_command(cli: &clap::ArgMatches) -> sysexits::ExitCode {
             Some(("obfuscate", args)) => commands::handle_obfuscate_command(args),
             Some(("query", args)) => commands::handle_query_command(args),
             Some(("overview", args)) => commands::handle_overview_command(args),
+            Some(("ql", args)) => commands::handle_ql_command(args),
             _ => {
                 eprintln!(
                     "Unknown logs subcommand. Try '{} logs --help' for available commands.",

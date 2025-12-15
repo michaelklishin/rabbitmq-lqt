@@ -13,6 +13,7 @@
 // limitations under the License.
 use duckdb::Error as DuckDbError;
 use rlqt_lib::Error as LibError;
+use rlqt_ql::errors::Error as QlError;
 use std::io::Error as IoError;
 use thiserror::Error;
 
@@ -24,6 +25,9 @@ pub enum CommandRunError {
 
     #[error("DateTime parse error: {0}")]
     DateTimeParse(String),
+
+    #[error("Query language error: {0}")]
+    QueryLanguage(#[from] QlError),
 }
 
 impl From<IoError> for CommandRunError {

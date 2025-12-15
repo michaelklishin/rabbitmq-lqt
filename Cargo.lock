@@ -1989,6 +1989,7 @@ dependencies = [
  "rayon",
  "rlqt-lib",
  "rlqt-obfuscation",
+ "rlqt-ql",
  "rlqt-ui",
  "serde",
  "serde_json",
