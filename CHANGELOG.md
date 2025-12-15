@@ -1,6 +1,6 @@
 # Change log
 
-## 0.16.0 (in development)
+## 0.16.0 (Dec 14, 2025)
 
 ### Enhancements
 
