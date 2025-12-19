@@ -44,9 +44,6 @@ const ERR_MSG_FILE_NOT_FOUND_HELP: &str = "Make sure:\n\
   • You have read permissions for the file(s)\n\
   • The file(s) exist and are not directories";
 
-const ERR_MSG_PARENT_DIR_HELP: &str = "Create the directory first with:\n\
-  mkdir -p";
-
 pub fn handle_parse_command(args: &ArgMatches) -> ExitCode {
     match parse_logs(args) {
         Ok(_) => {
@@ -144,20 +141,23 @@ fn validate_file_paths(log_paths: &[PathBuf]) -> Result<()> {
     Ok(())
 }
 
-fn validate_database_path(db_path: &Path) -> Result<()> {
-    if let Some(parent) = db_path.parent()
+fn ensure_parent_directory_exists(path: &Path) -> Result<()> {
+    if let Some(parent) = path.parent()
+        && !parent.as_os_str().is_empty()
         && !parent.exists()
     {
-        return Err(CommandRunError::Library(rlqt_lib::Error::Io(IoError::new(
-            ErrorKind::NotFound,
-            format!(
-                "Parent directory does not exist: {}\n\n{}  {}",
-                parent.display(),
-                ERR_MSG_PARENT_DIR_HELP,
-                parent.display()
-            ),
-        ))));
+        fs::create_dir_all(parent).map_err(|e| {
+            CommandRunError::Library(rlqt_lib::Error::Io(IoError::new(
+                e.kind(),
+                format!("Failed to create directory '{}': {}", parent.display(), e),
+            )))
+        })?;
     }
+    Ok(())
+}
+
+fn validate_database_path(db_path: &Path) -> Result<()> {
+    ensure_parent_directory_exists(db_path)?;
 
     if db_path.exists() {
         let metadata = db_path.metadata()?;
@@ -772,20 +772,7 @@ fn obfuscate_log(args: &ArgMatches) -> Result<()> {
         ))));
     }
 
-    if let Some(parent) = output_path.parent()
-        && !parent.as_os_str().is_empty()
-        && !parent.exists()
-    {
-        return Err(CommandRunError::Library(rlqt_lib::Error::Io(IoError::new(
-            ErrorKind::NotFound,
-            format!(
-                "Parent directory does not exist: {}\n\n{}  {}",
-                parent.display(),
-                ERR_MSG_PARENT_DIR_HELP,
-                parent.display()
-            ),
-        ))));
-    }
+    ensure_parent_directory_exists(&output_path)?;
 
     let silent = args.get_flag("silent");
 

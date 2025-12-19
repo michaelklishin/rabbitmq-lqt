@@ -401,3 +401,30 @@ fn parse_fixture4_log_file() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+#[test]
+fn parse_creates_parent_directory_if_missing() -> Result<(), Box<dyn Error>> {
+    let log_path = fixture_log_path();
+    let temp_dir = tempfile::tempdir()?;
+    let nested_db_path = temp_dir
+        .path()
+        .join("nested")
+        .join("deep")
+        .join("output.db");
+
+    run_succeeds([
+        "logs",
+        "parse",
+        "--input-log-file-path",
+        log_path.to_str().unwrap(),
+        "--output-db-file-path",
+        nested_db_path.to_str().unwrap(),
+    ])
+    .stderr(output_includes("465 log entries"));
+
+    assert!(nested_db_path.exists());
+    let file_metadata = metadata(&nested_db_path)?;
+    assert!(file_metadata.len() > 0, "Database file should not be empty");
+
+    Ok(())
+}
