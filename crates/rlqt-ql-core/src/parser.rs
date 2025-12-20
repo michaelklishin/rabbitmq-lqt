@@ -378,6 +378,7 @@ fn parse_primary_expr(input: &str) -> IResult<&str, FilterExpr> {
         parse_preset_expr,
         parse_special_filter,
         parse_label_filter,
+        parse_subsystem_filter,
         parse_comparison_expr,
     ))
     .parse(input)
@@ -461,6 +462,17 @@ fn parse_label_list_value(input: &str) -> IResult<&str, Vec<String>> {
         pair(multispace0, char(']')),
     )
     .parse(input)
+}
+
+fn parse_subsystem_filter(input: &str) -> IResult<&str, FilterExpr> {
+    let (input, _) = tag_no_case("subsystem").parse(input)?;
+    let (input, _) = multispace0.parse(input)?;
+
+    let (input, _) = tag_no_case("any").parse(input)?;
+    let (input, _) = multispace0.parse(input)?;
+    let (input, subsystems) = parse_label_list_value(input)?;
+
+    Ok((input, FilterExpr::SubsystemAny(subsystems)))
 }
 
 fn parse_comparison_expr(input: &str) -> IResult<&str, FilterExpr> {

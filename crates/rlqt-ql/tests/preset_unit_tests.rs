@@ -69,6 +69,7 @@ fn test_to_filter_expr_returns_valid_ast() {
             | FilterExpr::Grouped(_)
             | FilterExpr::LabelAny(_)
             | FilterExpr::LabelAll(_)
+            | FilterExpr::SubsystemAny(_)
             | FilterExpr::Preset(_)
             | FilterExpr::HasDocUrl
             | FilterExpr::HasResolutionUrl
@@ -180,7 +181,7 @@ fn test_preset_as_str_roundtrip() {
 #[test]
 fn test_preset_all_returns_all_variants() {
     let all = PresetName::all();
-    assert_eq!(all.len(), 7);
+    assert_eq!(all.len(), 8);
     assert!(all.contains(&PresetName::Errors));
     assert!(all.contains(&PresetName::Crashes));
     assert!(all.contains(&PresetName::ErrorsOrCrashes));
@@ -188,6 +189,7 @@ fn test_preset_all_returns_all_variants() {
     assert!(all.contains(&PresetName::TlsIssues));
     assert!(all.contains(&PresetName::AccessDenied));
     assert!(all.contains(&PresetName::Timeouts));
+    assert!(all.contains(&PresetName::RaftAndQuorumQueues));
 }
 
 #[test]
@@ -233,4 +235,41 @@ fn test_disconnects_preset_produces_label_any() {
         }
         _ => panic!("Expected LabelAny for :disconnects preset"),
     }
+}
+
+#[test]
+fn test_raft_and_quorum_queues_preset_query_string() {
+    let preset = PresetName::RaftAndQuorumQueues;
+    let query = preset.query_string();
+    assert!(query.contains("raft"));
+    assert!(query.contains("quorum_queues"));
+    assert!(query.contains("elections"));
+    assert!(query.contains("metadata_store"));
+    assert!(query.contains("labels any"));
+    assert!(query.contains("subsystem any"));
+}
+
+#[test]
+fn test_raft_and_quorum_queues_preset_produces_or() {
+    let expr = PresetName::RaftAndQuorumQueues.to_filter_expr();
+    match expr {
+        FilterExpr::Or(_, _) => {}
+        _ => panic!("Expected Or for :raft_and_quorum_queues preset"),
+    }
+}
+
+#[test]
+fn test_raft_and_quorum_queues_preset_from_str() {
+    assert_eq!(
+        PresetName::from_str("raft_and_quorum_queues").unwrap(),
+        PresetName::RaftAndQuorumQueues
+    );
+    assert_eq!(
+        PresetName::from_str("raft").unwrap(),
+        PresetName::RaftAndQuorumQueues
+    );
+    assert_eq!(
+        PresetName::from_str("quorum_queues").unwrap(),
+        PresetName::RaftAndQuorumQueues
+    );
 }

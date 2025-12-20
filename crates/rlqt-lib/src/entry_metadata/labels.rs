@@ -71,6 +71,7 @@ pub const LABEL_SESSIONS: &str = "sessions";
 pub const LABEL_AMQP10: &str = "amqp10";
 pub const LABEL_OAUTH2: &str = "oauth2";
 pub const LABEL_SQL: &str = "sql";
+pub const LABEL_MNESIA: &str = "mnesia";
 
 /// Array of all label names in the order they were defined
 pub const LABEL_NAMES: &[&str] = &[
@@ -127,6 +128,7 @@ pub const LABEL_NAMES: &[&str] = &[
     LABEL_AMQP10,
     LABEL_OAUTH2,
     LABEL_SQL,
+    LABEL_MNESIA,
 ];
 
 // Given that a parsed dataset can have 100s of thousands or millions of labels,
@@ -187,6 +189,7 @@ bitflags! {
         const AMQP10              = 1 << 50;
         const OAUTH2              = 1 << 51;
         const SQL                 = 1 << 52;
+        const MNESIA              = 1 << 53;
     }
 }
 
@@ -265,6 +268,7 @@ impl LogEntryLabels {
             LABEL_AMQP10 => Some(1 << 50),
             LABEL_OAUTH2 => Some(1 << 51),
             LABEL_SQL => Some(1 << 52),
+            LABEL_MNESIA => Some(1 << 53),
             _ => None,
         }
     }
@@ -436,6 +440,9 @@ impl Serialize for LogEntryLabels {
         if self.contains(Self::SQL) {
             map.serialize_entry(LABEL_SQL, &true)?;
         }
+        if self.contains(Self::MNESIA) {
+            map.serialize_entry(LABEL_MNESIA, &true)?;
+        }
 
         map.end()
     }
@@ -526,6 +533,7 @@ impl<'de> Deserialize<'de> for LogEntryLabels {
                             LABEL_AMQP10 => labels |= LogEntryLabels::AMQP10,
                             LABEL_OAUTH2 => labels |= LogEntryLabels::OAUTH2,
                             LABEL_SQL => labels |= LogEntryLabels::SQL,
+                            LABEL_MNESIA => labels |= LogEntryLabels::MNESIA,
                             _ => {}
                         }
                     }

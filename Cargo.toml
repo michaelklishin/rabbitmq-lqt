@@ -40,6 +40,10 @@ futures = "0.3"
 criterion = { version = "0.8", features = ["async_tokio"] }
 rayon = "1.11"
 proptest = "1.9"
+flate2 = "1.1"
+lzma-rs = "0.3"
+tar = "0.4"
+tempfile = "3"
 
 [workspace.lints.clippy]
 uninlined_format_args = "allow"

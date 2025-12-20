@@ -195,6 +195,24 @@ fn test_compile_unknown_label() {
 }
 
 #[test]
+fn test_compile_subsystem_any_sql() {
+    let query = parse(r#"subsystem any ["raft", "metadata_store"]"#).unwrap();
+    let compiled = compile(&query).unwrap();
+    assert!(!compiled.sql_where_fragments.is_empty());
+    let sql = &compiled.sql_where_fragments[0];
+    assert!(sql.contains("subsystem_id IN"));
+    assert!(sql.contains("4")); // Raft = 4
+    assert!(sql.contains("1")); // MetadataStore = 1
+}
+
+#[test]
+fn test_compile_unknown_subsystem() {
+    let query = parse(r#"subsystem any ["nonexistent_subsystem"]"#).unwrap();
+    let result = compile(&query);
+    assert!(result.is_err());
+}
+
+#[test]
 fn test_compile_has_doc_url() {
     let query = parse("has_doc_url").unwrap();
     let result = compile(&query);

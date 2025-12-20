@@ -22,7 +22,9 @@ use chrono::Utc;
 use chrono_english::{Dialect, parse_date_string};
 use rlqt_lib::QueryContext;
 use rlqt_lib::entry_metadata::labels::LogEntryLabels;
+use rlqt_lib::entry_metadata::subsystems::Subsystem;
 use std::mem;
+use std::str::FromStr;
 
 #[derive(Debug, Clone, Default)]
 pub struct CompiledQuery {
@@ -226,6 +228,11 @@ fn compile_filter(filter: &FilterExpr, compiled: &mut CompiledQuery) -> Result<(
                 .sql_where_fragments
                 .push(format!("(labels & {}) = {}", mask, mask));
         }
+        FilterExpr::SubsystemAny(subsystems) => {
+            compiled
+                .sql_where_fragments
+                .push(format_subsystem_any_sql(subsystems)?);
+        }
         FilterExpr::HasDocUrl => {
             compiled.context = mem::take(&mut compiled.context).has_doc_url(true);
         }
@@ -272,6 +279,7 @@ fn compile_filter_to_sql(filter: &FilterExpr) -> Result<String, CompileError> {
             let mask = compute_label_mask(labels)?;
             Ok(format!("(labels & {}) = {}", mask, mask))
         }
+        FilterExpr::SubsystemAny(subsystems) => format_subsystem_any_sql(subsystems),
         FilterExpr::HasDocUrl => Ok("doc_url_id IS NOT NULL".to_string()),
         FilterExpr::HasResolutionUrl => {
             Ok("resolution_or_discussion_url_id IS NOT NULL".to_string())
@@ -447,6 +455,27 @@ fn compute_label_mask(labels: &[String]) -> Result<u64, CompileError> {
         mask |= bit;
     }
     Ok(mask)
+}
+
+fn compute_subsystem_ids(subsystems: &[String]) -> Result<Vec<i16>, CompileError> {
+    subsystems
+        .iter()
+        .map(|name| {
+            Subsystem::from_str(name)
+                .map(|s| s.to_id())
+                .map_err(|_| CompileError::invalid_subsystem(name))
+        })
+        .collect()
+}
+
+fn format_subsystem_any_sql(subsystems: &[String]) -> Result<String, CompileError> {
+    let ids = compute_subsystem_ids(subsystems)?;
+    let id_list = ids
+        .iter()
+        .map(|id| id.to_string())
+        .collect::<Vec<_>>()
+        .join(", ");
+    Ok(format!("subsystem_id IN ({})", id_list))
 }
 
 fn validate_severity(s: &str) -> Result<(), CompileError> {

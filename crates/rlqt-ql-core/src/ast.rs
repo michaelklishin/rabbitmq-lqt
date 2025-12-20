@@ -169,6 +169,7 @@ pub enum FilterExpr {
     Not(Box<FilterExpr>),
     LabelAny(Vec<String>),
     LabelAll(Vec<String>),
+    SubsystemAny(Vec<String>),
     HasDocUrl,
     HasResolutionUrl,
     Unlabelled,

@@ -150,7 +150,7 @@ fn parse_directory_with_no_log_files_fails() -> Result<(), Box<dyn Error>> {
         "--output-db-file-path",
         db_path,
     ])
-    .stderr(output_includes("No .log files found"));
+    .stderr(output_includes("No log files found"));
 
     Ok(())
 }
@@ -424,6 +424,98 @@ fn parse_creates_parent_directory_if_missing() -> Result<(), Box<dyn Error>> {
 
     assert!(nested_db_path.exists());
     let file_metadata = metadata(&nested_db_path)?;
+    assert!(file_metadata.len() > 0, "Database file should not be empty");
+
+    Ok(())
+}
+
+#[test]
+fn parse_gzip_compressed_log_file() -> Result<(), Box<dyn Error>> {
+    let log_path = fixture_log_path_gzip();
+    let db_file = NamedTempFile::new()?;
+    let db_path = db_file.path().to_str().unwrap();
+
+    run_succeeds([
+        "logs",
+        "parse",
+        "--input-log-file-path",
+        log_path.to_str().unwrap(),
+        "--output-db-file-path",
+        db_path,
+    ])
+    .stderr(output_includes("224 log entries"));
+
+    assert!(db_file.path().exists());
+    let file_metadata = metadata(db_file.path())?;
+    assert!(file_metadata.len() > 0, "Database file should not be empty");
+
+    Ok(())
+}
+
+#[test]
+fn parse_xz_compressed_log_file() -> Result<(), Box<dyn Error>> {
+    let log_path = fixture_log_path_xz();
+    let db_file = NamedTempFile::new()?;
+    let db_path = db_file.path().to_str().unwrap();
+
+    run_succeeds([
+        "logs",
+        "parse",
+        "--input-log-file-path",
+        log_path.to_str().unwrap(),
+        "--output-db-file-path",
+        db_path,
+    ])
+    .stderr(output_includes("1399466 log entries"));
+
+    assert!(db_file.path().exists());
+    let file_metadata = metadata(db_file.path())?;
+    assert!(file_metadata.len() > 0, "Database file should not be empty");
+
+    Ok(())
+}
+
+#[test]
+fn parse_tar_gz_archive() -> Result<(), Box<dyn Error>> {
+    let archive_path = fixture_tar_gz_path();
+    let db_file = NamedTempFile::new()?;
+    let db_path = db_file.path().to_str().unwrap();
+
+    run_succeeds([
+        "logs",
+        "parse",
+        "--input-log-file-path",
+        archive_path.to_str().unwrap(),
+        "--output-db-file-path",
+        db_path,
+    ])
+    .stderr(output_includes("930 log entries"));
+
+    assert!(db_file.path().exists());
+    let file_metadata = metadata(db_file.path())?;
+    assert!(file_metadata.len() > 0, "Database file should not be empty");
+
+    Ok(())
+}
+
+#[test]
+fn parse_tar_xz_archive() -> Result<(), Box<dyn Error>> {
+    let archive_path = fixture_tar_xz_path();
+    let db_file = NamedTempFile::new()?;
+    let db_path = db_file.path().to_str().unwrap();
+
+    run_succeeds([
+        "logs",
+        "parse",
+        "--input-log-file-path",
+        archive_path.to_str().unwrap(),
+        "--output-db-file-path",
+        db_path,
+    ])
+    .stderr(output_includes("1217 log entries"));
+
+    assert!(db_file.path().exists());
+    let file_metadata = metadata(db_file.path())?;
     assert!(file_metadata.len() > 0, "Database file should not be empty");
 
     Ok(())

@@ -80,6 +80,7 @@ pub const LABELS: &[&str] = &[
     "limits",
     "maintenance_mode",
     "metrics",
+    "mnesia",
     "mqtt",
     "multiline",
     "networking",

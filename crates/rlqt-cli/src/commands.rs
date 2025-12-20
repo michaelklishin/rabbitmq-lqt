@@ -11,6 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+use crate::archive::{
+    ArchiveType, extract_tar_archive, is_supported_log_file, open_log_reader,
+    strip_compression_suffix,
+};
 use crate::core::Result;
 use crate::errors::CommandRunError;
 use crate::output;
@@ -242,11 +246,7 @@ fn collect_log_files_from_directory(dir_path: &str) -> Result<Vec<PathBuf>> {
         })?;
 
         let path = entry.path();
-        if path.is_file()
-            && path
-                .extension()
-                .is_some_and(|ext| ext.eq_ignore_ascii_case("log"))
-        {
+        if path.is_file() && is_supported_log_file(&path) {
             log_files.push(path);
         }
     }
@@ -255,11 +255,11 @@ fn collect_log_files_from_directory(dir_path: &str) -> Result<Vec<PathBuf>> {
         return Err(CommandRunError::Library(rlqt_lib::Error::Io(IoError::new(
             ErrorKind::NotFound,
             format!(
-                "No .log files found in directory: {}\n\
+                "No log files found in directory: {}\n\
                 \n\
                 Make sure:\n\
-                • The directory contains files with .log extension\n\
-                • Use --input-log-file-path to specify individual non-.log files",
+                • The directory contains log files (.log, .log.gz, .log.xz, .tar.gz, etc.)\n\
+                • Use --input-log-file-path to specify individual files",
                 dir.display()
             ),
         ))));
@@ -321,13 +321,7 @@ fn process_log_file(log_path: &Path, tx: &mpsc::Sender<InsertionTask>, silent: b
         pb.set_message(format!("Reading {}", log_path.display()));
     }
 
-    let file = File::open(log_path).map_err(|e| {
-        CommandRunError::Library(rlqt_lib::Error::Io(IoError::new(
-            e.kind(),
-            format!("Failed to open log file '{}': {}", log_path.display(), e),
-        )))
-    })?;
-    let reader = BufReader::new(file);
+    let reader = open_log_reader(log_path)?;
 
     if let Some(pb) = &file_progress {
         pb.set_message(format!("Parsing {}", log_path.display()));
@@ -417,12 +411,25 @@ fn parse_logs(args: &ArgMatches) -> Result<()> {
     let db_clone = db.clone();
     let insert_thread = thread::spawn(move || insert_entries_thread(db_clone, rx));
 
+    // Keep extracted archives alive until processing is complete
+    let mut extracted_archives = Vec::new();
+
     for log_path in &log_paths {
-        process_log_file(log_path, &tx, silent)?;
+        let archive_type = ArchiveType::from_path(log_path);
+        if archive_type.is_tar_archive() {
+            let extracted = extract_tar_archive(log_path)?;
+            for contained_file in &extracted.log_files {
+                process_log_file(contained_file, &tx, silent)?;
+            }
+            extracted_archives.push(extracted);
+        } else {
+            process_log_file(log_path, &tx, silent)?;
+        }
     }
 
     drop(tx);
     wait_for_insertion_thread(insert_thread)?;
+    drop(extracted_archives);
 
     let index_progress = if !silent {
         let pb = ProgressBar::new_spinner();
@@ -513,12 +520,24 @@ fn merge_logs(args: &ArgMatches) -> Result<()> {
     let insert_thread =
         thread::spawn(move || merge_entries_thread_with_start_id(db_clone, rx, start_id));
 
+    let mut extracted_archives = Vec::new();
+
     for log_path in &log_paths {
-        process_log_file(log_path, &tx, silent)?;
+        let archive_type = ArchiveType::from_path(log_path);
+        if archive_type.is_tar_archive() {
+            let extracted = extract_tar_archive(log_path)?;
+            for contained_file in &extracted.log_files {
+                process_log_file(contained_file, &tx, silent)?;
+            }
+            extracted_archives.push(extracted);
+        } else {
+            process_log_file(log_path, &tx, silent)?;
+        }
     }
 
     drop(tx);
     wait_for_insertion_thread(insert_thread)?;
+    drop(extracted_archives);
 
     let count_after = NodeLogEntry::count_all(&db)?;
     let entries_added = count_after - count_before;
@@ -617,10 +636,7 @@ fn extract_node_name(log_path: &Path) -> Result<String> {
             )))
         })?;
 
-    let node_name = file_name
-        .strip_suffix(".log")
-        .unwrap_or(file_name)
-        .to_string();
+    let node_name = strip_compression_suffix(file_name).to_string();
 
     Ok(node_name)
 }

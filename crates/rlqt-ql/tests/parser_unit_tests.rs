@@ -350,6 +350,26 @@ fn test_parse_label_all() {
 }
 
 #[test]
+fn test_parse_subsystem_any() {
+    let query = parse(r#"subsystem any ["raft", "metadata_store"]"#).unwrap();
+    let filter = query.filter.as_ref().unwrap();
+    if let FilterExpr::SubsystemAny(subsystems) = filter {
+        assert_eq!(subsystems.len(), 2);
+        assert!(subsystems.contains(&"raft".to_string()));
+        assert!(subsystems.contains(&"metadata_store".to_string()));
+    } else {
+        panic!("Expected SubsystemAny filter");
+    }
+}
+
+#[test]
+fn test_parse_subsystem_any_case_insensitive() {
+    let query = parse(r#"SUBSYSTEM ANY ["raft"]"#).unwrap();
+    let filter = query.filter.as_ref().unwrap();
+    assert!(matches!(filter, FilterExpr::SubsystemAny(_)));
+}
+
+#[test]
 fn test_parse_has_doc_url() {
     let query = parse("has_doc_url").unwrap();
     let filter = query.filter.as_ref().unwrap();

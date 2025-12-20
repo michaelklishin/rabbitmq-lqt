@@ -387,6 +387,7 @@ impl Annotator for AccessControlAnnotator {
             || msg_lower.contains("created user")
             || msg_lower.contains("deleted user")
             || msg_lower.contains("asked to set user tags")
+            || msg_lower.contains("successfully set user tags")
             || msg_lower.contains("asked to clear permissions")
     }
 }
@@ -744,6 +745,7 @@ impl Annotator for MetricsAnnotator {
             || msg_lower.contains("prometheus metrics:")
             || msg_lower.contains("global counters")
             || msg_lower.contains("message rates")
+            || msg_lower.starts_with("rabbit_sysmon_handler")
     }
 }
 
@@ -919,6 +921,29 @@ impl Annotator for KhepriAnnotator {
 impl LabelAnnotator for KhepriAnnotator {
     fn annotate(&self, labels: &mut LogEntryLabels) {
         *labels |= LogEntryLabels::KHEPRI;
+    }
+}
+
+#[derive(Debug)]
+pub struct MnesiaAnnotator;
+
+impl Annotator for MnesiaAnnotator {
+    fn does_match(&self, entry: &ParsedLogEntry) -> bool {
+        let msg = &entry.message_lowercased;
+        if !msg.contains("mnesia") {
+            return false;
+        }
+        // Exclude messages where "mnesia" only appears in a directory path.
+        // Some messages actually related to Mnesia: "Waiting for Mnesia tables", "Application mnesia exited",
+        // "Mnesia->Khepri", "mnesia_event", and so on.
+        let without_paths = msg.replace("/mnesia/", "");
+        without_paths.contains("mnesia")
+    }
+}
+
+impl LabelAnnotator for MnesiaAnnotator {
+    fn annotate(&self, labels: &mut LogEntryLabels) {
+        *labels |= LogEntryLabels::MNESIA;
     }
 }
 
@@ -1720,7 +1745,8 @@ pub struct HttpAnnotator;
 
 impl Annotator for HttpAnnotator {
     fn does_match(&self, entry: &ParsedLogEntry) -> bool {
-        entry.message_lowercased.starts_with("http api:")
+        let msg_lower = &entry.message_lowercased;
+        msg_lower.starts_with("http api:") || msg_lower.contains("rabbit_web_dispatch")
     }
 }
 
@@ -1819,6 +1845,7 @@ impl Annotator for ClusteringLabelsAnnotator {
         let msg_lower = &entry.message_lowercased;
         msg_lower.contains("partial partition disconnect")
             || msg_lower.contains("has joined the cluster")
+            || msg_lower.contains("busy_dist_port")
     }
 }
 
@@ -2637,7 +2664,9 @@ pub struct LdapAuthAnnotator;
 impl Annotator for LdapAuthAnnotator {
     fn does_match(&self, entry: &ParsedLogEntry) -> bool {
         let msg_lower = &entry.message_lowercased;
-        msg_lower.contains("ldap") || msg_lower.contains("rabbit_auth_backend_ldap")
+        msg_lower.contains("ldap")
+            || msg_lower.contains("rabbit_auth_backend_ldap")
+            || msg_lower.starts_with("searching for dn for")
     }
 }
 
@@ -3541,6 +3570,7 @@ pub fn annotate_labels(entry: &ParsedLogEntry) -> LogEntryLabels {
         &DeprecatedFeaturesAnnotator,
         &MaintenanceModeLabelAnnotator,
         &KhepriAnnotator,
+        &MnesiaAnnotator,
         &SegmentWriterQuorumQueuesAnnotator,
         &SegmentWriterAnnotator,
         &OsirisAnnotator,

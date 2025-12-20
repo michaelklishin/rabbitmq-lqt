@@ -75,3 +75,13 @@ fn test_http_access_denied_annotator_sets_both_labels() {
     assert!(labels.contains(LogEntryLabels::HTTP));
     assert!(labels.contains(LogEntryLabels::ACCESS_CONTROL));
 }
+
+#[test]
+fn test_http_annotator_matches_web_dispatch_registry_terminating() {
+    let entry = create_test_entry(
+        "** Generic server rabbit_web_dispatch_registry terminating",
+        Severity::Error,
+    );
+    let annotator = HttpAnnotator;
+    assert!(annotator.does_match(&entry));
+}

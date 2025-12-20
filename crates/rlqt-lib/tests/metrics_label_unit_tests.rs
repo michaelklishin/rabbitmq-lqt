@@ -48,3 +48,14 @@ fn test_prometheus_metrics() {
     assert!(labels.contains(LogEntryLabels::METRICS));
     assert!(labels.contains(LogEntryLabels::PLUGINS));
 }
+
+#[test]
+fn test_sysmon_handler_busy_dist_port() {
+    let entry = create_test_entry(
+        "rabbit_sysmon_handler busy_dist_port <0.28731.0> [{name,delegate_management_2},{initial_call,{delegate,init,1}},{gen_server2,process_next_msg,1},{message_queue_len,0}] {#Port<0.84554>,unknown}",
+        Severity::Warning,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::METRICS));
+    assert!(labels.contains(LogEntryLabels::CLUSTERING));
+}

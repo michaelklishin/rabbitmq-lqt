@@ -13,14 +13,14 @@
 2025-12-02 07:01:55.741578-08:00 [debug] <0.208.0>         server_sup => ra_coordination_server_sup_sup,
 2025-12-02 07:01:55.741578-08:00 [debug] <0.208.0>         wal => ra_coordination_log_wal,wal_sup => ra_coordination_log_wal_sup},
 2025-12-02 07:01:55.741578-08:00 [debug] <0.208.0>   data_dir =>
-2025-12-02 07:01:55.741578-08:00 [debug] <0.208.0>       "/Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/fluffle@sunnyside/coordination/fluffle@sunnyside",
+2025-12-02 07:01:55.741578-08:00 [debug] <0.208.0>       /data/path1@host1/coordination/fluffle@host1",
 2025-12-02 07:01:55.741578-08:00 [debug] <0.208.0>   wal_max_size_bytes => 64000000,wal_max_batch_size => 4096,
 2025-12-02 07:01:55.741578-08:00 [debug] <0.208.0>   wal_max_entries => undefined,compress_mem_tables => false,
 2025-12-02 07:01:55.741578-08:00 [debug] <0.208.0>   default_max_append_entries_rpc_batch_size => 128,
 2025-12-02 07:01:55.741578-08:00 [debug] <0.208.0>   segment_compute_checksums => true,server_min_bin_vheap_size => 46422,
 2025-12-02 07:01:55.741578-08:00 [debug] <0.208.0>   wal_compute_checksums => true,wal_min_bin_vheap_size => 46422,
 2025-12-02 07:01:55.741578-08:00 [debug] <0.208.0>   wal_data_dir =>
-2025-12-02 07:01:55.741578-08:00 [debug] <0.208.0>       "/Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/fluffle@sunnyside/coordination/fluffle@sunnyside",
+2025-12-02 07:01:55.741578-08:00 [debug] <0.208.0>       /data/path1@host1/coordination/fluffle@host1",
 2025-12-02 07:01:55.741578-08:00 [debug] <0.208.0>   segment_max_entries => 4096,segment_max_pending => 1024,
 2025-12-02 07:01:55.741578-08:00 [debug] <0.208.0>   segment_max_size_bytes => 64000000,wal_write_strategy => default,
 2025-12-02 07:01:55.741578-08:00 [debug] <0.208.0>   wal_sync_method => datasync,wal_garbage_collect => false,
@@ -54,7 +54,7 @@
 2025-12-02 07:01:55.741755-08:00 [debug] <0.208.0>                                                       wal_sup =>
 2025-12-02 07:01:55.741755-08:00 [debug] <0.208.0>                                                           ra_coordination_log_wal_sup},
 2025-12-02 07:01:55.741755-08:00 [debug] <0.208.0>                                                 data_dir =>
-2025-12-02 07:01:55.741755-08:00 [debug] <0.208.0>                                                     "/Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/fluffle@sunnyside/coordination/fluffle@sunnyside",
+2025-12-02 07:01:55.741755-08:00 [debug] <0.208.0>                                                     /data/path1@host1/coordination/fluffle@host1",
 2025-12-02 07:01:55.741755-08:00 [debug] <0.208.0>                                                 wal_max_size_bytes => 64000000,
 2025-12-02 07:01:55.741755-08:00 [debug] <0.208.0>                                                 wal_max_batch_size => 4096,
 2025-12-02 07:01:55.741755-08:00 [debug] <0.208.0>                                                 wal_max_entries => undefined,
@@ -69,7 +69,7 @@
 2025-12-02 07:01:55.741755-08:00 [debug] <0.208.0>                                                 wal_min_bin_vheap_size =>
 2025-12-02 07:01:55.741755-08:00 [debug] <0.208.0>                                                     46422,
 2025-12-02 07:01:55.741755-08:00 [debug] <0.208.0>                                                 wal_data_dir =>
-2025-12-02 07:01:55.741755-08:00 [debug] <0.208.0>                                                     "/Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/fluffle@sunnyside/coordination/fluffle@sunnyside",
+2025-12-02 07:01:55.741755-08:00 [debug] <0.208.0>                                                     /data/path1@host1/coordination/fluffle@host1",
 2025-12-02 07:01:55.741755-08:00 [debug] <0.208.0>                                                 segment_max_entries => 4096,
 2025-12-02 07:01:55.741755-08:00 [debug] <0.208.0>                                                 segment_max_pending => 1024,
 2025-12-02 07:01:55.741755-08:00 [debug] <0.208.0>                                                 segment_max_size_bytes =>
@@ -91,12 +91,12 @@
 2025-12-02 07:01:55.741755-08:00 [debug] <0.208.0>                                                     16,
 2025-12-02 07:01:55.741755-08:00 [debug] <0.208.0>                                                 machine_upgrade_strategy =>
 2025-12-02 07:01:55.741755-08:00 [debug] <0.208.0>                                                     all}
-2025-12-02 07:01:55.741993-08:00 [info] <0.208.0> starting Ra system: coordination in directory: /Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/fluffle@sunnyside/coordination/fluffle@sunnyside
+2025-12-02 07:01:55.741993-08:00 [info] <0.208.0> starting Ra system: coordination in directory: /data/path1@host1/coordination/fluffle@host1
 2025-12-02 07:01:55.743406-08:00 [debug] <0.215.0> ra system 'coordination' starting
 2025-12-02 07:01:55.744637-08:00 [info] <0.216.0> ra_coordination_log_ets: in system coordination initialising. Mem table opts: [set,{write_concurrency,auto},public,{compressed,false}]
 2025-12-02 07:01:55.761411-08:00 [info] <0.222.0> ra system 'coordination' running pre init for 0 registered servers
 2025-12-02 07:01:55.764774-08:00 [info] <0.223.0> ra: meta data store initialised for system coordination. 0 record(s) recovered
-2025-12-02 07:01:55.766444-08:00 [info] <0.226.0> segment_writer: upgrading segment file names to new format in dirctory /Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/fluffle@sunnyside/coordination/fluffle@sunnyside
+2025-12-02 07:01:55.766444-08:00 [info] <0.226.0> segment_writer: upgrading segment file names to new format in dirctory /data/path1@host1/coordination/fluffle@host1
 2025-12-02 07:01:55.773604-08:00 [notice] <0.228.0> WAL: ra_coordination_log_wal init, mem-tables table name: ra_coordination_log_open_mem_tables
 2025-12-02 07:01:55.773817-08:00 [debug] <0.228.0> wal: recovered 0 writers
 2025-12-02 07:01:55.773843-08:00 [debug] <0.228.0> wal: opening new file 0000000000000001.wal
@@ -112,7 +112,7 @@
 2025-12-02 07:01:55.777877-08:00 [debug] <0.208.0>         server_sup => ra_server_sup_sup,wal => ra_log_wal,
 2025-12-02 07:01:55.777877-08:00 [debug] <0.208.0>         wal_sup => ra_log_wal_sup},
 2025-12-02 07:01:55.777877-08:00 [debug] <0.208.0>   data_dir =>
-2025-12-02 07:01:55.777877-08:00 [debug] <0.208.0>       "/Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/fluffle@sunnyside/quorum/fluffle@sunnyside",
+2025-12-02 07:01:55.777877-08:00 [debug] <0.208.0>       /data/path1@host1/quorum/fluffle@host1",
 2025-12-02 07:01:55.777877-08:00 [debug] <0.208.0>   wal_max_size_bytes => 536870912,wal_max_batch_size => 4096,
 2025-12-02 07:01:55.777877-08:00 [debug] <0.208.0>   wal_max_entries => 500000,compress_mem_tables => true,
 2025-12-02 07:01:55.777877-08:00 [debug] <0.208.0>   default_max_append_entries_rpc_batch_size => 16,
@@ -120,7 +120,7 @@
 2025-12-02 07:01:55.777877-08:00 [debug] <0.208.0>   server_recovery_strategy => {rabbit_quorum_queue,system_recover,[]},
 2025-12-02 07:01:55.777877-08:00 [debug] <0.208.0>   wal_compute_checksums => true,wal_min_bin_vheap_size => 2971008,
 2025-12-02 07:01:55.777877-08:00 [debug] <0.208.0>   wal_data_dir =>
-2025-12-02 07:01:55.777877-08:00 [debug] <0.208.0>       "/Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/fluffle@sunnyside/quorum/fluffle@sunnyside",
+2025-12-02 07:01:55.777877-08:00 [debug] <0.208.0>       /data/path1@host1/quorum/fluffle@host1",
 2025-12-02 07:01:55.777877-08:00 [debug] <0.208.0>   segment_max_entries => 4096,segment_max_pending => 1024,
 2025-12-02 07:01:55.777877-08:00 [debug] <0.208.0>   segment_max_size_bytes => 64000000,wal_write_strategy => default,
 2025-12-02 07:01:55.777877-08:00 [debug] <0.208.0>   wal_sync_method => datasync,wal_garbage_collect => false,
@@ -149,7 +149,7 @@
 2025-12-02 07:01:55.778007-08:00 [debug] <0.208.0>                                                     wal => ra_log_wal,
 2025-12-02 07:01:55.778007-08:00 [debug] <0.208.0>                                                     wal_sup => ra_log_wal_sup},
 2025-12-02 07:01:55.778007-08:00 [debug] <0.208.0>                                                  data_dir =>
-2025-12-02 07:01:55.778007-08:00 [debug] <0.208.0>                                                   "/Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/fluffle@sunnyside/quorum/fluffle@sunnyside",
+2025-12-02 07:01:55.778007-08:00 [debug] <0.208.0>                                                   /data/path1@host1/quorum/fluffle@host1",
 2025-12-02 07:01:55.778007-08:00 [debug] <0.208.0>                                                  wal_max_size_bytes =>
 2025-12-02 07:01:55.778007-08:00 [debug] <0.208.0>                                                   536870912,
 2025-12-02 07:01:55.778007-08:00 [debug] <0.208.0>                                                  wal_max_batch_size => 4096,
@@ -168,7 +168,7 @@
 2025-12-02 07:01:55.778007-08:00 [debug] <0.208.0>                                                  wal_min_bin_vheap_size =>
 2025-12-02 07:01:55.778007-08:00 [debug] <0.208.0>                                                   2971008,
 2025-12-02 07:01:55.778007-08:00 [debug] <0.208.0>                                                  wal_data_dir =>
-2025-12-02 07:01:55.778007-08:00 [debug] <0.208.0>                                                   "/Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/fluffle@sunnyside/quorum/fluffle@sunnyside",
+2025-12-02 07:01:55.778007-08:00 [debug] <0.208.0>                                                   /data/path1@host1/quorum/fluffle@host1",
 2025-12-02 07:01:55.778007-08:00 [debug] <0.208.0>                                                  segment_max_entries => 4096,
 2025-12-02 07:01:55.778007-08:00 [debug] <0.208.0>                                                  segment_max_pending => 1024,
 2025-12-02 07:01:55.778007-08:00 [debug] <0.208.0>                                                  segment_max_size_bytes =>
@@ -191,12 +191,12 @@
 2025-12-02 07:01:55.778007-08:00 [debug] <0.208.0>                                                   16,
 2025-12-02 07:01:55.778007-08:00 [debug] <0.208.0>                                                  machine_upgrade_strategy =>
 2025-12-02 07:01:55.778007-08:00 [debug] <0.208.0>                                                   all}
-2025-12-02 07:01:55.778275-08:00 [info] <0.208.0> starting Ra system: quorum_queues in directory: /Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/fluffle@sunnyside/quorum/fluffle@sunnyside
+2025-12-02 07:01:55.778275-08:00 [info] <0.208.0> starting Ra system: quorum_queues in directory: /data/path1@host1/quorum/fluffle@host1
 2025-12-02 07:01:55.778482-08:00 [debug] <0.231.0> ra system 'quorum_queues' starting
 2025-12-02 07:01:55.778501-08:00 [info] <0.232.0> ra_log_ets: in system quorum_queues initialising. Mem table opts: [set,{write_concurrency,auto},public,{compressed,true}]
 2025-12-02 07:01:55.778834-08:00 [info] <0.236.0> ra system 'quorum_queues' running pre init for 0 registered servers
 2025-12-02 07:01:55.779135-08:00 [info] <0.237.0> ra: meta data store initialised for system quorum_queues. 0 record(s) recovered
-2025-12-02 07:01:55.779198-08:00 [info] <0.240.0> segment_writer: upgrading segment file names to new format in dirctory /Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/fluffle@sunnyside/quorum/fluffle@sunnyside
+2025-12-02 07:01:55.779198-08:00 [info] <0.240.0> segment_writer: upgrading segment file names to new format in dirctory /data/path1@host1/quorum/fluffle@host1
 2025-12-02 07:01:55.780022-08:00 [notice] <0.242.0> WAL: ra_log_wal init, mem-tables table name: ra_log_open_mem_tables
 2025-12-02 07:01:55.780117-08:00 [debug] <0.242.0> wal: recovered 0 writers
 2025-12-02 07:01:55.780129-08:00 [debug] <0.242.0> wal: opening new file 0000000000000001.wal
@@ -218,14 +218,14 @@
 2025-12-02 07:01:55.782461-08:00 [debug] <0.208.0>         server_sup => ra_coordination_server_sup_sup,
 2025-12-02 07:01:55.782461-08:00 [debug] <0.208.0>         wal => ra_coordination_log_wal,wal_sup => ra_coordination_log_wal_sup},
 2025-12-02 07:01:55.782461-08:00 [debug] <0.208.0>   data_dir =>
-2025-12-02 07:01:55.782461-08:00 [debug] <0.208.0>       "/Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/fluffle@sunnyside/coordination/fluffle@sunnyside",
+2025-12-02 07:01:55.782461-08:00 [debug] <0.208.0>       /data/path1@host1/coordination/fluffle@host1",
 2025-12-02 07:01:55.782461-08:00 [debug] <0.208.0>   wal_max_size_bytes => 64000000,wal_max_batch_size => 4096,
 2025-12-02 07:01:55.782461-08:00 [debug] <0.208.0>   wal_max_entries => undefined,compress_mem_tables => false,
 2025-12-02 07:01:55.782461-08:00 [debug] <0.208.0>   default_max_append_entries_rpc_batch_size => 128,
 2025-12-02 07:01:55.782461-08:00 [debug] <0.208.0>   segment_compute_checksums => true,server_min_bin_vheap_size => 46422,
 2025-12-02 07:01:55.782461-08:00 [debug] <0.208.0>   wal_compute_checksums => true,wal_min_bin_vheap_size => 46422,
 2025-12-02 07:01:55.782461-08:00 [debug] <0.208.0>   wal_data_dir =>
-2025-12-02 07:01:55.782461-08:00 [debug] <0.208.0>       "/Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/fluffle@sunnyside/coordination/fluffle@sunnyside",
+2025-12-02 07:01:55.782461-08:00 [debug] <0.208.0>       /data/path1@host1/coordination/fluffle@host1",
 2025-12-02 07:01:55.782461-08:00 [debug] <0.208.0>   segment_max_entries => 4096,segment_max_pending => 1024,
 2025-12-02 07:01:55.782461-08:00 [debug] <0.208.0>   segment_max_size_bytes => 64000000,wal_write_strategy => default,
 2025-12-02 07:01:55.782461-08:00 [debug] <0.208.0>   wal_sync_method => datasync,wal_garbage_collect => false,
@@ -259,7 +259,7 @@
 2025-12-02 07:01:55.782606-08:00 [debug] <0.208.0>                                                       wal_sup =>
 2025-12-02 07:01:55.782606-08:00 [debug] <0.208.0>                                                           ra_coordination_log_wal_sup},
 2025-12-02 07:01:55.782606-08:00 [debug] <0.208.0>                                                 data_dir =>
-2025-12-02 07:01:55.782606-08:00 [debug] <0.208.0>                                                     "/Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/fluffle@sunnyside/coordination/fluffle@sunnyside",
+2025-12-02 07:01:55.782606-08:00 [debug] <0.208.0>                                                     /data/path1@host1/coordination/fluffle@host1",
 2025-12-02 07:01:55.782606-08:00 [debug] <0.208.0>                                                 wal_max_size_bytes => 64000000,
 2025-12-02 07:01:55.782606-08:00 [debug] <0.208.0>                                                 wal_max_batch_size => 4096,
 2025-12-02 07:01:55.782606-08:00 [debug] <0.208.0>                                                 wal_max_entries => undefined,
@@ -274,7 +274,7 @@
 2025-12-02 07:01:55.782606-08:00 [debug] <0.208.0>                                                 wal_min_bin_vheap_size =>
 2025-12-02 07:01:55.782606-08:00 [debug] <0.208.0>                                                     46422,
 2025-12-02 07:01:55.782606-08:00 [debug] <0.208.0>                                                 wal_data_dir =>
-2025-12-02 07:01:55.782606-08:00 [debug] <0.208.0>                                                     "/Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/fluffle@sunnyside/coordination/fluffle@sunnyside",
+2025-12-02 07:01:55.782606-08:00 [debug] <0.208.0>                                                     /data/path1@host1/coordination/fluffle@host1",
 2025-12-02 07:01:55.782606-08:00 [debug] <0.208.0>                                                 segment_max_entries => 4096,
 2025-12-02 07:01:55.782606-08:00 [debug] <0.208.0>                                                 segment_max_pending => 1024,
 2025-12-02 07:01:55.782606-08:00 [debug] <0.208.0>                                                 segment_max_size_bytes =>
@@ -296,15 +296,15 @@
 2025-12-02 07:01:55.782606-08:00 [debug] <0.208.0>                                                     16,
 2025-12-02 07:01:55.782606-08:00 [debug] <0.208.0>                                                 machine_upgrade_strategy =>
 2025-12-02 07:01:55.782606-08:00 [debug] <0.208.0>                                                     all}
-2025-12-02 07:01:55.782821-08:00 [info] <0.208.0> starting Ra system: coordination in directory: /Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/fluffle@sunnyside/coordination/fluffle@sunnyside
+2025-12-02 07:01:55.782821-08:00 [info] <0.208.0> starting Ra system: coordination in directory: /data/path1@host1/coordination/fluffle@host1
 2025-12-02 07:01:55.782847-08:00 [debug] <0.208.0> Ra system "coordination" ready
 2025-12-02 07:01:55.786389-08:00 [debug] <0.208.0> Trying to restart local Ra server for store "rabbitmq_metadata" in Ra system "coordination"
 2025-12-02 07:01:55.788028-08:00 [debug] <0.208.0> Ra server for store "rabbitmq_metadata" not registered in Ra system "coordination", try to start a new one
 2025-12-02 07:01:55.788067-08:00 [debug] <0.208.0> Starting a Ra server with the following configuration:
-2025-12-02 07:01:55.788067-08:00 [debug] <0.208.0> #{id => {rabbitmq_metadata,fluffle@sunnyside},
+2025-12-02 07:01:55.788067-08:00 [debug] <0.208.0> #{id => {rabbitmq_metadata,fluffle@host1},
 2025-12-02 07:01:55.788067-08:00 [debug] <0.208.0>   machine =>
 2025-12-02 07:01:55.788067-08:00 [debug] <0.208.0>       {module,khepri_machine,
-2025-12-02 07:01:55.788067-08:00 [debug] <0.208.0>               #{member => {rabbitmq_metadata,fluffle@sunnyside},
+2025-12-02 07:01:55.788067-08:00 [debug] <0.208.0>               #{member => {rabbitmq_metadata,fluffle@host1},
 2025-12-02 07:01:55.788067-08:00 [debug] <0.208.0>                 store_id => rabbitmq_metadata}},
 2025-12-02 07:01:55.788067-08:00 [debug] <0.208.0>   friendly_name => "RabbitMQ metadata store",
 2025-12-02 07:01:55.788067-08:00 [debug] <0.208.0>   cluster_name => rabbitmq_metadata,
@@ -339,20 +339,20 @@
 2025-12-02 07:01:55.878296-08:00 [debug] <0.208.0> 
 2025-12-02 07:01:55.878324-08:00 [debug] <0.208.0> == Prelaunch DONE ==
 2025-12-02 07:01:55.878579-08:00 [info] <0.208.0> 
-2025-12-02 07:01:55.878579-08:00 [info] <0.208.0>  Starting RabbitMQ 4.2.1 on Erlang 27.3.4.5 [jit]
+2025-12-02 07:01:55.878579-08:00 [info] <0.208.0>  Starting RabbitMQ 4.2.1 on Erlang 10.0.0.1 [jit]
 2025-12-02 07:01:55.878579-08:00 [info] <0.208.0>  Copyright (c) 2007-2025 Broadcom Inc and/or its subsidiaries
 2025-12-02 07:01:55.878579-08:00 [info] <0.208.0>  Licensed under the MPL 2.0. Website: https://rabbitmq.com
 2025-12-02 07:01:55.878685-08:00 [debug] <0.264.0> Feature flags: controller standing by
 2025-12-02 07:01:55.878717-08:00 [debug] <0.208.0> Register `rabbit` process (<0.208.0>) for rabbit_node_monitor
 2025-12-02 07:01:55.879479-08:00 [info] <0.208.0> 
-2025-12-02 07:01:55.879479-08:00 [info] <0.208.0>  node           : fluffle@sunnyside
-2025-12-02 07:01:55.879479-08:00 [info] <0.208.0>  home dir       : /Users/antares
-2025-12-02 07:01:55.879479-08:00 [info] <0.208.0>  config file(s) : /Users/antares/Tools/rabbitmq/generic/etc/rabbitmq/advanced.config
-2025-12-02 07:01:55.879479-08:00 [info] <0.208.0>                 : /Users/antares/Dropbox/Tools/RabbitMQ/configs/peer_discovery.classic_config.3.conf
+2025-12-02 07:01:55.879479-08:00 [info] <0.208.0>  node           : fluffle@host1
+2025-12-02 07:01:55.879479-08:00 [info] <0.208.0>  home dir       : /data/path2
+2025-12-02 07:01:55.879479-08:00 [info] <0.208.0>  config file(s) : /data/path3
+2025-12-02 07:01:55.879479-08:00 [info] <0.208.0>                 : /data/path4
 2025-12-02 07:01:55.879479-08:00 [info] <0.208.0>  cookie hash    : NdNYTSkVzI3As6xqYGJsHg==
-2025-12-02 07:01:55.879479-08:00 [info] <0.208.0>  log(s)         : /Users/antares/Tools/rabbitmq/generic/var/log/rabbitmq/fluffle@sunnyside.log
+2025-12-02 07:01:55.879479-08:00 [info] <0.208.0>  log(s)         : /data/path5@host2
 2025-12-02 07:01:55.879479-08:00 [info] <0.208.0>                 : <stdout>
-2025-12-02 07:01:55.879479-08:00 [info] <0.208.0>  data dir       : /Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/fluffle@sunnyside
+2025-12-02 07:01:55.879479-08:00 [info] <0.208.0>  data dir       : /data/path1@host1
 2025-12-02 07:01:55.879516-08:00 [debug] <0.208.0> 
 2025-12-02 07:01:55.879530-08:00 [debug] <0.208.0> == Plugins (prelaunch phase) ==
 2025-12-02 07:01:55.879539-08:00 [debug] <0.208.0> Setting plugins up
@@ -373,8 +373,8 @@
 2025-12-02 07:01:55.931367-08:00 [debug] <0.208.0>                                 rabbitmq_prometheus]
 2025-12-02 07:01:55.941313-08:00 [debug] <0.208.0> Feature flags: REFRESHING after applications load...
 2025-12-02 07:01:55.941351-08:00 [debug] <0.264.0> Feature flags: registering controller globally before proceeding with task: refresh_after_app_load
-2025-12-02 07:01:55.941382-08:00 [debug] <0.264.0> Feature flags: [global sync] @ fluffle@sunnyside
-2025-12-02 07:01:55.941433-08:00 [debug] <0.264.0> Feature flags: [global register] @ fluffle@sunnyside
+2025-12-02 07:01:55.941382-08:00 [debug] <0.264.0> Feature flags: [global sync] @ fluffle@host1
+2025-12-02 07:01:55.941433-08:00 [debug] <0.264.0> Feature flags: [global register] @ fluffle@host1
 2025-12-02 07:01:55.941494-08:00 [debug] <0.264.0> Feature flags: controller globally registered; can proceed with task
 2025-12-02 07:01:55.941591-08:00 [debug] <0.264.0> Feature flags: acquired lock before initializing registry (<0.264.0>)
 2025-12-02 07:01:55.941616-08:00 [debug] <0.264.0> Feature flags: query feature flags in loaded applications
@@ -417,7 +417,7 @@
 2025-12-02 07:01:56.166642-08:00 [debug] <0.264.0> Feature flags: feature flag states written to disk: yes
 2025-12-02 07:01:56.166825-08:00 [debug] <0.264.0> Feature flags: time to regen registry: 313 us
 2025-12-02 07:01:56.166834-08:00 [debug] <0.264.0> Feature flags: releasing lock after initializing registry (<0.264.0>)
-2025-12-02 07:01:56.167131-08:00 [debug] <0.264.0> Feature flags: collecting inventory on nodes: [fluffle@sunnyside]
+2025-12-02 07:01:56.167131-08:00 [debug] <0.264.0> Feature flags: collecting inventory on nodes: [fluffle@host1]
 2025-12-02 07:01:56.167375-08:00 [debug] <0.264.0> Feature flags: acquiring lock {feature_flags_state_change,<0.264.0>}
 2025-12-02 07:01:56.167406-08:00 [debug] <0.264.0> Feature flags: acquired lock {feature_flags_state_change,<0.264.0>}
 2025-12-02 07:01:56.167416-08:00 [debug] <0.264.0> Feature flags: `classic_mirrored_queue_version`: supported; continuing
@@ -470,7 +470,7 @@
 2025-12-02 07:01:56.168327-08:00 [debug] <0.264.0> Feature flags: `virtual_host_metadata`: already enabled; skipping
 2025-12-02 07:01:56.168335-08:00 [debug] <0.264.0> Feature flags: releasing lock {feature_flags_state_change,<0.264.0>}
 2025-12-02 07:01:56.168357-08:00 [debug] <0.264.0> Feature flags: unregistering controller globally
-2025-12-02 07:01:56.168364-08:00 [debug] <0.264.0> Feature flags: [global unregister] @ fluffle@sunnyside
+2025-12-02 07:01:56.168364-08:00 [debug] <0.264.0> Feature flags: [global unregister] @ fluffle@host1
 2025-12-02 07:01:56.168446-08:00 [debug] <0.208.0> 
 2025-12-02 07:01:56.168457-08:00 [debug] <0.208.0> == Boot steps ==
 2025-12-02 07:01:56.169130-08:00 [debug] <0.208.0> Boot steps: time to find boot steps: 585 us
@@ -509,7 +509,7 @@
 2025-12-02 07:01:56.226652-08:00 [debug] <0.208.0> Finished MFA: M = rabbit_sup, F = start_child, A = [rabbit_registry]
 2025-12-02 07:01:56.226662-08:00 [info] <0.208.0> Running boot step database defined by app rabbit
 2025-12-02 07:01:56.226675-08:00 [debug] <0.208.0> Applying MFA: M = rabbit_db, F = init, A = []
-2025-12-02 07:01:56.226800-08:00 [debug] <0.208.0> Files and directories found in node's data directory: cluster_nodes.config, coordination, nodes_running_at_shutdown, quorum, of them to be ignored: cluster_nodes.config, coordination, fluffle@sunnyside, fluffle@sunnyside-feature_flags, msg_stores, nodes_running_at_shutdown, quorum, rabbitmq_metadata, stream, user_provided_plugins_data_dir
+2025-12-02 07:01:56.226800-08:00 [debug] <0.208.0> Files and directories found in node's data directory: cluster_nodes.config, coordination, nodes_running_at_shutdown, quorum, of them to be ignored: cluster_nodes.config, coordination, fluffle@host1, fluffle@host3, msg_stores, nodes_running_at_shutdown, quorum, rabbitmq_metadata, stream, user_provided_plugins_data_dir
 2025-12-02 07:01:56.226835-08:00 [debug] <0.208.0> Files and directories found in node's data directory sans ignored ones:
 2025-12-02 07:01:56.226931-08:00 [debug] <0.208.0> DB: this node is virgin: true
 2025-12-02 07:01:56.227029-08:00 [info] <0.208.0> Peer discovery: configured backend: rabbit_peer_discovery_classic_config
@@ -517,16 +517,16 @@
 2025-12-02 07:01:56.227092-08:00 [debug] <0.208.0> Peer discovery: registration is not supported, skipping it
 2025-12-02 07:01:56.227361-08:00 [debug] <0.208.0> Feature flags: configure initial feature flags state
 2025-12-02 07:01:56.227412-08:00 [debug] <0.264.0> Feature flags: registering controller globally before proceeding with task: enable_default
-2025-12-02 07:01:56.227434-08:00 [debug] <0.264.0> Feature flags: [global sync] @ fluffle@sunnyside
-2025-12-02 07:01:56.227485-08:00 [debug] <0.264.0> Feature flags: [global register] @ fluffle@sunnyside
+2025-12-02 07:01:56.227434-08:00 [debug] <0.264.0> Feature flags: [global sync] @ fluffle@host1
+2025-12-02 07:01:56.227485-08:00 [debug] <0.264.0> Feature flags: [global register] @ fluffle@host1
 2025-12-02 07:01:56.227608-08:00 [debug] <0.264.0> Feature flags: controller globally registered; can proceed with task
 2025-12-02 07:01:56.227629-08:00 [info] <0.264.0> Feature flags: starting an unclustered node for the first time: all stable feature flags will be enabled by default
-2025-12-02 07:01:56.227652-08:00 [debug] <0.264.0> Feature flags: collecting inventory on nodes: [fluffle@sunnyside]
+2025-12-02 07:01:56.227652-08:00 [debug] <0.264.0> Feature flags: collecting inventory on nodes: [fluffle@host1]
 2025-12-02 07:01:56.227851-08:00 [debug] <0.264.0> Feature flags: acquiring lock {feature_flags_state_change,<0.264.0>}
 2025-12-02 07:01:56.227875-08:00 [debug] <0.264.0> Feature flags: acquired lock {feature_flags_state_change,<0.264.0>}
 2025-12-02 07:01:56.227887-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.0.0`: supported; continuing
 2025-12-02 07:01:56.227953-08:00 [notice] <0.264.0> Feature flags: attempt to enable `rabbitmq_4.0.0`...
-2025-12-02 07:01:56.227972-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.0.0`: mark as enabled=state_changing on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.227972-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.0.0`: mark as enabled=state_changing on nodes [fluffle@host1]
 2025-12-02 07:01:56.227995-08:00 [debug] <0.301.0> Feature flags: `rabbitmq_4.0.0`: mark as enabled=state_changing
 2025-12-02 07:01:56.228038-08:00 [debug] <0.301.0> Feature flags: acquired lock before initializing registry (<0.301.0>)
 2025-12-02 07:01:56.228055-08:00 [debug] <0.301.0> Feature flags: query feature flags in loaded applications
@@ -570,7 +570,7 @@
 2025-12-02 07:01:56.231318-08:00 [debug] <0.301.0> Feature flags: releasing lock after initializing registry (<0.301.0>)
 2025-12-02 07:01:56.231710-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.0.0`: enable dependencies: [message_containers]
 2025-12-02 07:01:56.231726-08:00 [debug] <0.264.0> Feature flags: `message_containers`: already enabled; skipping
-2025-12-02 07:01:56.231763-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.0.0`: mark as enabled=true on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.231763-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.0.0`: mark as enabled=true on nodes [fluffle@host1]
 2025-12-02 07:01:56.231801-08:00 [debug] <0.303.0> Feature flags: `rabbitmq_4.0.0`: mark as enabled=true
 2025-12-02 07:01:56.232412-08:00 [debug] <0.303.0> Feature flags: acquired lock before initializing registry (<0.303.0>)
 2025-12-02 07:01:56.232432-08:00 [debug] <0.303.0> Feature flags: query feature flags in loaded applications
@@ -615,7 +615,7 @@
 2025-12-02 07:01:56.235566-08:00 [notice] <0.264.0> Feature flags: `rabbitmq_4.0.0` enabled
 2025-12-02 07:01:56.235577-08:00 [debug] <0.264.0> Feature flags: `message_containers_deaths_v2`: supported; continuing
 2025-12-02 07:01:56.235597-08:00 [notice] <0.264.0> Feature flags: attempt to enable `message_containers_deaths_v2`...
-2025-12-02 07:01:56.235617-08:00 [debug] <0.264.0> Feature flags: `message_containers_deaths_v2`: mark as enabled=state_changing on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.235617-08:00 [debug] <0.264.0> Feature flags: `message_containers_deaths_v2`: mark as enabled=state_changing on nodes [fluffle@host1]
 2025-12-02 07:01:56.235655-08:00 [debug] <0.306.0> Feature flags: `message_containers_deaths_v2`: mark as enabled=state_changing
 2025-12-02 07:01:56.235703-08:00 [debug] <0.306.0> Feature flags: acquired lock before initializing registry (<0.306.0>)
 2025-12-02 07:01:56.235720-08:00 [debug] <0.306.0> Feature flags: query feature flags in loaded applications
@@ -659,7 +659,7 @@
 2025-12-02 07:01:56.238655-08:00 [debug] <0.306.0> Feature flags: releasing lock after initializing registry (<0.306.0>)
 2025-12-02 07:01:56.238706-08:00 [debug] <0.264.0> Feature flags: `message_containers_deaths_v2`: enable dependencies: [message_containers]
 2025-12-02 07:01:56.238728-08:00 [debug] <0.264.0> Feature flags: `message_containers`: already enabled; skipping
-2025-12-02 07:01:56.238774-08:00 [debug] <0.264.0> Feature flags: `message_containers_deaths_v2`: mark as enabled=true on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.238774-08:00 [debug] <0.264.0> Feature flags: `message_containers_deaths_v2`: mark as enabled=true on nodes [fluffle@host1]
 2025-12-02 07:01:56.238821-08:00 [debug] <0.308.0> Feature flags: `message_containers_deaths_v2`: mark as enabled=true
 2025-12-02 07:01:56.239818-08:00 [debug] <0.308.0> Feature flags: acquired lock before initializing registry (<0.308.0>)
 2025-12-02 07:01:56.239855-08:00 [debug] <0.308.0> Feature flags: query feature flags in loaded applications
@@ -704,7 +704,7 @@
 2025-12-02 07:01:56.242623-08:00 [notice] <0.264.0> Feature flags: `message_containers_deaths_v2` enabled
 2025-12-02 07:01:56.242633-08:00 [debug] <0.264.0> Feature flags: `rabbit_exchange_type_local_random`: supported; continuing
 2025-12-02 07:01:56.242648-08:00 [notice] <0.264.0> Feature flags: attempt to enable `rabbit_exchange_type_local_random`...
-2025-12-02 07:01:56.242659-08:00 [debug] <0.264.0> Feature flags: `rabbit_exchange_type_local_random`: mark as enabled=state_changing on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.242659-08:00 [debug] <0.264.0> Feature flags: `rabbit_exchange_type_local_random`: mark as enabled=state_changing on nodes [fluffle@host1]
 2025-12-02 07:01:56.242697-08:00 [debug] <0.311.0> Feature flags: `rabbit_exchange_type_local_random`: mark as enabled=state_changing
 2025-12-02 07:01:56.242749-08:00 [debug] <0.311.0> Feature flags: acquired lock before initializing registry (<0.311.0>)
 2025-12-02 07:01:56.242762-08:00 [debug] <0.311.0> Feature flags: query feature flags in loaded applications
@@ -746,7 +746,7 @@
 2025-12-02 07:01:56.245178-08:00 [debug] <0.311.0> Feature flags: feature flag states written to disk: yes
 2025-12-02 07:01:56.245351-08:00 [debug] <0.311.0> Feature flags: time to regen registry: 242 us
 2025-12-02 07:01:56.245363-08:00 [debug] <0.311.0> Feature flags: releasing lock after initializing registry (<0.311.0>)
-2025-12-02 07:01:56.245418-08:00 [debug] <0.264.0> Feature flags: `rabbit_exchange_type_local_random`: mark as enabled=true on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.245418-08:00 [debug] <0.264.0> Feature flags: `rabbit_exchange_type_local_random`: mark as enabled=true on nodes [fluffle@host1]
 2025-12-02 07:01:56.245449-08:00 [debug] <0.313.0> Feature flags: `rabbit_exchange_type_local_random`: mark as enabled=true
 2025-12-02 07:01:56.245939-08:00 [debug] <0.313.0> Feature flags: acquired lock before initializing registry (<0.313.0>)
 2025-12-02 07:01:56.245960-08:00 [debug] <0.313.0> Feature flags: query feature flags in loaded applications
@@ -791,7 +791,7 @@
 2025-12-02 07:01:56.249007-08:00 [notice] <0.264.0> Feature flags: `rabbit_exchange_type_local_random` enabled
 2025-12-02 07:01:56.249021-08:00 [debug] <0.264.0> Feature flags: `quorum_queue_non_voters`: supported; continuing
 2025-12-02 07:01:56.249035-08:00 [notice] <0.264.0> Feature flags: attempt to enable `quorum_queue_non_voters`...
-2025-12-02 07:01:56.249047-08:00 [debug] <0.264.0> Feature flags: `quorum_queue_non_voters`: mark as enabled=state_changing on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.249047-08:00 [debug] <0.264.0> Feature flags: `quorum_queue_non_voters`: mark as enabled=state_changing on nodes [fluffle@host1]
 2025-12-02 07:01:56.249074-08:00 [debug] <0.316.0> Feature flags: `quorum_queue_non_voters`: mark as enabled=state_changing
 2025-12-02 07:01:56.249112-08:00 [debug] <0.316.0> Feature flags: acquired lock before initializing registry (<0.316.0>)
 2025-12-02 07:01:56.249128-08:00 [debug] <0.316.0> Feature flags: query feature flags in loaded applications
@@ -835,7 +835,7 @@
 2025-12-02 07:01:56.251891-08:00 [debug] <0.316.0> Feature flags: releasing lock after initializing registry (<0.316.0>)
 2025-12-02 07:01:56.251963-08:00 [debug] <0.264.0> Feature flags: `quorum_queue_non_voters`: enable dependencies: [quorum_queue]
 2025-12-02 07:01:56.251984-08:00 [debug] <0.264.0> Feature flags: `quorum_queue`: already enabled; skipping
-2025-12-02 07:01:56.252009-08:00 [debug] <0.264.0> Feature flags: `quorum_queue_non_voters`: mark as enabled=true on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.252009-08:00 [debug] <0.264.0> Feature flags: `quorum_queue_non_voters`: mark as enabled=true on nodes [fluffle@host1]
 2025-12-02 07:01:56.252032-08:00 [debug] <0.318.0> Feature flags: `quorum_queue_non_voters`: mark as enabled=true
 2025-12-02 07:01:56.252537-08:00 [debug] <0.318.0> Feature flags: acquired lock before initializing registry (<0.318.0>)
 2025-12-02 07:01:56.252557-08:00 [debug] <0.318.0> Feature flags: query feature flags in loaded applications
@@ -880,7 +880,7 @@
 2025-12-02 07:01:56.255581-08:00 [notice] <0.264.0> Feature flags: `quorum_queue_non_voters` enabled
 2025-12-02 07:01:56.255610-08:00 [debug] <0.264.0> Feature flags: `khepri_db`: supported; continuing
 2025-12-02 07:01:56.255625-08:00 [notice] <0.264.0> Feature flags: attempt to enable `khepri_db`...
-2025-12-02 07:01:56.255641-08:00 [debug] <0.264.0> Feature flags: `khepri_db`: mark as enabled=state_changing on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.255641-08:00 [debug] <0.264.0> Feature flags: `khepri_db`: mark as enabled=state_changing on nodes [fluffle@host1]
 2025-12-02 07:01:56.255673-08:00 [debug] <0.321.0> Feature flags: `khepri_db`: mark as enabled=state_changing
 2025-12-02 07:01:56.255732-08:00 [debug] <0.321.0> Feature flags: acquired lock before initializing registry (<0.321.0>)
 2025-12-02 07:01:56.255747-08:00 [debug] <0.321.0> Feature flags: query feature flags in loaded applications
@@ -940,7 +940,7 @@
 2025-12-02 07:01:56.258973-08:00 [debug] <0.264.0> Feature flags: `listener_records_in_ets`: already enabled; skipping
 2025-12-02 07:01:56.258983-08:00 [debug] <0.264.0> Feature flags: `classic_queue_mirroring`: already enabled; skipping
 2025-12-02 07:01:56.258996-08:00 [notice] <0.264.0> Feature flags: attempt to enable `ram_node_type`...
-2025-12-02 07:01:56.259007-08:00 [debug] <0.264.0> Feature flags: `ram_node_type`: mark as enabled=state_changing on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.259007-08:00 [debug] <0.264.0> Feature flags: `ram_node_type`: mark as enabled=state_changing on nodes [fluffle@host1]
 2025-12-02 07:01:56.259048-08:00 [debug] <0.323.0> Feature flags: `ram_node_type`: mark as enabled=state_changing
 2025-12-02 07:01:56.259101-08:00 [debug] <0.323.0> Feature flags: acquired lock before initializing registry (<0.323.0>)
 2025-12-02 07:01:56.259116-08:00 [debug] <0.323.0> Feature flags: query feature flags in loaded applications
@@ -982,7 +982,7 @@
 2025-12-02 07:01:56.261698-08:00 [debug] <0.323.0> Feature flags: feature flag states written to disk: yes
 2025-12-02 07:01:56.261844-08:00 [debug] <0.323.0> Feature flags: time to regen registry: 210 us
 2025-12-02 07:01:56.261862-08:00 [debug] <0.323.0> Feature flags: releasing lock after initializing registry (<0.323.0>)
-2025-12-02 07:01:56.261915-08:00 [debug] <0.264.0> Feature flags: `ram_node_type`: mark as enabled=true on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.261915-08:00 [debug] <0.264.0> Feature flags: `ram_node_type`: mark as enabled=true on nodes [fluffle@host1]
 2025-12-02 07:01:56.261941-08:00 [debug] <0.325.0> Feature flags: `ram_node_type`: mark as enabled=true
 2025-12-02 07:01:56.262405-08:00 [debug] <0.325.0> Feature flags: acquired lock before initializing registry (<0.325.0>)
 2025-12-02 07:01:56.262420-08:00 [debug] <0.325.0> Feature flags: query feature flags in loaded applications
@@ -1027,7 +1027,7 @@
 2025-12-02 07:01:56.265133-08:00 [notice] <0.264.0> Feature flags: `ram_node_type` enabled
 2025-12-02 07:01:56.265149-08:00 [debug] <0.264.0> Feature flags: `khepri_db`: run callback rabbit_khepri:khepri_db_migration_enable (enable callback)
 2025-12-02 07:01:56.265149-08:00 [debug] <0.264.0> Feature flags:   with args = #{command => enable,
-2025-12-02 07:01:56.265149-08:00 [debug] <0.264.0>                                nodes => [fluffle@sunnyside],
+2025-12-02 07:01:56.265149-08:00 [debug] <0.264.0>                                nodes => [fluffle@host1],
 2025-12-02 07:01:56.265149-08:00 [debug] <0.264.0>                                feature_name => khepri_db,
 2025-12-02 07:01:56.265149-08:00 [debug] <0.264.0>                                feature_props =>
 2025-12-02 07:01:56.265149-08:00 [debug] <0.264.0>                                 #{name => khepri_db,
@@ -1051,16 +1051,16 @@
 2025-12-02 07:01:56.265149-08:00 [debug] <0.264.0>                                     listener_records_in_ets,
 2025-12-02 07:01:56.265149-08:00 [debug] <0.264.0>                                     classic_queue_mirroring,ram_node_type],
 2025-12-02 07:01:56.265149-08:00 [debug] <0.264.0>                                   provided_by => rabbit}}
-2025-12-02 07:01:56.265149-08:00 [debug] <0.264.0> Feature flags:   on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.265149-08:00 [debug] <0.264.0> Feature flags:   on nodes [fluffle@host1]
 2025-12-02 07:01:56.265271-08:00 [info] <0.327.0> Feature flag `khepri_db`: syncing cluster membership
 2025-12-02 07:01:56.269483-08:00 [info] <0.328.0> Syncing Mnesia->Khepri clusters membership
-2025-12-02 07:01:56.271040-08:00 [debug] <0.328.0> Mnesia->Khepri cluster sync: Mnesia cluster: [fluffle@sunnyside]
+2025-12-02 07:01:56.271040-08:00 [debug] <0.328.0> Mnesia->Khepri cluster sync: Mnesia cluster: [fluffle@host1]
 2025-12-02 07:01:56.271073-08:00 [debug] <0.328.0> Mnesia->Khepri cluster sync: Connected nodes to consider: []
-2025-12-02 07:01:56.271187-08:00 [debug] <0.328.0> Mnesia->Khepri cluster sync: Khepri clusters: [[fluffle@sunnyside]]
-2025-12-02 07:01:56.271221-08:00 [debug] <0.328.0> Mnesia->Khepri cluster sync: Largest Khepri cluster: [fluffle@sunnyside]
+2025-12-02 07:01:56.271187-08:00 [debug] <0.328.0> Mnesia->Khepri cluster sync: Khepri clusters: [[fluffle@host1]]
+2025-12-02 07:01:56.271221-08:00 [debug] <0.328.0> Mnesia->Khepri cluster sync: Largest Khepri cluster: [fluffle@host1]
 2025-12-02 07:01:56.271270-08:00 [debug] <0.328.0> Mnesia->Khepri cluster sync: Khepri nodes joining the largest Khepri cluster: []
 2025-12-02 07:01:56.271309-08:00 [debug] <0.328.0> Mnesia->Khepri cluster sync: Khepri nodes being removed from the expanded Khepri cluster: []
-2025-12-02 07:01:56.271375-08:00 [info] <0.327.0> Feature flag `khepri_db`: cluster membership synchronized; members are: [fluffle@sunnyside]
+2025-12-02 07:01:56.271375-08:00 [info] <0.327.0> Feature flag `khepri_db`: cluster membership synchronized; members are: [fluffle@host1]
 2025-12-02 07:01:56.271402-08:00 [info] <0.327.0> Feature flag `khepri_db`: unregistering legacy projections
 2025-12-02 07:01:56.274943-08:00 [info] <0.327.0> Feature flag `khepri_db`: registering projections
 2025-12-02 07:01:56.535707-08:00 [notice] <0.327.0> Feature flags: `khepri_db`: starting migration of 20 tables from Mnesia to Khepri; expect decrease in performance and increase in memory footprint
@@ -1088,8 +1088,8 @@
 2025-12-02 07:01:56.536244-08:00 [debug] <0.327.0> Mnesia->Khepri data copy: Table `rh_exchange_table` does not exist, skipping its migration
 2025-12-02 07:01:56.536257-08:00 [notice] <0.327.0> Feature flags: `khepri_db`: migration from Mnesia to Khepri finished
 2025-12-02 07:01:56.536674-08:00 [debug] <0.264.0> Feature flags: `khepri_db`: callback rabbit_khepri:khepri_db_migration_enable (enable callback) returned:
-2025-12-02 07:01:56.536674-08:00 [debug] <0.264.0> Feature flags:   #{fluffle@sunnyside => ok}
-2025-12-02 07:01:56.536714-08:00 [debug] <0.264.0> Feature flags: `khepri_db`: mark as enabled=true on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.536674-08:00 [debug] <0.264.0> Feature flags:   #{fluffle@host1 => ok}
+2025-12-02 07:01:56.536714-08:00 [debug] <0.264.0> Feature flags: `khepri_db`: mark as enabled=true on nodes [fluffle@host1]
 2025-12-02 07:01:56.536757-08:00 [debug] <0.340.0> Feature flags: `khepri_db`: mark as enabled=true
 2025-12-02 07:01:56.537320-08:00 [debug] <0.340.0> Feature flags: acquired lock before initializing registry (<0.340.0>)
 2025-12-02 07:01:56.537338-08:00 [debug] <0.340.0> Feature flags: query feature flags in loaded applications
@@ -1134,7 +1134,7 @@
 2025-12-02 07:01:56.540340-08:00 [debug] <0.264.0> Feature flags: `khepri_db`: run `post_enable` callback (if any) to perform any cleanups
 2025-12-02 07:01:56.540357-08:00 [debug] <0.264.0> Feature flags: `khepri_db`: run callback rabbit_khepri:khepri_db_migration_post_enable (post_enable callback)
 2025-12-02 07:01:56.540357-08:00 [debug] <0.264.0> Feature flags:   with args = #{command => post_enable,enabled => true,
-2025-12-02 07:01:56.540357-08:00 [debug] <0.264.0>                                nodes => [fluffle@sunnyside],
+2025-12-02 07:01:56.540357-08:00 [debug] <0.264.0>                                nodes => [fluffle@host1],
 2025-12-02 07:01:56.540357-08:00 [debug] <0.264.0>                                feature_name => khepri_db,
 2025-12-02 07:01:56.540357-08:00 [debug] <0.264.0>                                feature_props =>
 2025-12-02 07:01:56.540357-08:00 [debug] <0.264.0>                                 #{name => khepri_db,
@@ -1158,18 +1158,18 @@
 2025-12-02 07:01:56.540357-08:00 [debug] <0.264.0>                                     listener_records_in_ets,
 2025-12-02 07:01:56.540357-08:00 [debug] <0.264.0>                                     classic_queue_mirroring,ram_node_type],
 2025-12-02 07:01:56.540357-08:00 [debug] <0.264.0>                                   provided_by => rabbit}}
-2025-12-02 07:01:56.540357-08:00 [debug] <0.264.0> Feature flags:   on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.540357-08:00 [debug] <0.264.0> Feature flags:   on nodes [fluffle@host1]
 2025-12-02 07:01:56.540467-08:00 [debug] <0.342.0> Feature flag `khepri_db`: cleaning up after finished migration
 2025-12-02 07:01:56.543282-08:00 [debug] <0.342.0> Mnesia->Khepri data copy: deleting Mnesia tables after migration "rabbitmq_metadata" finished
 2025-12-02 07:01:56.547141-08:00 [notice] <0.45.0> Application mnesia exited with reason: stopped
-2025-12-02 07:01:56.547445-08:00 [debug] <0.342.0> Files and directories found in node's data directory: cluster_nodes.config, coordination, nodes_running_at_shutdown, quorum, of them to be ignored: cluster_nodes.config, coordination, fluffle@sunnyside, fluffle@sunnyside-feature_flags, msg_stores, nodes_running_at_shutdown, quorum, rabbitmq_metadata, stream, user_provided_plugins_data_dir
+2025-12-02 07:01:56.547445-08:00 [debug] <0.342.0> Files and directories found in node's data directory: cluster_nodes.config, coordination, nodes_running_at_shutdown, quorum, of them to be ignored: cluster_nodes.config, coordination, fluffle@host1, fluffle@host3, msg_stores, nodes_running_at_shutdown, quorum, rabbitmq_metadata, stream, user_provided_plugins_data_dir
 2025-12-02 07:01:56.547488-08:00 [debug] <0.342.0> Files and directories found in node's data directory sans ignored ones:
 2025-12-02 07:01:56.547874-08:00 [debug] <0.264.0> Feature flags: `khepri_db`: callback rabbit_khepri:khepri_db_migration_post_enable (post_enable callback) returned:
-2025-12-02 07:01:56.547874-08:00 [debug] <0.264.0> Feature flags:   #{fluffle@sunnyside => ok}
+2025-12-02 07:01:56.547874-08:00 [debug] <0.264.0> Feature flags:   #{fluffle@host1 => ok}
 2025-12-02 07:01:56.547896-08:00 [notice] <0.264.0> Feature flags: `khepri_db` enabled
 2025-12-02 07:01:56.547923-08:00 [debug] <0.264.0> Feature flags: `detailed_queues_endpoint`: supported; continuing
 2025-12-02 07:01:56.547941-08:00 [notice] <0.264.0> Feature flags: attempt to enable `detailed_queues_endpoint`...
-2025-12-02 07:01:56.547951-08:00 [debug] <0.264.0> Feature flags: `detailed_queues_endpoint`: mark as enabled=state_changing on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.547951-08:00 [debug] <0.264.0> Feature flags: `detailed_queues_endpoint`: mark as enabled=state_changing on nodes [fluffle@host1]
 2025-12-02 07:01:56.547987-08:00 [debug] <0.344.0> Feature flags: `detailed_queues_endpoint`: mark as enabled=state_changing
 2025-12-02 07:01:56.548036-08:00 [debug] <0.344.0> Feature flags: acquired lock before initializing registry (<0.344.0>)
 2025-12-02 07:01:56.548054-08:00 [debug] <0.344.0> Feature flags: query feature flags in loaded applications
@@ -1213,7 +1213,7 @@
 2025-12-02 07:01:56.550733-08:00 [debug] <0.344.0> Feature flags: releasing lock after initializing registry (<0.344.0>)
 2025-12-02 07:01:56.550775-08:00 [debug] <0.264.0> Feature flags: `detailed_queues_endpoint`: enable dependencies: [feature_flags_v2]
 2025-12-02 07:01:56.550807-08:00 [debug] <0.264.0> Feature flags: `feature_flags_v2`: already enabled; skipping
-2025-12-02 07:01:56.550818-08:00 [debug] <0.264.0> Feature flags: `detailed_queues_endpoint`: mark as enabled=true on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.550818-08:00 [debug] <0.264.0> Feature flags: `detailed_queues_endpoint`: mark as enabled=true on nodes [fluffle@host1]
 2025-12-02 07:01:56.550870-08:00 [debug] <0.346.0> Feature flags: `detailed_queues_endpoint`: mark as enabled=true
 2025-12-02 07:01:56.551401-08:00 [debug] <0.346.0> Feature flags: acquired lock before initializing registry (<0.346.0>)
 2025-12-02 07:01:56.551445-08:00 [debug] <0.346.0> Feature flags: query feature flags in loaded applications
@@ -1258,7 +1258,7 @@
 2025-12-02 07:01:56.554188-08:00 [notice] <0.264.0> Feature flags: `detailed_queues_endpoint` enabled
 2025-12-02 07:01:56.554210-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.1.0`: supported; continuing
 2025-12-02 07:01:56.554234-08:00 [notice] <0.264.0> Feature flags: attempt to enable `rabbitmq_4.1.0`...
-2025-12-02 07:01:56.554251-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.1.0`: mark as enabled=state_changing on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.554251-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.1.0`: mark as enabled=state_changing on nodes [fluffle@host1]
 2025-12-02 07:01:56.554293-08:00 [debug] <0.349.0> Feature flags: `rabbitmq_4.1.0`: mark as enabled=state_changing
 2025-12-02 07:01:56.554334-08:00 [debug] <0.349.0> Feature flags: acquired lock before initializing registry (<0.349.0>)
 2025-12-02 07:01:56.554348-08:00 [debug] <0.349.0> Feature flags: query feature flags in loaded applications
@@ -1302,7 +1302,7 @@
 2025-12-02 07:01:56.557067-08:00 [debug] <0.349.0> Feature flags: releasing lock after initializing registry (<0.349.0>)
 2025-12-02 07:01:56.557101-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.1.0`: enable dependencies: ['rabbitmq_4.0.0']
 2025-12-02 07:01:56.557113-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.0.0`: already enabled; skipping
-2025-12-02 07:01:56.557122-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.1.0`: mark as enabled=true on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.557122-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.1.0`: mark as enabled=true on nodes [fluffle@host1]
 2025-12-02 07:01:56.557147-08:00 [debug] <0.351.0> Feature flags: `rabbitmq_4.1.0`: mark as enabled=true
 2025-12-02 07:01:56.557620-08:00 [debug] <0.351.0> Feature flags: acquired lock before initializing registry (<0.351.0>)
 2025-12-02 07:01:56.557655-08:00 [debug] <0.351.0> Feature flags: query feature flags in loaded applications
@@ -1347,7 +1347,7 @@
 2025-12-02 07:01:56.560725-08:00 [notice] <0.264.0> Feature flags: `rabbitmq_4.1.0` enabled
 2025-12-02 07:01:56.560736-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.2.0`: supported; continuing
 2025-12-02 07:01:56.560758-08:00 [notice] <0.264.0> Feature flags: attempt to enable `rabbitmq_4.2.0`...
-2025-12-02 07:01:56.560789-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.2.0`: mark as enabled=state_changing on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.560789-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.2.0`: mark as enabled=state_changing on nodes [fluffle@host1]
 2025-12-02 07:01:56.560832-08:00 [debug] <0.354.0> Feature flags: `rabbitmq_4.2.0`: mark as enabled=state_changing
 2025-12-02 07:01:56.560886-08:00 [debug] <0.354.0> Feature flags: acquired lock before initializing registry (<0.354.0>)
 2025-12-02 07:01:56.560906-08:00 [debug] <0.354.0> Feature flags: query feature flags in loaded applications
@@ -1393,7 +1393,7 @@
 2025-12-02 07:01:56.563468-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.1.0`: already enabled; skipping
 2025-12-02 07:01:56.563493-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.2.0`: run callback rabbit_khepri:enable_feature_flag (enable callback)
 2025-12-02 07:01:56.563493-08:00 [debug] <0.264.0> Feature flags:   with args = #{command => enable,
-2025-12-02 07:01:56.563493-08:00 [debug] <0.264.0>                                nodes => [fluffle@sunnyside],
+2025-12-02 07:01:56.563493-08:00 [debug] <0.264.0>                                nodes => [fluffle@host1],
 2025-12-02 07:01:56.563493-08:00 [debug] <0.264.0>                                feature_name => 'rabbitmq_4.2.0',
 2025-12-02 07:01:56.563493-08:00 [debug] <0.264.0>                                feature_props =>
 2025-12-02 07:01:56.563493-08:00 [debug] <0.264.0>                                 #{name => 'rabbitmq_4.2.0',
@@ -1404,11 +1404,11 @@
 2025-12-02 07:01:56.563493-08:00 [debug] <0.264.0>                                   stability => stable,
 2025-12-02 07:01:56.563493-08:00 [debug] <0.264.0>                                   depends_on => ['rabbitmq_4.1.0'],
 2025-12-02 07:01:56.563493-08:00 [debug] <0.264.0>                                   provided_by => rabbit}}
-2025-12-02 07:01:56.563493-08:00 [debug] <0.264.0> Feature flags:   on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.563493-08:00 [debug] <0.264.0> Feature flags:   on nodes [fluffle@host1]
 2025-12-02 07:01:56.564793-08:00 [debug] <0.355.0> enabling feature flag rabbitmq_4.2.0 unregisters projection rabbit_khepri_index_route: ok
 2025-12-02 07:01:56.564850-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.2.0`: callback rabbit_khepri:enable_feature_flag (enable callback) returned:
-2025-12-02 07:01:56.564850-08:00 [debug] <0.264.0> Feature flags:   #{fluffle@sunnyside => ok}
-2025-12-02 07:01:56.564870-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.2.0`: mark as enabled=true on nodes [fluffle@sunnyside]
+2025-12-02 07:01:56.564850-08:00 [debug] <0.264.0> Feature flags:   #{fluffle@host1 => ok}
+2025-12-02 07:01:56.564870-08:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.2.0`: mark as enabled=true on nodes [fluffle@host1]
 2025-12-02 07:01:56.564902-08:00 [debug] <0.357.0> Feature flags: `rabbitmq_4.2.0`: mark as enabled=true
 2025-12-02 07:01:56.565538-08:00 [debug] <0.357.0> Feature flags: acquired lock before initializing registry (<0.357.0>)
 2025-12-02 07:01:56.565555-08:00 [debug] <0.357.0> Feature flags: query feature flags in loaded applications
@@ -1454,12 +1454,12 @@
 2025-12-02 07:01:56.568320-08:00 [notice] <0.264.0> Feature flags: `rabbitmq_4.2.0` enabled
 2025-12-02 07:01:56.568336-08:00 [debug] <0.264.0> Feature flags: releasing lock {feature_flags_state_change,<0.264.0>}
 2025-12-02 07:01:56.568369-08:00 [debug] <0.264.0> Feature flags: unregistering controller globally
-2025-12-02 07:01:56.568382-08:00 [debug] <0.264.0> Feature flags: [global unregister] @ fluffle@sunnyside
+2025-12-02 07:01:56.568382-08:00 [debug] <0.264.0> Feature flags: [global unregister] @ fluffle@host1
 2025-12-02 07:01:56.568454-08:00 [info] <0.208.0> DB: virgin node -> run peer discovery
-2025-12-02 07:01:56.568561-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@klishinm-a01','hare@klishinm-a01','rabbit@klishinm-a01']
+2025-12-02 07:01:56.568561-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@host4','hare@host4','rabbit@host4']
 2025-12-02 07:01:56.568582-08:00 [debug] <0.208.0> Peer discovery: backend returned the following configuration:
-2025-12-02 07:01:56.568582-08:00 [debug] <0.208.0>   {ok,{[fluffle@sunnyside,'flopsy@klishinm-a01','hare@klishinm-a01',
-2025-12-02 07:01:56.568582-08:00 [debug] <0.208.0>         'rabbit@klishinm-a01'],
+2025-12-02 07:01:56.568582-08:00 [debug] <0.208.0>   {ok,{[fluffle@host1,'flopsy@host4','hare@host4',
+2025-12-02 07:01:56.568582-08:00 [debug] <0.208.0>         'rabbit@host4'],
 2025-12-02 07:01:56.568582-08:00 [debug] <0.208.0>        disc}}
 2025-12-02 07:01:56.568650-08:00 [debug] <0.208.0> Peer discovery: peer node arguments: #{args =>
 2025-12-02 07:01:56.568650-08:00 [debug] <0.208.0>                                            ["-boot","start_sasl","-hidden"],
@@ -1467,18 +1467,18 @@
 2025-12-02 07:01:56.568650-08:00 [debug] <0.208.0>                                        connection => standard_io,
 2025-12-02 07:01:56.568650-08:00 [debug] <0.208.0>                                        wait_boot => infinity}
 2025-12-02 07:01:56.692226-08:00 [debug] <0.208.0> Peer discovery: using temporary hidden node 'fluffle-4292-26484@sunnyside' to query discovered peers properties
-2025-12-02 07:01:56.720257-08:00 [debug] <0.363.0> Peer discovery: temporary hidden node 'fluffle-4292-26484@sunnyside' failed to connect to 'flopsy@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:01:57.724442-08:00 [debug] <0.364.0> Peer discovery: temporary hidden node 'fluffle-4292-26484@sunnyside' failed to connect to 'hare@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:01:58.729219-08:00 [debug] <0.365.0> Peer discovery: temporary hidden node 'fluffle-4292-26484@sunnyside' failed to connect to 'rabbit@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:01:59.730754-08:00 [debug] <0.366.0> Peer discovery: temporary hidden node 'fluffle-4292-26484@sunnyside' queries properties from node 'fluffle@sunnyside'
+2025-12-02 07:01:56.720257-08:00 [debug] <0.363.0> Peer discovery: temporary hidden node 'fluffle-4292-26484@sunnyside' failed to connect to 'flopsy@host4': {erpc,noconnection}
+2025-12-02 07:01:57.724442-08:00 [debug] <0.364.0> Peer discovery: temporary hidden node 'fluffle-4292-26484@sunnyside' failed to connect to 'hare@host4': {erpc,noconnection}
+2025-12-02 07:01:58.729219-08:00 [debug] <0.365.0> Peer discovery: temporary hidden node 'fluffle-4292-26484@sunnyside' failed to connect to 'rabbit@host4': {erpc,noconnection}
+2025-12-02 07:01:59.730754-08:00 [debug] <0.366.0> Peer discovery: temporary hidden node 'fluffle-4292-26484@sunnyside' queries properties from node 'fluffle@host1'
 2025-12-02 07:01:59.731323-08:00 [debug] <0.208.0> Peer discovery: sorted list of nodes and their properties considered to create/sync the cluster:
-2025-12-02 07:01:59.731323-08:00 [debug] <0.208.0>   - {fluffle@sunnyside,[fluffle@sunnyside],1764687714816840,true}
+2025-12-02 07:01:59.731323-08:00 [debug] <0.208.0>   - {fluffle@host1,[fluffle@host1],1764687714816840,true}
 2025-12-02 07:01:59.732486-08:00 [debug] <0.208.0> Peer discovery: not satisfyied with discovered peers: the list should contain at least two nodes with a configured cluster size hint of 4 nodes
 2025-12-02 07:01:59.732542-08:00 [debug] <0.208.0> Peer discovery: retrying to create/sync cluster in 1000 ms (29 attempts left)
-2025-12-02 07:02:00.733026-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@klishinm-a01','hare@klishinm-a01','rabbit@klishinm-a01']
+2025-12-02 07:02:00.733026-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@host4','hare@host4','rabbit@host4']
 2025-12-02 07:02:00.733232-08:00 [debug] <0.208.0> Peer discovery: backend returned the following configuration:
-2025-12-02 07:02:00.733232-08:00 [debug] <0.208.0>   {ok,{[fluffle@sunnyside,'flopsy@klishinm-a01','hare@klishinm-a01',
-2025-12-02 07:02:00.733232-08:00 [debug] <0.208.0>         'rabbit@klishinm-a01'],
+2025-12-02 07:02:00.733232-08:00 [debug] <0.208.0>   {ok,{[fluffle@host1,'flopsy@host4','hare@host4',
+2025-12-02 07:02:00.733232-08:00 [debug] <0.208.0>         'rabbit@host4'],
 2025-12-02 07:02:00.733232-08:00 [debug] <0.208.0>        disc}}
 2025-12-02 07:02:00.733504-08:00 [debug] <0.208.0> Peer discovery: peer node arguments: #{args =>
 2025-12-02 07:02:00.733504-08:00 [debug] <0.208.0>                                            ["-boot","start_sasl","-hidden"],
@@ -1486,18 +1486,18 @@
 2025-12-02 07:02:00.733504-08:00 [debug] <0.208.0>                                        connection => standard_io,
 2025-12-02 07:02:00.733504-08:00 [debug] <0.208.0>                                        wait_boot => infinity}
 2025-12-02 07:02:00.900575-08:00 [debug] <0.208.0> Peer discovery: using temporary hidden node 'fluffle-98-26484@sunnyside' to query discovered peers properties
-2025-12-02 07:02:00.914374-08:00 [debug] <0.372.0> Peer discovery: temporary hidden node 'fluffle-98-26484@sunnyside' failed to connect to 'flopsy@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:01.918944-08:00 [debug] <0.373.0> Peer discovery: temporary hidden node 'fluffle-98-26484@sunnyside' failed to connect to 'hare@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:02.931040-08:00 [debug] <0.374.0> Peer discovery: temporary hidden node 'fluffle-98-26484@sunnyside' failed to connect to 'rabbit@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:03.932923-08:00 [debug] <0.375.0> Peer discovery: temporary hidden node 'fluffle-98-26484@sunnyside' queries properties from node 'fluffle@sunnyside'
+2025-12-02 07:02:00.914374-08:00 [debug] <0.372.0> Peer discovery: temporary hidden node 'fluffle-98-26484@sunnyside' failed to connect to 'flopsy@host4': {erpc,noconnection}
+2025-12-02 07:02:01.918944-08:00 [debug] <0.373.0> Peer discovery: temporary hidden node 'fluffle-98-26484@sunnyside' failed to connect to 'hare@host4': {erpc,noconnection}
+2025-12-02 07:02:02.931040-08:00 [debug] <0.374.0> Peer discovery: temporary hidden node 'fluffle-98-26484@sunnyside' failed to connect to 'rabbit@host4': {erpc,noconnection}
+2025-12-02 07:02:03.932923-08:00 [debug] <0.375.0> Peer discovery: temporary hidden node 'fluffle-98-26484@sunnyside' queries properties from node 'fluffle@host1'
 2025-12-02 07:02:03.943093-08:00 [debug] <0.208.0> Peer discovery: sorted list of nodes and their properties considered to create/sync the cluster:
-2025-12-02 07:02:03.943093-08:00 [debug] <0.208.0>   - {fluffle@sunnyside,[fluffle@sunnyside],1764687714816840,true}
+2025-12-02 07:02:03.943093-08:00 [debug] <0.208.0>   - {fluffle@host1,[fluffle@host1],1764687714816840,true}
 2025-12-02 07:02:03.943477-08:00 [debug] <0.208.0> Peer discovery: not satisfyied with discovered peers: the list should contain at least two nodes with a configured cluster size hint of 4 nodes
 2025-12-02 07:02:03.943532-08:00 [debug] <0.208.0> Peer discovery: retrying to create/sync cluster in 1000 ms (28 attempts left)
-2025-12-02 07:02:04.944061-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@klishinm-a01','hare@klishinm-a01','rabbit@klishinm-a01']
+2025-12-02 07:02:04.944061-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@host4','hare@host4','rabbit@host4']
 2025-12-02 07:02:04.944140-08:00 [debug] <0.208.0> Peer discovery: backend returned the following configuration:
-2025-12-02 07:02:04.944140-08:00 [debug] <0.208.0>   {ok,{[fluffle@sunnyside,'flopsy@klishinm-a01','hare@klishinm-a01',
-2025-12-02 07:02:04.944140-08:00 [debug] <0.208.0>         'rabbit@klishinm-a01'],
+2025-12-02 07:02:04.944140-08:00 [debug] <0.208.0>   {ok,{[fluffle@host1,'flopsy@host4','hare@host4',
+2025-12-02 07:02:04.944140-08:00 [debug] <0.208.0>         'rabbit@host4'],
 2025-12-02 07:02:04.944140-08:00 [debug] <0.208.0>        disc}}
 2025-12-02 07:02:04.944247-08:00 [debug] <0.208.0> Peer discovery: peer node arguments: #{args =>
 2025-12-02 07:02:04.944247-08:00 [debug] <0.208.0>                                            ["-boot","start_sasl","-hidden"],
@@ -1505,18 +1505,18 @@
 2025-12-02 07:02:04.944247-08:00 [debug] <0.208.0>                                        connection => standard_io,
 2025-12-02 07:02:04.944247-08:00 [debug] <0.208.0>                                        wait_boot => infinity}
 2025-12-02 07:02:05.083850-08:00 [debug] <0.208.0> Peer discovery: using temporary hidden node 'fluffle-130-26484@sunnyside' to query discovered peers properties
-2025-12-02 07:02:05.097054-08:00 [debug] <0.381.0> Peer discovery: temporary hidden node 'fluffle-130-26484@sunnyside' failed to connect to 'flopsy@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:06.111560-08:00 [debug] <0.382.0> Peer discovery: temporary hidden node 'fluffle-130-26484@sunnyside' failed to connect to 'hare@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:07.124466-08:00 [debug] <0.383.0> Peer discovery: temporary hidden node 'fluffle-130-26484@sunnyside' failed to connect to 'rabbit@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:08.125242-08:00 [debug] <0.384.0> Peer discovery: temporary hidden node 'fluffle-130-26484@sunnyside' queries properties from node 'fluffle@sunnyside'
+2025-12-02 07:02:05.097054-08:00 [debug] <0.381.0> Peer discovery: temporary hidden node 'fluffle-130-26484@sunnyside' failed to connect to 'flopsy@host4': {erpc,noconnection}
+2025-12-02 07:02:06.111560-08:00 [debug] <0.382.0> Peer discovery: temporary hidden node 'fluffle-130-26484@sunnyside' failed to connect to 'hare@host4': {erpc,noconnection}
+2025-12-02 07:02:07.124466-08:00 [debug] <0.383.0> Peer discovery: temporary hidden node 'fluffle-130-26484@sunnyside' failed to connect to 'rabbit@host4': {erpc,noconnection}
+2025-12-02 07:02:08.125242-08:00 [debug] <0.384.0> Peer discovery: temporary hidden node 'fluffle-130-26484@sunnyside' queries properties from node 'fluffle@host1'
 2025-12-02 07:02:08.126702-08:00 [debug] <0.208.0> Peer discovery: sorted list of nodes and their properties considered to create/sync the cluster:
-2025-12-02 07:02:08.126702-08:00 [debug] <0.208.0>   - {fluffle@sunnyside,[fluffle@sunnyside],1764687714816840,true}
+2025-12-02 07:02:08.126702-08:00 [debug] <0.208.0>   - {fluffle@host1,[fluffle@host1],1764687714816840,true}
 2025-12-02 07:02:08.129510-08:00 [debug] <0.208.0> Peer discovery: not satisfyied with discovered peers: the list should contain at least two nodes with a configured cluster size hint of 4 nodes
 2025-12-02 07:02:08.129611-08:00 [debug] <0.208.0> Peer discovery: retrying to create/sync cluster in 1000 ms (27 attempts left)
-2025-12-02 07:02:09.130033-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@klishinm-a01','hare@klishinm-a01','rabbit@klishinm-a01']
+2025-12-02 07:02:09.130033-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@host4','hare@host4','rabbit@host4']
 2025-12-02 07:02:09.130682-08:00 [debug] <0.208.0> Peer discovery: backend returned the following configuration:
-2025-12-02 07:02:09.130682-08:00 [debug] <0.208.0>   {ok,{[fluffle@sunnyside,'flopsy@klishinm-a01','hare@klishinm-a01',
-2025-12-02 07:02:09.130682-08:00 [debug] <0.208.0>         'rabbit@klishinm-a01'],
+2025-12-02 07:02:09.130682-08:00 [debug] <0.208.0>   {ok,{[fluffle@host1,'flopsy@host4','hare@host4',
+2025-12-02 07:02:09.130682-08:00 [debug] <0.208.0>         'rabbit@host4'],
 2025-12-02 07:02:09.130682-08:00 [debug] <0.208.0>        disc}}
 2025-12-02 07:02:09.131133-08:00 [debug] <0.208.0> Peer discovery: peer node arguments: #{args =>
 2025-12-02 07:02:09.131133-08:00 [debug] <0.208.0>                                            ["-boot","start_sasl","-hidden"],
@@ -1524,18 +1524,18 @@
 2025-12-02 07:02:09.131133-08:00 [debug] <0.208.0>                                        connection => standard_io,
 2025-12-02 07:02:09.131133-08:00 [debug] <0.208.0>                                        wait_boot => infinity}
 2025-12-02 07:02:09.276410-08:00 [debug] <0.208.0> Peer discovery: using temporary hidden node 'fluffle-101-26484@sunnyside' to query discovered peers properties
-2025-12-02 07:02:09.288513-08:00 [debug] <0.390.0> Peer discovery: temporary hidden node 'fluffle-101-26484@sunnyside' failed to connect to 'flopsy@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:10.292392-08:00 [debug] <0.391.0> Peer discovery: temporary hidden node 'fluffle-101-26484@sunnyside' failed to connect to 'hare@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:11.298296-08:00 [debug] <0.392.0> Peer discovery: temporary hidden node 'fluffle-101-26484@sunnyside' failed to connect to 'rabbit@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:12.313286-08:00 [debug] <0.393.0> Peer discovery: temporary hidden node 'fluffle-101-26484@sunnyside' queries properties from node 'fluffle@sunnyside'
+2025-12-02 07:02:09.288513-08:00 [debug] <0.390.0> Peer discovery: temporary hidden node 'fluffle-101-26484@sunnyside' failed to connect to 'flopsy@host4': {erpc,noconnection}
+2025-12-02 07:02:10.292392-08:00 [debug] <0.391.0> Peer discovery: temporary hidden node 'fluffle-101-26484@sunnyside' failed to connect to 'hare@host4': {erpc,noconnection}
+2025-12-02 07:02:11.298296-08:00 [debug] <0.392.0> Peer discovery: temporary hidden node 'fluffle-101-26484@sunnyside' failed to connect to 'rabbit@host4': {erpc,noconnection}
+2025-12-02 07:02:12.313286-08:00 [debug] <0.393.0> Peer discovery: temporary hidden node 'fluffle-101-26484@sunnyside' queries properties from node 'fluffle@host1'
 2025-12-02 07:02:12.313892-08:00 [debug] <0.208.0> Peer discovery: sorted list of nodes and their properties considered to create/sync the cluster:
-2025-12-02 07:02:12.313892-08:00 [debug] <0.208.0>   - {fluffle@sunnyside,[fluffle@sunnyside],1764687714816840,true}
+2025-12-02 07:02:12.313892-08:00 [debug] <0.208.0>   - {fluffle@host1,[fluffle@host1],1764687714816840,true}
 2025-12-02 07:02:12.314309-08:00 [debug] <0.208.0> Peer discovery: not satisfyied with discovered peers: the list should contain at least two nodes with a configured cluster size hint of 4 nodes
 2025-12-02 07:02:12.314359-08:00 [debug] <0.208.0> Peer discovery: retrying to create/sync cluster in 1000 ms (26 attempts left)
-2025-12-02 07:02:13.315190-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@klishinm-a01','hare@klishinm-a01','rabbit@klishinm-a01']
+2025-12-02 07:02:13.315190-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@host4','hare@host4','rabbit@host4']
 2025-12-02 07:02:13.315255-08:00 [debug] <0.208.0> Peer discovery: backend returned the following configuration:
-2025-12-02 07:02:13.315255-08:00 [debug] <0.208.0>   {ok,{[fluffle@sunnyside,'flopsy@klishinm-a01','hare@klishinm-a01',
-2025-12-02 07:02:13.315255-08:00 [debug] <0.208.0>         'rabbit@klishinm-a01'],
+2025-12-02 07:02:13.315255-08:00 [debug] <0.208.0>   {ok,{[fluffle@host1,'flopsy@host4','hare@host4',
+2025-12-02 07:02:13.315255-08:00 [debug] <0.208.0>         'rabbit@host4'],
 2025-12-02 07:02:13.315255-08:00 [debug] <0.208.0>        disc}}
 2025-12-02 07:02:13.315348-08:00 [debug] <0.208.0> Peer discovery: peer node arguments: #{args =>
 2025-12-02 07:02:13.315348-08:00 [debug] <0.208.0>                                            ["-boot","start_sasl","-hidden"],
@@ -1543,18 +1543,18 @@
 2025-12-02 07:02:13.315348-08:00 [debug] <0.208.0>                                        connection => standard_io,
 2025-12-02 07:02:13.315348-08:00 [debug] <0.208.0>                                        wait_boot => infinity}
 2025-12-02 07:02:13.448937-08:00 [debug] <0.208.0> Peer discovery: using temporary hidden node 'fluffle-162-26484@sunnyside' to query discovered peers properties
-2025-12-02 07:02:13.462240-08:00 [debug] <0.399.0> Peer discovery: temporary hidden node 'fluffle-162-26484@sunnyside' failed to connect to 'flopsy@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:14.467705-08:00 [debug] <0.400.0> Peer discovery: temporary hidden node 'fluffle-162-26484@sunnyside' failed to connect to 'hare@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:15.478865-08:00 [debug] <0.401.0> Peer discovery: temporary hidden node 'fluffle-162-26484@sunnyside' failed to connect to 'rabbit@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:16.489330-08:00 [debug] <0.402.0> Peer discovery: temporary hidden node 'fluffle-162-26484@sunnyside' queries properties from node 'fluffle@sunnyside'
+2025-12-02 07:02:13.462240-08:00 [debug] <0.399.0> Peer discovery: temporary hidden node 'fluffle-162-26484@sunnyside' failed to connect to 'flopsy@host4': {erpc,noconnection}
+2025-12-02 07:02:14.467705-08:00 [debug] <0.400.0> Peer discovery: temporary hidden node 'fluffle-162-26484@sunnyside' failed to connect to 'hare@host4': {erpc,noconnection}
+2025-12-02 07:02:15.478865-08:00 [debug] <0.401.0> Peer discovery: temporary hidden node 'fluffle-162-26484@sunnyside' failed to connect to 'rabbit@host4': {erpc,noconnection}
+2025-12-02 07:02:16.489330-08:00 [debug] <0.402.0> Peer discovery: temporary hidden node 'fluffle-162-26484@sunnyside' queries properties from node 'fluffle@host1'
 2025-12-02 07:02:16.489839-08:00 [debug] <0.208.0> Peer discovery: sorted list of nodes and their properties considered to create/sync the cluster:
-2025-12-02 07:02:16.489839-08:00 [debug] <0.208.0>   - {fluffle@sunnyside,[fluffle@sunnyside],1764687714816840,true}
+2025-12-02 07:02:16.489839-08:00 [debug] <0.208.0>   - {fluffle@host1,[fluffle@host1],1764687714816840,true}
 2025-12-02 07:02:16.490368-08:00 [debug] <0.208.0> Peer discovery: not satisfyied with discovered peers: the list should contain at least two nodes with a configured cluster size hint of 4 nodes
 2025-12-02 07:02:16.490408-08:00 [debug] <0.208.0> Peer discovery: retrying to create/sync cluster in 1000 ms (25 attempts left)
-2025-12-02 07:02:17.491364-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@klishinm-a01','hare@klishinm-a01','rabbit@klishinm-a01']
+2025-12-02 07:02:17.491364-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@host4','hare@host4','rabbit@host4']
 2025-12-02 07:02:17.491465-08:00 [debug] <0.208.0> Peer discovery: backend returned the following configuration:
-2025-12-02 07:02:17.491465-08:00 [debug] <0.208.0>   {ok,{[fluffle@sunnyside,'flopsy@klishinm-a01','hare@klishinm-a01',
-2025-12-02 07:02:17.491465-08:00 [debug] <0.208.0>         'rabbit@klishinm-a01'],
+2025-12-02 07:02:17.491465-08:00 [debug] <0.208.0>   {ok,{[fluffle@host1,'flopsy@host4','hare@host4',
+2025-12-02 07:02:17.491465-08:00 [debug] <0.208.0>         'rabbit@host4'],
 2025-12-02 07:02:17.491465-08:00 [debug] <0.208.0>        disc}}
 2025-12-02 07:02:17.491595-08:00 [debug] <0.208.0> Peer discovery: peer node arguments: #{args =>
 2025-12-02 07:02:17.491595-08:00 [debug] <0.208.0>                                            ["-boot","start_sasl","-hidden"],
@@ -1562,18 +1562,18 @@
 2025-12-02 07:02:17.491595-08:00 [debug] <0.208.0>                                        connection => standard_io,
 2025-12-02 07:02:17.491595-08:00 [debug] <0.208.0>                                        wait_boot => infinity}
 2025-12-02 07:02:17.649120-08:00 [debug] <0.208.0> Peer discovery: using temporary hidden node 'fluffle-197-26484@sunnyside' to query discovered peers properties
-2025-12-02 07:02:17.662545-08:00 [debug] <0.408.0> Peer discovery: temporary hidden node 'fluffle-197-26484@sunnyside' failed to connect to 'flopsy@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:18.670079-08:00 [debug] <0.409.0> Peer discovery: temporary hidden node 'fluffle-197-26484@sunnyside' failed to connect to 'hare@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:19.680075-08:00 [debug] <0.410.0> Peer discovery: temporary hidden node 'fluffle-197-26484@sunnyside' failed to connect to 'rabbit@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:20.682204-08:00 [debug] <0.411.0> Peer discovery: temporary hidden node 'fluffle-197-26484@sunnyside' queries properties from node 'fluffle@sunnyside'
+2025-12-02 07:02:17.662545-08:00 [debug] <0.408.0> Peer discovery: temporary hidden node 'fluffle-197-26484@sunnyside' failed to connect to 'flopsy@host4': {erpc,noconnection}
+2025-12-02 07:02:18.670079-08:00 [debug] <0.409.0> Peer discovery: temporary hidden node 'fluffle-197-26484@sunnyside' failed to connect to 'hare@host4': {erpc,noconnection}
+2025-12-02 07:02:19.680075-08:00 [debug] <0.410.0> Peer discovery: temporary hidden node 'fluffle-197-26484@sunnyside' failed to connect to 'rabbit@host4': {erpc,noconnection}
+2025-12-02 07:02:20.682204-08:00 [debug] <0.411.0> Peer discovery: temporary hidden node 'fluffle-197-26484@sunnyside' queries properties from node 'fluffle@host1'
 2025-12-02 07:02:20.682568-08:00 [debug] <0.208.0> Peer discovery: sorted list of nodes and their properties considered to create/sync the cluster:
-2025-12-02 07:02:20.682568-08:00 [debug] <0.208.0>   - {fluffle@sunnyside,[fluffle@sunnyside],1764687714816840,true}
+2025-12-02 07:02:20.682568-08:00 [debug] <0.208.0>   - {fluffle@host1,[fluffle@host1],1764687714816840,true}
 2025-12-02 07:02:20.682981-08:00 [debug] <0.208.0> Peer discovery: not satisfyied with discovered peers: the list should contain at least two nodes with a configured cluster size hint of 4 nodes
 2025-12-02 07:02:20.682999-08:00 [debug] <0.208.0> Peer discovery: retrying to create/sync cluster in 1000 ms (24 attempts left)
-2025-12-02 07:02:21.683214-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@klishinm-a01','hare@klishinm-a01','rabbit@klishinm-a01']
+2025-12-02 07:02:21.683214-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@host4','hare@host4','rabbit@host4']
 2025-12-02 07:02:21.683302-08:00 [debug] <0.208.0> Peer discovery: backend returned the following configuration:
-2025-12-02 07:02:21.683302-08:00 [debug] <0.208.0>   {ok,{[fluffle@sunnyside,'flopsy@klishinm-a01','hare@klishinm-a01',
-2025-12-02 07:02:21.683302-08:00 [debug] <0.208.0>         'rabbit@klishinm-a01'],
+2025-12-02 07:02:21.683302-08:00 [debug] <0.208.0>   {ok,{[fluffle@host1,'flopsy@host4','hare@host4',
+2025-12-02 07:02:21.683302-08:00 [debug] <0.208.0>         'rabbit@host4'],
 2025-12-02 07:02:21.683302-08:00 [debug] <0.208.0>        disc}}
 2025-12-02 07:02:21.683382-08:00 [debug] <0.208.0> Peer discovery: peer node arguments: #{args =>
 2025-12-02 07:02:21.683382-08:00 [debug] <0.208.0>                                            ["-boot","start_sasl","-hidden"],
@@ -1581,18 +1581,18 @@
 2025-12-02 07:02:21.683382-08:00 [debug] <0.208.0>                                        connection => standard_io,
 2025-12-02 07:02:21.683382-08:00 [debug] <0.208.0>                                        wait_boot => infinity}
 2025-12-02 07:02:21.815924-08:00 [debug] <0.208.0> Peer discovery: using temporary hidden node 'fluffle-261-26484@sunnyside' to query discovered peers properties
-2025-12-02 07:02:21.830600-08:00 [debug] <0.417.0> Peer discovery: temporary hidden node 'fluffle-261-26484@sunnyside' failed to connect to 'flopsy@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:22.834769-08:00 [debug] <0.418.0> Peer discovery: temporary hidden node 'fluffle-261-26484@sunnyside' failed to connect to 'hare@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:23.841074-08:00 [debug] <0.419.0> Peer discovery: temporary hidden node 'fluffle-261-26484@sunnyside' failed to connect to 'rabbit@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:24.842028-08:00 [debug] <0.420.0> Peer discovery: temporary hidden node 'fluffle-261-26484@sunnyside' queries properties from node 'fluffle@sunnyside'
+2025-12-02 07:02:21.830600-08:00 [debug] <0.417.0> Peer discovery: temporary hidden node 'fluffle-261-26484@sunnyside' failed to connect to 'flopsy@host4': {erpc,noconnection}
+2025-12-02 07:02:22.834769-08:00 [debug] <0.418.0> Peer discovery: temporary hidden node 'fluffle-261-26484@sunnyside' failed to connect to 'hare@host4': {erpc,noconnection}
+2025-12-02 07:02:23.841074-08:00 [debug] <0.419.0> Peer discovery: temporary hidden node 'fluffle-261-26484@sunnyside' failed to connect to 'rabbit@host4': {erpc,noconnection}
+2025-12-02 07:02:24.842028-08:00 [debug] <0.420.0> Peer discovery: temporary hidden node 'fluffle-261-26484@sunnyside' queries properties from node 'fluffle@host1'
 2025-12-02 07:02:24.842454-08:00 [debug] <0.208.0> Peer discovery: sorted list of nodes and their properties considered to create/sync the cluster:
-2025-12-02 07:02:24.842454-08:00 [debug] <0.208.0>   - {fluffle@sunnyside,[fluffle@sunnyside],1764687714816840,true}
+2025-12-02 07:02:24.842454-08:00 [debug] <0.208.0>   - {fluffle@host1,[fluffle@host1],1764687714816840,true}
 2025-12-02 07:02:24.842784-08:00 [debug] <0.208.0> Peer discovery: not satisfyied with discovered peers: the list should contain at least two nodes with a configured cluster size hint of 4 nodes
 2025-12-02 07:02:24.842827-08:00 [debug] <0.208.0> Peer discovery: retrying to create/sync cluster in 1000 ms (23 attempts left)
-2025-12-02 07:02:25.845145-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@klishinm-a01','hare@klishinm-a01','rabbit@klishinm-a01']
+2025-12-02 07:02:25.845145-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@host4','hare@host4','rabbit@host4']
 2025-12-02 07:02:25.845401-08:00 [debug] <0.208.0> Peer discovery: backend returned the following configuration:
-2025-12-02 07:02:25.845401-08:00 [debug] <0.208.0>   {ok,{[fluffle@sunnyside,'flopsy@klishinm-a01','hare@klishinm-a01',
-2025-12-02 07:02:25.845401-08:00 [debug] <0.208.0>         'rabbit@klishinm-a01'],
+2025-12-02 07:02:25.845401-08:00 [debug] <0.208.0>   {ok,{[fluffle@host1,'flopsy@host4','hare@host4',
+2025-12-02 07:02:25.845401-08:00 [debug] <0.208.0>         'rabbit@host4'],
 2025-12-02 07:02:25.845401-08:00 [debug] <0.208.0>        disc}}
 2025-12-02 07:02:25.845587-08:00 [debug] <0.208.0> Peer discovery: peer node arguments: #{args =>
 2025-12-02 07:02:25.845587-08:00 [debug] <0.208.0>                                            ["-boot","start_sasl","-hidden"],
@@ -1600,18 +1600,18 @@
 2025-12-02 07:02:25.845587-08:00 [debug] <0.208.0>                                        connection => standard_io,
 2025-12-02 07:02:25.845587-08:00 [debug] <0.208.0>                                        wait_boot => infinity}
 2025-12-02 07:02:25.998884-08:00 [debug] <0.208.0> Peer discovery: using temporary hidden node 'fluffle-325-26484@sunnyside' to query discovered peers properties
-2025-12-02 07:02:26.011947-08:00 [debug] <0.426.0> Peer discovery: temporary hidden node 'fluffle-325-26484@sunnyside' failed to connect to 'flopsy@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:27.018012-08:00 [debug] <0.427.0> Peer discovery: temporary hidden node 'fluffle-325-26484@sunnyside' failed to connect to 'hare@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:28.022202-08:00 [debug] <0.428.0> Peer discovery: temporary hidden node 'fluffle-325-26484@sunnyside' failed to connect to 'rabbit@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:29.023544-08:00 [debug] <0.429.0> Peer discovery: temporary hidden node 'fluffle-325-26484@sunnyside' queries properties from node 'fluffle@sunnyside'
+2025-12-02 07:02:26.011947-08:00 [debug] <0.426.0> Peer discovery: temporary hidden node 'fluffle-325-26484@sunnyside' failed to connect to 'flopsy@host4': {erpc,noconnection}
+2025-12-02 07:02:27.018012-08:00 [debug] <0.427.0> Peer discovery: temporary hidden node 'fluffle-325-26484@sunnyside' failed to connect to 'hare@host4': {erpc,noconnection}
+2025-12-02 07:02:28.022202-08:00 [debug] <0.428.0> Peer discovery: temporary hidden node 'fluffle-325-26484@sunnyside' failed to connect to 'rabbit@host4': {erpc,noconnection}
+2025-12-02 07:02:29.023544-08:00 [debug] <0.429.0> Peer discovery: temporary hidden node 'fluffle-325-26484@sunnyside' queries properties from node 'fluffle@host1'
 2025-12-02 07:02:29.025046-08:00 [debug] <0.208.0> Peer discovery: sorted list of nodes and their properties considered to create/sync the cluster:
-2025-12-02 07:02:29.025046-08:00 [debug] <0.208.0>   - {fluffle@sunnyside,[fluffle@sunnyside],1764687714816840,true}
+2025-12-02 07:02:29.025046-08:00 [debug] <0.208.0>   - {fluffle@host1,[fluffle@host1],1764687714816840,true}
 2025-12-02 07:02:29.037442-08:00 [debug] <0.208.0> Peer discovery: not satisfyied with discovered peers: the list should contain at least two nodes with a configured cluster size hint of 4 nodes
 2025-12-02 07:02:29.037583-08:00 [debug] <0.208.0> Peer discovery: retrying to create/sync cluster in 1000 ms (22 attempts left)
-2025-12-02 07:02:30.038385-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@klishinm-a01','hare@klishinm-a01','rabbit@klishinm-a01']
+2025-12-02 07:02:30.038385-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@host4','hare@host4','rabbit@host4']
 2025-12-02 07:02:30.038564-08:00 [debug] <0.208.0> Peer discovery: backend returned the following configuration:
-2025-12-02 07:02:30.038564-08:00 [debug] <0.208.0>   {ok,{[fluffle@sunnyside,'flopsy@klishinm-a01','hare@klishinm-a01',
-2025-12-02 07:02:30.038564-08:00 [debug] <0.208.0>         'rabbit@klishinm-a01'],
+2025-12-02 07:02:30.038564-08:00 [debug] <0.208.0>   {ok,{[fluffle@host1,'flopsy@host4','hare@host4',
+2025-12-02 07:02:30.038564-08:00 [debug] <0.208.0>         'rabbit@host4'],
 2025-12-02 07:02:30.038564-08:00 [debug] <0.208.0>        disc}}
 2025-12-02 07:02:30.038748-08:00 [debug] <0.208.0> Peer discovery: peer node arguments: #{args =>
 2025-12-02 07:02:30.038748-08:00 [debug] <0.208.0>                                            ["-boot","start_sasl","-hidden"],
@@ -1619,18 +1619,18 @@
 2025-12-02 07:02:30.038748-08:00 [debug] <0.208.0>                                        connection => standard_io,
 2025-12-02 07:02:30.038748-08:00 [debug] <0.208.0>                                        wait_boot => infinity}
 2025-12-02 07:02:30.292216-08:00 [debug] <0.208.0> Peer discovery: using temporary hidden node 'fluffle-389-26484@sunnyside' to query discovered peers properties
-2025-12-02 07:02:30.308213-08:00 [debug] <0.435.0> Peer discovery: temporary hidden node 'fluffle-389-26484@sunnyside' failed to connect to 'flopsy@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:31.316339-08:00 [debug] <0.436.0> Peer discovery: temporary hidden node 'fluffle-389-26484@sunnyside' failed to connect to 'hare@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:32.320179-08:00 [debug] <0.437.0> Peer discovery: temporary hidden node 'fluffle-389-26484@sunnyside' failed to connect to 'rabbit@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:33.327839-08:00 [debug] <0.438.0> Peer discovery: temporary hidden node 'fluffle-389-26484@sunnyside' queries properties from node 'fluffle@sunnyside'
+2025-12-02 07:02:30.308213-08:00 [debug] <0.435.0> Peer discovery: temporary hidden node 'fluffle-389-26484@sunnyside' failed to connect to 'flopsy@host4': {erpc,noconnection}
+2025-12-02 07:02:31.316339-08:00 [debug] <0.436.0> Peer discovery: temporary hidden node 'fluffle-389-26484@sunnyside' failed to connect to 'hare@host4': {erpc,noconnection}
+2025-12-02 07:02:32.320179-08:00 [debug] <0.437.0> Peer discovery: temporary hidden node 'fluffle-389-26484@sunnyside' failed to connect to 'rabbit@host4': {erpc,noconnection}
+2025-12-02 07:02:33.327839-08:00 [debug] <0.438.0> Peer discovery: temporary hidden node 'fluffle-389-26484@sunnyside' queries properties from node 'fluffle@host1'
 2025-12-02 07:02:33.334689-08:00 [debug] <0.208.0> Peer discovery: sorted list of nodes and their properties considered to create/sync the cluster:
-2025-12-02 07:02:33.334689-08:00 [debug] <0.208.0>   - {fluffle@sunnyside,[fluffle@sunnyside],1764687714816840,true}
+2025-12-02 07:02:33.334689-08:00 [debug] <0.208.0>   - {fluffle@host1,[fluffle@host1],1764687714816840,true}
 2025-12-02 07:02:33.337967-08:00 [debug] <0.208.0> Peer discovery: not satisfyied with discovered peers: the list should contain at least two nodes with a configured cluster size hint of 4 nodes
 2025-12-02 07:02:33.338089-08:00 [debug] <0.208.0> Peer discovery: retrying to create/sync cluster in 1000 ms (21 attempts left)
-2025-12-02 07:02:34.338324-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@klishinm-a01','hare@klishinm-a01','rabbit@klishinm-a01']
+2025-12-02 07:02:34.338324-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@host4','hare@host4','rabbit@host4']
 2025-12-02 07:02:34.338531-08:00 [debug] <0.208.0> Peer discovery: backend returned the following configuration:
-2025-12-02 07:02:34.338531-08:00 [debug] <0.208.0>   {ok,{[fluffle@sunnyside,'flopsy@klishinm-a01','hare@klishinm-a01',
-2025-12-02 07:02:34.338531-08:00 [debug] <0.208.0>         'rabbit@klishinm-a01'],
+2025-12-02 07:02:34.338531-08:00 [debug] <0.208.0>   {ok,{[fluffle@host1,'flopsy@host4','hare@host4',
+2025-12-02 07:02:34.338531-08:00 [debug] <0.208.0>         'rabbit@host4'],
 2025-12-02 07:02:34.338531-08:00 [debug] <0.208.0>        disc}}
 2025-12-02 07:02:34.338930-08:00 [debug] <0.208.0> Peer discovery: peer node arguments: #{args =>
 2025-12-02 07:02:34.338930-08:00 [debug] <0.208.0>                                            ["-boot","start_sasl","-hidden"],
@@ -1638,18 +1638,18 @@
 2025-12-02 07:02:34.338930-08:00 [debug] <0.208.0>                                        connection => standard_io,
 2025-12-02 07:02:34.338930-08:00 [debug] <0.208.0>                                        wait_boot => infinity}
 2025-12-02 07:02:34.479183-08:00 [debug] <0.208.0> Peer discovery: using temporary hidden node 'fluffle-453-26484@sunnyside' to query discovered peers properties
-2025-12-02 07:02:34.493574-08:00 [debug] <0.444.0> Peer discovery: temporary hidden node 'fluffle-453-26484@sunnyside' failed to connect to 'flopsy@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:35.499226-08:00 [debug] <0.445.0> Peer discovery: temporary hidden node 'fluffle-453-26484@sunnyside' failed to connect to 'hare@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:36.503482-08:00 [debug] <0.446.0> Peer discovery: temporary hidden node 'fluffle-453-26484@sunnyside' failed to connect to 'rabbit@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:37.509428-08:00 [debug] <0.447.0> Peer discovery: temporary hidden node 'fluffle-453-26484@sunnyside' queries properties from node 'fluffle@sunnyside'
+2025-12-02 07:02:34.493574-08:00 [debug] <0.444.0> Peer discovery: temporary hidden node 'fluffle-453-26484@sunnyside' failed to connect to 'flopsy@host4': {erpc,noconnection}
+2025-12-02 07:02:35.499226-08:00 [debug] <0.445.0> Peer discovery: temporary hidden node 'fluffle-453-26484@sunnyside' failed to connect to 'hare@host4': {erpc,noconnection}
+2025-12-02 07:02:36.503482-08:00 [debug] <0.446.0> Peer discovery: temporary hidden node 'fluffle-453-26484@sunnyside' failed to connect to 'rabbit@host4': {erpc,noconnection}
+2025-12-02 07:02:37.509428-08:00 [debug] <0.447.0> Peer discovery: temporary hidden node 'fluffle-453-26484@sunnyside' queries properties from node 'fluffle@host1'
 2025-12-02 07:02:37.517059-08:00 [debug] <0.208.0> Peer discovery: sorted list of nodes and their properties considered to create/sync the cluster:
-2025-12-02 07:02:37.517059-08:00 [debug] <0.208.0>   - {fluffle@sunnyside,[fluffle@sunnyside],1764687714816840,true}
+2025-12-02 07:02:37.517059-08:00 [debug] <0.208.0>   - {fluffle@host1,[fluffle@host1],1764687714816840,true}
 2025-12-02 07:02:37.517933-08:00 [debug] <0.208.0> Peer discovery: not satisfyied with discovered peers: the list should contain at least two nodes with a configured cluster size hint of 4 nodes
 2025-12-02 07:02:37.518023-08:00 [debug] <0.208.0> Peer discovery: retrying to create/sync cluster in 1000 ms (20 attempts left)
-2025-12-02 07:02:38.518581-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@klishinm-a01','hare@klishinm-a01','rabbit@klishinm-a01']
+2025-12-02 07:02:38.518581-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@host4','hare@host4','rabbit@host4']
 2025-12-02 07:02:38.518994-08:00 [debug] <0.208.0> Peer discovery: backend returned the following configuration:
-2025-12-02 07:02:38.518994-08:00 [debug] <0.208.0>   {ok,{[fluffle@sunnyside,'flopsy@klishinm-a01','hare@klishinm-a01',
-2025-12-02 07:02:38.518994-08:00 [debug] <0.208.0>         'rabbit@klishinm-a01'],
+2025-12-02 07:02:38.518994-08:00 [debug] <0.208.0>   {ok,{[fluffle@host1,'flopsy@host4','hare@host4',
+2025-12-02 07:02:38.518994-08:00 [debug] <0.208.0>         'rabbit@host4'],
 2025-12-02 07:02:38.518994-08:00 [debug] <0.208.0>        disc}}
 2025-12-02 07:02:38.519187-08:00 [debug] <0.208.0> Peer discovery: peer node arguments: #{args =>
 2025-12-02 07:02:38.519187-08:00 [debug] <0.208.0>                                            ["-boot","start_sasl","-hidden"],
@@ -1657,18 +1657,18 @@
 2025-12-02 07:02:38.519187-08:00 [debug] <0.208.0>                                        connection => standard_io,
 2025-12-02 07:02:38.519187-08:00 [debug] <0.208.0>                                        wait_boot => infinity}
 2025-12-02 07:02:38.662023-08:00 [debug] <0.208.0> Peer discovery: using temporary hidden node 'fluffle-517-26484@sunnyside' to query discovered peers properties
-2025-12-02 07:02:38.674538-08:00 [debug] <0.453.0> Peer discovery: temporary hidden node 'fluffle-517-26484@sunnyside' failed to connect to 'flopsy@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:39.679771-08:00 [debug] <0.454.0> Peer discovery: temporary hidden node 'fluffle-517-26484@sunnyside' failed to connect to 'hare@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:40.685286-08:00 [debug] <0.455.0> Peer discovery: temporary hidden node 'fluffle-517-26484@sunnyside' failed to connect to 'rabbit@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:41.687009-08:00 [debug] <0.456.0> Peer discovery: temporary hidden node 'fluffle-517-26484@sunnyside' queries properties from node 'fluffle@sunnyside'
+2025-12-02 07:02:38.674538-08:00 [debug] <0.453.0> Peer discovery: temporary hidden node 'fluffle-517-26484@sunnyside' failed to connect to 'flopsy@host4': {erpc,noconnection}
+2025-12-02 07:02:39.679771-08:00 [debug] <0.454.0> Peer discovery: temporary hidden node 'fluffle-517-26484@sunnyside' failed to connect to 'hare@host4': {erpc,noconnection}
+2025-12-02 07:02:40.685286-08:00 [debug] <0.455.0> Peer discovery: temporary hidden node 'fluffle-517-26484@sunnyside' failed to connect to 'rabbit@host4': {erpc,noconnection}
+2025-12-02 07:02:41.687009-08:00 [debug] <0.456.0> Peer discovery: temporary hidden node 'fluffle-517-26484@sunnyside' queries properties from node 'fluffle@host1'
 2025-12-02 07:02:41.689867-08:00 [debug] <0.208.0> Peer discovery: sorted list of nodes and their properties considered to create/sync the cluster:
-2025-12-02 07:02:41.689867-08:00 [debug] <0.208.0>   - {fluffle@sunnyside,[fluffle@sunnyside],1764687714816840,true}
+2025-12-02 07:02:41.689867-08:00 [debug] <0.208.0>   - {fluffle@host1,[fluffle@host1],1764687714816840,true}
 2025-12-02 07:02:41.690703-08:00 [debug] <0.208.0> Peer discovery: not satisfyied with discovered peers: the list should contain at least two nodes with a configured cluster size hint of 4 nodes
 2025-12-02 07:02:41.690758-08:00 [debug] <0.208.0> Peer discovery: retrying to create/sync cluster in 1000 ms (19 attempts left)
-2025-12-02 07:02:42.692513-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@klishinm-a01','hare@klishinm-a01','rabbit@klishinm-a01']
+2025-12-02 07:02:42.692513-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@host4','hare@host4','rabbit@host4']
 2025-12-02 07:02:42.692948-08:00 [debug] <0.208.0> Peer discovery: backend returned the following configuration:
-2025-12-02 07:02:42.692948-08:00 [debug] <0.208.0>   {ok,{[fluffle@sunnyside,'flopsy@klishinm-a01','hare@klishinm-a01',
-2025-12-02 07:02:42.692948-08:00 [debug] <0.208.0>         'rabbit@klishinm-a01'],
+2025-12-02 07:02:42.692948-08:00 [debug] <0.208.0>   {ok,{[fluffle@host1,'flopsy@host4','hare@host4',
+2025-12-02 07:02:42.692948-08:00 [debug] <0.208.0>         'rabbit@host4'],
 2025-12-02 07:02:42.692948-08:00 [debug] <0.208.0>        disc}}
 2025-12-02 07:02:42.693136-08:00 [debug] <0.208.0> Peer discovery: peer node arguments: #{args =>
 2025-12-02 07:02:42.693136-08:00 [debug] <0.208.0>                                            ["-boot","start_sasl","-hidden"],
@@ -1676,18 +1676,18 @@
 2025-12-02 07:02:42.693136-08:00 [debug] <0.208.0>                                        connection => standard_io,
 2025-12-02 07:02:42.693136-08:00 [debug] <0.208.0>                                        wait_boot => infinity}
 2025-12-02 07:02:42.830017-08:00 [debug] <0.208.0> Peer discovery: using temporary hidden node 'fluffle-4324-26484@sunnyside' to query discovered peers properties
-2025-12-02 07:02:42.854700-08:00 [debug] <0.462.0> Peer discovery: temporary hidden node 'fluffle-4324-26484@sunnyside' failed to connect to 'flopsy@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:43.859155-08:00 [debug] <0.463.0> Peer discovery: temporary hidden node 'fluffle-4324-26484@sunnyside' failed to connect to 'hare@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:44.863136-08:00 [debug] <0.464.0> Peer discovery: temporary hidden node 'fluffle-4324-26484@sunnyside' failed to connect to 'rabbit@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:45.864920-08:00 [debug] <0.465.0> Peer discovery: temporary hidden node 'fluffle-4324-26484@sunnyside' queries properties from node 'fluffle@sunnyside'
+2025-12-02 07:02:42.854700-08:00 [debug] <0.462.0> Peer discovery: temporary hidden node 'fluffle-4324-26484@sunnyside' failed to connect to 'flopsy@host4': {erpc,noconnection}
+2025-12-02 07:02:43.859155-08:00 [debug] <0.463.0> Peer discovery: temporary hidden node 'fluffle-4324-26484@sunnyside' failed to connect to 'hare@host4': {erpc,noconnection}
+2025-12-02 07:02:44.863136-08:00 [debug] <0.464.0> Peer discovery: temporary hidden node 'fluffle-4324-26484@sunnyside' failed to connect to 'rabbit@host4': {erpc,noconnection}
+2025-12-02 07:02:45.864920-08:00 [debug] <0.465.0> Peer discovery: temporary hidden node 'fluffle-4324-26484@sunnyside' queries properties from node 'fluffle@host1'
 2025-12-02 07:02:45.866166-08:00 [debug] <0.208.0> Peer discovery: sorted list of nodes and their properties considered to create/sync the cluster:
-2025-12-02 07:02:45.866166-08:00 [debug] <0.208.0>   - {fluffle@sunnyside,[fluffle@sunnyside],1764687714816840,true}
+2025-12-02 07:02:45.866166-08:00 [debug] <0.208.0>   - {fluffle@host1,[fluffle@host1],1764687714816840,true}
 2025-12-02 07:02:45.869290-08:00 [debug] <0.208.0> Peer discovery: not satisfyied with discovered peers: the list should contain at least two nodes with a configured cluster size hint of 4 nodes
 2025-12-02 07:02:45.869419-08:00 [debug] <0.208.0> Peer discovery: retrying to create/sync cluster in 1000 ms (18 attempts left)
-2025-12-02 07:02:46.870411-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@klishinm-a01','hare@klishinm-a01','rabbit@klishinm-a01']
+2025-12-02 07:02:46.870411-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@host4','hare@host4','rabbit@host4']
 2025-12-02 07:02:46.870516-08:00 [debug] <0.208.0> Peer discovery: backend returned the following configuration:
-2025-12-02 07:02:46.870516-08:00 [debug] <0.208.0>   {ok,{[fluffle@sunnyside,'flopsy@klishinm-a01','hare@klishinm-a01',
-2025-12-02 07:02:46.870516-08:00 [debug] <0.208.0>         'rabbit@klishinm-a01'],
+2025-12-02 07:02:46.870516-08:00 [debug] <0.208.0>   {ok,{[fluffle@host1,'flopsy@host4','hare@host4',
+2025-12-02 07:02:46.870516-08:00 [debug] <0.208.0>         'rabbit@host4'],
 2025-12-02 07:02:46.870516-08:00 [debug] <0.208.0>        disc}}
 2025-12-02 07:02:46.870647-08:00 [debug] <0.208.0> Peer discovery: peer node arguments: #{args =>
 2025-12-02 07:02:46.870647-08:00 [debug] <0.208.0>                                            ["-boot","start_sasl","-hidden"],
@@ -1695,18 +1695,18 @@
 2025-12-02 07:02:46.870647-08:00 [debug] <0.208.0>                                        connection => standard_io,
 2025-12-02 07:02:46.870647-08:00 [debug] <0.208.0>                                        wait_boot => infinity}
 2025-12-02 07:02:47.059745-08:00 [debug] <0.208.0> Peer discovery: using temporary hidden node 'fluffle-613-26484@sunnyside' to query discovered peers properties
-2025-12-02 07:02:47.073220-08:00 [debug] <0.471.0> Peer discovery: temporary hidden node 'fluffle-613-26484@sunnyside' failed to connect to 'flopsy@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:48.078536-08:00 [debug] <0.472.0> Peer discovery: temporary hidden node 'fluffle-613-26484@sunnyside' failed to connect to 'hare@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:49.082670-08:00 [debug] <0.473.0> Peer discovery: temporary hidden node 'fluffle-613-26484@sunnyside' failed to connect to 'rabbit@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:50.083682-08:00 [debug] <0.474.0> Peer discovery: temporary hidden node 'fluffle-613-26484@sunnyside' queries properties from node 'fluffle@sunnyside'
+2025-12-02 07:02:47.073220-08:00 [debug] <0.471.0> Peer discovery: temporary hidden node 'fluffle-613-26484@sunnyside' failed to connect to 'flopsy@host4': {erpc,noconnection}
+2025-12-02 07:02:48.078536-08:00 [debug] <0.472.0> Peer discovery: temporary hidden node 'fluffle-613-26484@sunnyside' failed to connect to 'hare@host4': {erpc,noconnection}
+2025-12-02 07:02:49.082670-08:00 [debug] <0.473.0> Peer discovery: temporary hidden node 'fluffle-613-26484@sunnyside' failed to connect to 'rabbit@host4': {erpc,noconnection}
+2025-12-02 07:02:50.083682-08:00 [debug] <0.474.0> Peer discovery: temporary hidden node 'fluffle-613-26484@sunnyside' queries properties from node 'fluffle@host1'
 2025-12-02 07:02:50.096266-08:00 [debug] <0.208.0> Peer discovery: sorted list of nodes and their properties considered to create/sync the cluster:
-2025-12-02 07:02:50.096266-08:00 [debug] <0.208.0>   - {fluffle@sunnyside,[fluffle@sunnyside],1764687714816840,true}
+2025-12-02 07:02:50.096266-08:00 [debug] <0.208.0>   - {fluffle@host1,[fluffle@host1],1764687714816840,true}
 2025-12-02 07:02:50.104576-08:00 [debug] <0.208.0> Peer discovery: not satisfyied with discovered peers: the list should contain at least two nodes with a configured cluster size hint of 4 nodes
 2025-12-02 07:02:50.104669-08:00 [debug] <0.208.0> Peer discovery: retrying to create/sync cluster in 1000 ms (17 attempts left)
-2025-12-02 07:02:51.105790-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@klishinm-a01','hare@klishinm-a01','rabbit@klishinm-a01']
+2025-12-02 07:02:51.105790-08:00 [warning] <0.208.0> Classic peer discovery backend: list of nodes does not contain the local node ['flopsy@host4','hare@host4','rabbit@host4']
 2025-12-02 07:02:51.106012-08:00 [debug] <0.208.0> Peer discovery: backend returned the following configuration:
-2025-12-02 07:02:51.106012-08:00 [debug] <0.208.0>   {ok,{[fluffle@sunnyside,'flopsy@klishinm-a01','hare@klishinm-a01',
-2025-12-02 07:02:51.106012-08:00 [debug] <0.208.0>         'rabbit@klishinm-a01'],
+2025-12-02 07:02:51.106012-08:00 [debug] <0.208.0>   {ok,{[fluffle@host1,'flopsy@host4','hare@host4',
+2025-12-02 07:02:51.106012-08:00 [debug] <0.208.0>         'rabbit@host4'],
 2025-12-02 07:02:51.106012-08:00 [debug] <0.208.0>        disc}}
 2025-12-02 07:02:51.106765-08:00 [debug] <0.208.0> Peer discovery: peer node arguments: #{args =>
 2025-12-02 07:02:51.106765-08:00 [debug] <0.208.0>                                            ["-boot","start_sasl","-hidden"],
@@ -1714,17 +1714,17 @@
 2025-12-02 07:02:51.106765-08:00 [debug] <0.208.0>                                        connection => standard_io,
 2025-12-02 07:02:51.106765-08:00 [debug] <0.208.0>                                        wait_boot => infinity}
 2025-12-02 07:02:51.249335-08:00 [debug] <0.208.0> Peer discovery: using temporary hidden node 'fluffle-4356-26484@sunnyside' to query discovered peers properties
-2025-12-02 07:02:51.262941-08:00 [debug] <0.480.0> Peer discovery: temporary hidden node 'fluffle-4356-26484@sunnyside' failed to connect to 'flopsy@klishinm-a01': {erpc,noconnection}
-2025-12-02 07:02:52.268565-08:00 [debug] <0.481.0> Peer discovery: temporary hidden node 'fluffle-4356-26484@sunnyside' failed to connect to 'hare@klishinm-a01': {erpc,noconnection}
+2025-12-02 07:02:51.262941-08:00 [debug] <0.480.0> Peer discovery: temporary hidden node 'fluffle-4356-26484@sunnyside' failed to connect to 'flopsy@host4': {erpc,noconnection}
+2025-12-02 07:02:52.268565-08:00 [debug] <0.481.0> Peer discovery: temporary hidden node 'fluffle-4356-26484@sunnyside' failed to connect to 'hare@host4': {erpc,noconnection}
 2025-12-02 07:02:52.417222-08:00 [notice] <0.63.0> SIGTERM received - shutting down
 2025-12-02 07:02:52.417222-08:00 [notice] <0.63.0> 
 2025-12-02 07:02:52.417349-08:00 [debug] <0.45.0> Running rabbit_prelaunch:shutdown_func() as part of `kernel` shutdown
-2025-12-02 07:02:52.417378-08:00 [debug] <0.45.0> Deleting PID file: /Users/antares/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/fluffle@sunnyside.pid
-2025-12-02 07:02:52.418995-08:00 [debug] <0.199.0> Stopping member {rabbitmq_metadata,fluffle@sunnyside} in store "rabbitmq_metadata"
+2025-12-02 07:02:52.417378-08:00 [debug] <0.45.0> Deleting PID file: /data/path1@host5
+2025-12-02 07:02:52.418995-08:00 [debug] <0.199.0> Stopping member {rabbitmq_metadata,fluffle@host1} in store "rabbitmq_metadata"
 2025-12-02 07:02:52.419193-08:00 [debug] <0.246.0> RabbitMQ metadata store: terminating with shutdown in state leader
 2025-12-02 07:02:52.419234-08:00 [debug] <0.246.0> RabbitMQ metadata store: terminating with reason 'shutdown'
-2025-12-02 07:02:52.419425-08:00 [debug] <0.199.0> Wait for Ra server {rabbitmq_metadata,fluffle@sunnyside} to exit in store "rabbitmq_metadata"
-2025-12-02 07:02:52.419465-08:00 [debug] <0.199.0> Ra server {rabbitmq_metadata,fluffle@sunnyside} ({rabbitmq_metadata,fluffle@sunnyside}) in store "rabbitmq_metadata" already exited
+2025-12-02 07:02:52.419425-08:00 [debug] <0.199.0> Wait for Ra server {rabbitmq_metadata,fluffle@host1} to exit in store "rabbitmq_metadata"
+2025-12-02 07:02:52.419465-08:00 [debug] <0.199.0> Ra server {rabbitmq_metadata,fluffle@host1} ({rabbitmq_metadata,fluffle@host1}) in store "rabbitmq_metadata" already exited
 2025-12-02 07:02:52.425464-08:00 [debug] <0.242.0> wal: terminating with shutdown
 2025-12-02 07:02:52.426853-08:00 [debug] <0.237.0> ra: meta data store is terminating
 2025-12-02 07:02:52.427088-08:00 [debug] <0.232.0> ra_log_ets: terminating with shutdown

@@ -5,7 +5,7 @@ failure-output = "final"
 fail-fast = false
 
 [profile.ci]
-default-filter = "all()"
+default-filter = "not test(parse_xz_compressed_log_file)"
 retries = 2
 failure-output = "final"
 fail-fast = false

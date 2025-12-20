@@ -56,6 +56,38 @@ pub fn fixture_log_path_flopsy() -> PathBuf {
         .join("rabbit@fixture4.log")
 }
 
+pub fn fixture_log_path_gzip() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join("compressed")
+        .join("rabbit@fixture3.log.gz")
+}
+
+pub fn fixture_log_path_xz() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join("compressed")
+        .join("rabbit@hostname010.eng.megacorp.local.log.xz")
+}
+
+pub fn fixture_tar_gz_path() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join("compressed")
+        .join("fixtures12.log.tar.gz")
+}
+
+pub fn fixture_tar_xz_path() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join("compressed")
+        .join("fixtures34.log.tar.xz")
+}
+
 pub fn parse_log_to_db(log_path: &str, db_path: &str) -> Result<(), Box<dyn Error>> {
     cargo_bin_cmd!("rabbitmq-lqt")
         .args([

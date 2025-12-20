@@ -109,3 +109,24 @@ fn test_no_match_unrelated() {
     let labels = annotate_labels(&entry);
     assert!(!labels.contains(LogEntryLabels::ACCESS_CONTROL));
 }
+
+#[test]
+fn test_ldap_searching_for_dn() {
+    let entry = create_test_entry(
+        "Searching for DN for americas\\svc_prdrabbitmqadm, got back []",
+        Severity::Warning,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::ACCESS_CONTROL));
+    assert!(labels.contains(LogEntryLabels::PLUGINS));
+}
+
+#[test]
+fn test_successfully_set_user_tags() {
+    let entry = create_test_entry(
+        "Successfully set user tags for user 'guest' to [administrator]",
+        Severity::Info,
+    );
+    let labels = annotate_labels(&entry);
+    assert!(labels.contains(LogEntryLabels::ACCESS_CONTROL));
+}

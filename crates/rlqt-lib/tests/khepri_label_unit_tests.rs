@@ -55,4 +55,5 @@ fn test_khepri_mnesia_migration() {
     );
     let labels = annotate_labels(&entry);
     assert!(labels.contains(LogEntryLabels::KHEPRI));
+    assert!(labels.contains(LogEntryLabels::MNESIA));
 }

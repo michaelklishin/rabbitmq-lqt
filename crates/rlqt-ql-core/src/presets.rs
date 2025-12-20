@@ -29,6 +29,7 @@ pub enum PresetName {
     TlsIssues,
     AccessDenied,
     Timeouts,
+    RaftAndQuorumQueues,
 }
 
 impl PresetName {
@@ -41,6 +42,7 @@ impl PresetName {
             Self::TlsIssues => "tls_issues",
             Self::AccessDenied => "access_denied",
             Self::Timeouts => "timeouts",
+            Self::RaftAndQuorumQueues => "raft_and_quorum_queues",
         }
     }
 
@@ -55,6 +57,9 @@ impl PresetName {
             Self::TlsIssues => r#"labels any ["tls"]"#,
             Self::AccessDenied => r#"labels any ["access_control"]"#,
             Self::Timeouts => r#"labels any ["timeouts"]"#,
+            Self::RaftAndQuorumQueues => {
+                r#"labels any ["raft", "quorum_queues", "elections"] or subsystem any ["raft", "metadata_store"]"#
+            }
         }
     }
 
@@ -64,9 +69,12 @@ impl PresetName {
             Self::Crashes => "Erlang process crashes, exceptions, and undefined function calls",
             Self::ErrorsOrCrashes => "Errors or crashes (combination of :errors and :crashes)",
             Self::Disconnects => "Client disconnections and connection-related events",
-            Self::TlsIssues => "TLS/SSL related issues",
+            Self::TlsIssues => "TLS-related issues",
             Self::AccessDenied => "Access control failures and permission denied events",
             Self::Timeouts => "Timeout-related events",
+            Self::RaftAndQuorumQueues => {
+                "Raft consensus, quorum queues, elections, and metadata store events"
+            }
         }
     }
 
@@ -84,6 +92,7 @@ impl PresetName {
             Self::TlsIssues,
             Self::AccessDenied,
             Self::Timeouts,
+            Self::RaftAndQuorumQueues,
         ]
     }
 }
@@ -100,6 +109,7 @@ impl FromStr for PresetName {
             "tls_issues" | "tls" => Ok(Self::TlsIssues),
             "access_denied" | "access_control" => Ok(Self::AccessDenied),
             "timeouts" => Ok(Self::Timeouts),
+            "raft_and_quorum_queues" | "raft" | "quorum_queues" => Ok(Self::RaftAndQuorumQueues),
             _ => Err(ParseError::unknown_preset(s)),
         }
     }

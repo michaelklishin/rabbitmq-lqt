@@ -24,14 +24,14 @@ pub struct ObfuscatedString {
 }
 
 impl ObfuscatedString {
-    fn original(value: String) -> Self {
+    fn changed(value: String) -> Self {
         Self {
             value,
             was_obfuscated: true,
         }
     }
 
-    fn already(value: String) -> Self {
+    fn unchanged(value: String) -> Self {
         Self {
             value,
             was_obfuscated: false,
@@ -39,54 +39,60 @@ impl ObfuscatedString {
     }
 }
 
+/// Checks if the suffix after a prefix consists of at least one ASCII digit
+fn has_numeric_suffix(s: &str, prefix: &str) -> bool {
+    s.strip_prefix(prefix)
+        .is_some_and(|suffix| !suffix.is_empty() && suffix.chars().all(|c| c.is_ascii_digit()))
+}
+
 /// Checks if a hostname looks like it was already obfuscated (e.g., "host1", "host42")
 fn is_obfuscated_hostname(hostname: &str) -> bool {
-    hostname.starts_with("host")
-        && hostname.len() > 4
-        && hostname[4..].chars().all(|c| c.is_ascii_digit())
+    has_numeric_suffix(hostname, "host")
 }
 
 /// Checks if a queue name looks like it was already obfuscated (e.g., "queue1", "queue42")
 fn is_obfuscated_queue(queue: &str) -> bool {
-    queue.starts_with("queue") && queue.len() > 5 && queue[5..].chars().all(|c| c.is_ascii_digit())
+    has_numeric_suffix(queue, "queue")
 }
 
 /// Checks if a username looks like it was already obfuscated (e.g., "user1", "user42")
 fn is_obfuscated_username(username: &str) -> bool {
-    username.starts_with("user")
-        && username.len() > 4
-        && username[4..].chars().all(|c| c.is_ascii_digit())
+    has_numeric_suffix(username, "user")
 }
 
 /// Checks if a vhost looks like it was already obfuscated (e.g., "vhost1", "vhost42")
 fn is_obfuscated_vhost(vhost: &str) -> bool {
-    vhost.starts_with("vhost") && vhost.len() > 5 && vhost[5..].chars().all(|c| c.is_ascii_digit())
+    has_numeric_suffix(vhost, "vhost")
 }
 
 /// Checks if an exchange looks like it was already obfuscated (e.g., "exchange1", "exchange42")
 fn is_obfuscated_exchange(exchange: &str) -> bool {
-    exchange.starts_with("exchange")
-        && exchange.len() > 8
-        && exchange[8..].chars().all(|c| c.is_ascii_digit())
+    has_numeric_suffix(exchange, "exchange")
 }
 
 /// Checks if a stream looks like it was already obfuscated (e.g., "stream1", "stream42")
 fn is_obfuscated_stream(stream: &str) -> bool {
-    stream.starts_with("stream")
-        && stream.len() > 6
-        && stream[6..].chars().all(|c| c.is_ascii_digit())
+    has_numeric_suffix(stream, "stream")
 }
 
 /// Checks if a policy looks like it was already obfuscated (e.g., "policy1", "policy42")
 fn is_obfuscated_policy(policy: &str) -> bool {
-    policy.starts_with("policy")
-        && policy.len() > 6
-        && policy[6..].chars().all(|c| c.is_ascii_digit())
+    has_numeric_suffix(policy, "policy")
+}
+
+/// Checks if an upstream looks like it was already obfuscated (e.g., "upstream1", "upstream42")
+fn is_obfuscated_upstream(upstream: &str) -> bool {
+    has_numeric_suffix(upstream, "upstream")
+}
+
+/// Checks if a shovel looks like it was already obfuscated (e.g., "shovel1", "shovel42")
+fn is_obfuscated_shovel(shovel: &str) -> bool {
+    has_numeric_suffix(shovel, "shovel")
 }
 
 /// Checks if a directory looks like it was already obfuscated (e.g., "/data/path1", "/data/path42")
 fn is_obfuscated_directory(dir: &str) -> bool {
-    dir.starts_with("/data/path") && dir.len() > 10 && dir[10..].chars().all(|c| c.is_ascii_digit())
+    has_numeric_suffix(dir, "/data/path")
 }
 
 /// Checks if an IPv4 address looks like it was already obfuscated (e.g., "10.0.0.1", "10.0.1.255")
@@ -99,6 +105,20 @@ fn is_obfuscated_ipv6(ip: &str) -> bool {
     ip.starts_with("fd00::")
 }
 
+/// Formats a keyword-value replacement preserving the original quote style and separator.
+/// Handles patterns like: `keyword 'value'`, `keyword "value"`, `keyword: 'value'`, `keyword: "value"`
+fn format_quoted_replacement(full_str: &str, keyword: &str, value: &str) -> String {
+    if full_str.contains(": '") {
+        format!("{}: '{}'", keyword, value)
+    } else if full_str.contains(": \"") {
+        format!("{}: \"{}\"", keyword, value)
+    } else if full_str.contains(" '") {
+        format!("{} '{}'", keyword, value)
+    } else {
+        format!("{} \"{}\"", keyword, value)
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct ObfuscationStats {
     pub hostnames_obfuscated: usize,
@@ -109,6 +129,8 @@ pub struct ObfuscationStats {
     pub exchanges_obfuscated: usize,
     pub streams_obfuscated: usize,
     pub policies_obfuscated: usize,
+    pub upstreams_obfuscated: usize,
+    pub shovels_obfuscated: usize,
     pub ipv4_addresses_obfuscated: usize,
     pub ipv6_addresses_obfuscated: usize,
 }
@@ -122,6 +144,8 @@ pub struct LogObfuscator {
     exchange_map: HashMap<String, String>,
     stream_map: HashMap<String, String>,
     policy_map: HashMap<String, String>,
+    upstream_map: HashMap<String, String>,
+    shovel_map: HashMap<String, String>,
     ipv4_map: HashMap<String, String>,
     ipv6_map: HashMap<String, String>,
 
@@ -133,6 +157,8 @@ pub struct LogObfuscator {
     exchange_counter: usize,
     stream_counter: usize,
     policy_counter: usize,
+    upstream_counter: usize,
+    shovel_counter: usize,
     ipv4_counter: usize,
     ipv6_counter: usize,
 
@@ -146,6 +172,10 @@ pub struct LogObfuscator {
     exchange_pattern_re: Regex,
     stream_pattern_re: Regex,
     policy_pattern_re: Regex,
+    federation_link_re: Regex,
+    shovel_connection_re: Regex,
+    shovel_quoted_re: Regex,
+    shovel_erlang_binary_re: Regex,
     erlang_queue_tuple_re: Regex,
 
     stats: ObfuscationStats,
@@ -162,6 +192,8 @@ impl LogObfuscator {
             exchange_map: HashMap::new(),
             stream_map: HashMap::new(),
             policy_map: HashMap::new(),
+            upstream_map: HashMap::new(),
+            shovel_map: HashMap::new(),
             ipv4_map: HashMap::new(),
             ipv6_map: HashMap::new(),
 
@@ -173,6 +205,8 @@ impl LogObfuscator {
             exchange_counter: 0,
             stream_counter: 0,
             policy_counter: 0,
+            upstream_counter: 0,
+            shovel_counter: 0,
             ipv4_counter: 0,
             ipv6_counter: 0,
 
@@ -211,6 +245,25 @@ impl LogObfuscator {
             // Matches policy patterns like: policy 'name', Policy 'name'
             policy_pattern_re: Regex::new(r#"(?i)policy[:\s]+['"]([^'"]+)['"]"#).unwrap(),
 
+            // Matches federation link patterns like:
+            // Federation link (upstream: name, policy: name)
+            federation_link_re: Regex::new(
+                r"Federation link \(upstream: ([^,]+), policy: ([^)]+)\)",
+            )
+            .unwrap(),
+
+            // Matches shovel connection name patterns like:
+            // Shovel name: (without quotes, in connection descriptions)
+            shovel_connection_re: Regex::new(r"Shovel ([a-zA-Z0-9._-]+):").unwrap(),
+
+            // Matches quoted shovel name patterns like:
+            // Shovel 'name' connected, Shovel 'name' in virtual host
+            shovel_quoted_re: Regex::new(r"Shovel '([^']+)'").unwrap(),
+
+            // Matches Erlang binary shovel name patterns like:
+            // Shovel <<"name">> received a 'basic.cancel'
+            shovel_erlang_binary_re: Regex::new(r#"Shovel <<"([^"]+)">>"#).unwrap(),
+
             // Matches Erlang tuples containing queue names and node names like:
             // {'QueueName','rabbit@host'} in quorum queue Raft log messages
             erlang_queue_tuple_re: Regex::new(
@@ -228,151 +281,185 @@ impl LogObfuscator {
 
     fn get_or_create_hostname(&mut self, hostname: &str) -> ObfuscatedString {
         if is_obfuscated_hostname(hostname) {
-            return ObfuscatedString::already(hostname.to_string());
+            return ObfuscatedString::unchanged(hostname.to_string());
         }
 
         match self.hostname_map.entry(hostname.to_string()) {
-            Entry::Occupied(e) => ObfuscatedString::original(e.get().clone()),
+            Entry::Occupied(e) => ObfuscatedString::changed(e.get().clone()),
             Entry::Vacant(e) => {
                 self.hostname_counter += 1;
                 self.stats.hostnames_obfuscated += 1;
                 let value = format!("host{}", self.hostname_counter);
                 e.insert(value.clone());
-                ObfuscatedString::original(value)
+                ObfuscatedString::changed(value)
             }
         }
     }
 
     fn get_or_create_directory(&mut self, dir: &str) -> ObfuscatedString {
         if is_obfuscated_directory(dir) {
-            return ObfuscatedString::already(dir.to_string());
+            return ObfuscatedString::unchanged(dir.to_string());
         }
 
         match self.directory_map.entry(dir.to_string()) {
-            Entry::Occupied(e) => ObfuscatedString::original(e.get().clone()),
+            Entry::Occupied(e) => ObfuscatedString::changed(e.get().clone()),
             Entry::Vacant(e) => {
                 self.directory_counter += 1;
                 self.stats.directories_obfuscated += 1;
                 let value = format!("/data/path{}", self.directory_counter);
                 e.insert(value.clone());
-                ObfuscatedString::original(value)
+                ObfuscatedString::changed(value)
             }
         }
     }
 
     fn get_or_create_username(&mut self, username: &str) -> ObfuscatedString {
         if is_obfuscated_username(username) {
-            return ObfuscatedString::already(username.to_string());
+            return ObfuscatedString::unchanged(username.to_string());
         }
 
         match self.username_map.entry(username.to_string()) {
-            Entry::Occupied(e) => ObfuscatedString::original(e.get().clone()),
+            Entry::Occupied(e) => ObfuscatedString::changed(e.get().clone()),
             Entry::Vacant(e) => {
                 self.username_counter += 1;
                 self.stats.usernames_obfuscated += 1;
                 let value = format!("user{}", self.username_counter);
                 e.insert(value.clone());
-                ObfuscatedString::original(value)
+                ObfuscatedString::changed(value)
             }
         }
     }
 
     fn get_or_create_vhost(&mut self, vhost: &str) -> ObfuscatedString {
         if is_obfuscated_vhost(vhost) {
-            return ObfuscatedString::already(vhost.to_string());
+            return ObfuscatedString::unchanged(vhost.to_string());
         }
 
         match self.vhost_map.entry(vhost.to_string()) {
-            Entry::Occupied(e) => ObfuscatedString::original(e.get().clone()),
+            Entry::Occupied(e) => ObfuscatedString::changed(e.get().clone()),
             Entry::Vacant(e) => {
                 self.vhost_counter += 1;
                 self.stats.vhosts_obfuscated += 1;
                 let value = format!("vhost{}", self.vhost_counter);
                 e.insert(value.clone());
-                ObfuscatedString::original(value)
+                ObfuscatedString::changed(value)
             }
         }
     }
 
     fn get_or_create_queue(&mut self, queue: &str) -> ObfuscatedString {
         if is_obfuscated_queue(queue) {
-            return ObfuscatedString::already(queue.to_string());
+            return ObfuscatedString::unchanged(queue.to_string());
         }
 
         match self.queue_map.entry(queue.to_string()) {
-            Entry::Occupied(e) => ObfuscatedString::original(e.get().clone()),
+            Entry::Occupied(e) => ObfuscatedString::changed(e.get().clone()),
             Entry::Vacant(e) => {
                 self.queue_counter += 1;
                 self.stats.queues_obfuscated += 1;
                 let value = format!("queue{}", self.queue_counter);
                 e.insert(value.clone());
-                ObfuscatedString::original(value)
+                ObfuscatedString::changed(value)
             }
         }
     }
 
     fn get_or_create_exchange(&mut self, exchange: &str) -> ObfuscatedString {
         if is_obfuscated_exchange(exchange) {
-            return ObfuscatedString::already(exchange.to_string());
+            return ObfuscatedString::unchanged(exchange.to_string());
         }
 
         match self.exchange_map.entry(exchange.to_string()) {
-            Entry::Occupied(e) => ObfuscatedString::original(e.get().clone()),
+            Entry::Occupied(e) => ObfuscatedString::changed(e.get().clone()),
             Entry::Vacant(e) => {
                 self.exchange_counter += 1;
                 self.stats.exchanges_obfuscated += 1;
                 let value = format!("exchange{}", self.exchange_counter);
                 e.insert(value.clone());
-                ObfuscatedString::original(value)
+                ObfuscatedString::changed(value)
             }
         }
     }
 
     fn get_or_create_stream(&mut self, stream: &str) -> ObfuscatedString {
         if is_obfuscated_stream(stream) {
-            return ObfuscatedString::already(stream.to_string());
+            return ObfuscatedString::unchanged(stream.to_string());
         }
 
         match self.stream_map.entry(stream.to_string()) {
-            Entry::Occupied(e) => ObfuscatedString::original(e.get().clone()),
+            Entry::Occupied(e) => ObfuscatedString::changed(e.get().clone()),
             Entry::Vacant(e) => {
                 self.stream_counter += 1;
                 self.stats.streams_obfuscated += 1;
                 let value = format!("stream{}", self.stream_counter);
                 e.insert(value.clone());
-                ObfuscatedString::original(value)
+                ObfuscatedString::changed(value)
             }
         }
     }
 
     fn get_or_create_policy(&mut self, policy: &str) -> ObfuscatedString {
         if is_obfuscated_policy(policy) {
-            return ObfuscatedString::already(policy.to_string());
+            return ObfuscatedString::unchanged(policy.to_string());
         }
 
         match self.policy_map.entry(policy.to_string()) {
-            Entry::Occupied(e) => ObfuscatedString::original(e.get().clone()),
+            Entry::Occupied(e) => ObfuscatedString::changed(e.get().clone()),
             Entry::Vacant(e) => {
                 self.policy_counter += 1;
                 self.stats.policies_obfuscated += 1;
                 let value = format!("policy{}", self.policy_counter);
                 e.insert(value.clone());
-                ObfuscatedString::original(value)
+                ObfuscatedString::changed(value)
+            }
+        }
+    }
+
+    fn get_or_create_upstream(&mut self, upstream: &str) -> ObfuscatedString {
+        if is_obfuscated_upstream(upstream) {
+            return ObfuscatedString::unchanged(upstream.to_string());
+        }
+
+        match self.upstream_map.entry(upstream.to_string()) {
+            Entry::Occupied(e) => ObfuscatedString::changed(e.get().clone()),
+            Entry::Vacant(e) => {
+                self.upstream_counter += 1;
+                self.stats.upstreams_obfuscated += 1;
+                let value = format!("upstream{}", self.upstream_counter);
+                e.insert(value.clone());
+                ObfuscatedString::changed(value)
+            }
+        }
+    }
+
+    fn get_or_create_shovel(&mut self, shovel: &str) -> ObfuscatedString {
+        if is_obfuscated_shovel(shovel) {
+            return ObfuscatedString::unchanged(shovel.to_string());
+        }
+
+        match self.shovel_map.entry(shovel.to_string()) {
+            Entry::Occupied(e) => ObfuscatedString::changed(e.get().clone()),
+            Entry::Vacant(e) => {
+                self.shovel_counter += 1;
+                self.stats.shovels_obfuscated += 1;
+                let value = format!("shovel{}", self.shovel_counter);
+                e.insert(value.clone());
+                ObfuscatedString::changed(value)
             }
         }
     }
 
     fn get_or_create_ipv4(&mut self, ip: &str) -> ObfuscatedString {
         if ip == "0.0.0.0" {
-            return ObfuscatedString::already("0.0.0.0".to_string());
+            return ObfuscatedString::unchanged("0.0.0.0".to_string());
         }
 
         if is_obfuscated_ipv4(ip) {
-            return ObfuscatedString::already(ip.to_string());
+            return ObfuscatedString::unchanged(ip.to_string());
         }
 
         match self.ipv4_map.entry(ip.to_string()) {
-            Entry::Occupied(e) => ObfuscatedString::original(e.get().clone()),
+            Entry::Occupied(e) => ObfuscatedString::changed(e.get().clone()),
             Entry::Vacant(e) => {
                 self.ipv4_counter += 1;
                 self.stats.ipv4_addresses_obfuscated += 1;
@@ -380,24 +467,24 @@ impl LogObfuscator {
                 let octet3 = (self.ipv4_counter - 1) / 255;
                 let value = format!("10.0.{}.{}", octet3, octet4);
                 e.insert(value.clone());
-                ObfuscatedString::original(value)
+                ObfuscatedString::changed(value)
             }
         }
     }
 
     fn get_or_create_ipv6(&mut self, ip: &str) -> ObfuscatedString {
         if is_obfuscated_ipv6(ip) {
-            return ObfuscatedString::already(ip.to_string());
+            return ObfuscatedString::unchanged(ip.to_string());
         }
 
         match self.ipv6_map.entry(ip.to_string()) {
-            Entry::Occupied(e) => ObfuscatedString::original(e.get().clone()),
+            Entry::Occupied(e) => ObfuscatedString::changed(e.get().clone()),
             Entry::Vacant(e) => {
                 self.ipv6_counter += 1;
                 self.stats.ipv6_addresses_obfuscated += 1;
                 let value = format!("fd00::{}", self.ipv6_counter);
                 e.insert(value.clone());
-                ObfuscatedString::original(value)
+                ObfuscatedString::changed(value)
             }
         }
     }
@@ -408,6 +495,13 @@ impl LogObfuscator {
         // Erlang tuples must be processed first to extract queue/hostname before
         // general node name obfuscation transforms them
         result = self.obfuscate_erlang_queue_tuples(&result);
+        // Federation links must be processed before general policy obfuscation
+        // because they use a different format (policy: without quotes)
+        result = self.obfuscate_federation_links(&result);
+        // Shovel patterns must be processed early to capture names before other patterns
+        result = self.obfuscate_shovel_connections(&result);
+        result = self.obfuscate_shovel_quoted(&result);
+        result = self.obfuscate_shovel_erlang_binary(&result);
         result = self.obfuscate_node_names(&result);
         result = self.obfuscate_usernames(&result);
         result = self.obfuscate_vhosts(&result);
@@ -491,19 +585,12 @@ impl LogObfuscator {
 
             let full_match = cap.get(0).unwrap();
             let full_str = full_match.as_str();
-
-            let is_uppercase = full_str.starts_with('U');
-            let user_word = if is_uppercase { "User" } else { "user" };
-
-            let replacement = if full_str.contains(": '") {
-                format!("{}: '{}'", user_word, obfuscated.value)
-            } else if full_str.contains(": \"") {
-                format!("{}: \"{}\"", user_word, obfuscated.value)
-            } else if full_str.contains(" '") {
-                format!("{} '{}'", user_word, obfuscated.value)
+            let keyword = if full_str.starts_with('U') {
+                "User"
             } else {
-                format!("{} \"{}\"", user_word, obfuscated.value)
+                "user"
             };
+            let replacement = format_quoted_replacement(full_str, keyword, &obfuscated.value);
 
             result.replace_range(full_match.range(), &replacement);
         }
@@ -526,23 +613,12 @@ impl LogObfuscator {
 
             let full_match = cap.get(0).unwrap();
             let full_str = full_match.as_str();
-
-            let is_virtual_host = full_str.to_lowercase().starts_with("virtual");
-            let prefix = if is_virtual_host {
+            let keyword = if full_str.to_lowercase().starts_with("virtual") {
                 "virtual host"
             } else {
                 "vhost"
             };
-
-            let replacement = if full_str.contains(": '") {
-                format!("{}: '{}'", prefix, obfuscated.value)
-            } else if full_str.contains(": \"") {
-                format!("{}: \"{}\"", prefix, obfuscated.value)
-            } else if full_str.contains(" '") {
-                format!("{} '{}'", prefix, obfuscated.value)
-            } else {
-                format!("{} \"{}\"", prefix, obfuscated.value)
-            };
+            let replacement = format_quoted_replacement(full_str, keyword, &obfuscated.value);
 
             result.replace_range(full_match.range(), &replacement);
         }
@@ -565,19 +641,12 @@ impl LogObfuscator {
 
             let full_match = cap.get(0).unwrap();
             let full_str = full_match.as_str();
-
-            let is_uppercase = full_str.starts_with('Q');
-            let keyword = if is_uppercase { "Queue" } else { "queue" };
-
-            let replacement = if full_str.contains(": '") {
-                format!("{}: '{}'", keyword, obfuscated.value)
-            } else if full_str.contains(": \"") {
-                format!("{}: \"{}\"", keyword, obfuscated.value)
-            } else if full_str.contains(" '") {
-                format!("{} '{}'", keyword, obfuscated.value)
+            let keyword = if full_str.starts_with('Q') {
+                "Queue"
             } else {
-                format!("{} \"{}\"", keyword, obfuscated.value)
+                "queue"
             };
+            let replacement = format_quoted_replacement(full_str, keyword, &obfuscated.value);
 
             result.replace_range(full_match.range(), &replacement);
         }
@@ -600,19 +669,12 @@ impl LogObfuscator {
 
             let full_match = cap.get(0).unwrap();
             let full_str = full_match.as_str();
-
-            let is_uppercase = full_str.starts_with('E');
-            let keyword = if is_uppercase { "Exchange" } else { "exchange" };
-
-            let replacement = if full_str.contains(": '") {
-                format!("{}: '{}'", keyword, obfuscated.value)
-            } else if full_str.contains(": \"") {
-                format!("{}: \"{}\"", keyword, obfuscated.value)
-            } else if full_str.contains(" '") {
-                format!("{} '{}'", keyword, obfuscated.value)
+            let keyword = if full_str.starts_with('E') {
+                "Exchange"
             } else {
-                format!("{} \"{}\"", keyword, obfuscated.value)
+                "exchange"
             };
+            let replacement = format_quoted_replacement(full_str, keyword, &obfuscated.value);
 
             result.replace_range(full_match.range(), &replacement);
         }
@@ -635,19 +697,12 @@ impl LogObfuscator {
 
             let full_match = cap.get(0).unwrap();
             let full_str = full_match.as_str();
-
-            let is_uppercase = full_str.starts_with('S');
-            let keyword = if is_uppercase { "Stream" } else { "stream" };
-
-            let replacement = if full_str.contains(": '") {
-                format!("{}: '{}'", keyword, obfuscated.value)
-            } else if full_str.contains(": \"") {
-                format!("{}: \"{}\"", keyword, obfuscated.value)
-            } else if full_str.contains(" '") {
-                format!("{} '{}'", keyword, obfuscated.value)
+            let keyword = if full_str.starts_with('S') {
+                "Stream"
             } else {
-                format!("{} \"{}\"", keyword, obfuscated.value)
+                "stream"
             };
+            let replacement = format_quoted_replacement(full_str, keyword, &obfuscated.value);
 
             result.replace_range(full_match.range(), &replacement);
         }
@@ -670,19 +725,108 @@ impl LogObfuscator {
 
             let full_match = cap.get(0).unwrap();
             let full_str = full_match.as_str();
-
-            let is_uppercase = full_str.starts_with('P');
-            let keyword = if is_uppercase { "Policy" } else { "policy" };
-
-            let replacement = if full_str.contains(": '") {
-                format!("{}: '{}'", keyword, obfuscated.value)
-            } else if full_str.contains(": \"") {
-                format!("{}: \"{}\"", keyword, obfuscated.value)
-            } else if full_str.contains(" '") {
-                format!("{} '{}'", keyword, obfuscated.value)
+            let keyword = if full_str.starts_with('P') {
+                "Policy"
             } else {
-                format!("{} \"{}\"", keyword, obfuscated.value)
+                "policy"
             };
+            let replacement = format_quoted_replacement(full_str, keyword, &obfuscated.value);
+
+            result.replace_range(full_match.range(), &replacement);
+        }
+        result
+    }
+
+    fn obfuscate_federation_links(&mut self, input: &str) -> String {
+        let captures: Vec<_> = self.federation_link_re.captures_iter(input).collect();
+        if captures.is_empty() {
+            return input.to_string();
+        }
+
+        let mut result = input.to_string();
+        for cap in captures.iter().rev() {
+            let upstream = cap.get(1).unwrap().as_str();
+            let policy = cap.get(2).unwrap().as_str();
+
+            let obfuscated_upstream = self.get_or_create_upstream(upstream);
+            let obfuscated_policy = self.get_or_create_policy(policy);
+
+            // Skip if both are already obfuscated
+            if !obfuscated_upstream.was_obfuscated && !obfuscated_policy.was_obfuscated {
+                continue;
+            }
+
+            let full_match = cap.get(0).unwrap();
+            let replacement = format!(
+                "Federation link (upstream: {}, policy: {})",
+                obfuscated_upstream.value, obfuscated_policy.value
+            );
+
+            result.replace_range(full_match.range(), &replacement);
+        }
+        result
+    }
+
+    fn obfuscate_shovel_connections(&mut self, input: &str) -> String {
+        let captures: Vec<_> = self.shovel_connection_re.captures_iter(input).collect();
+        if captures.is_empty() {
+            return input.to_string();
+        }
+
+        let mut result = input.to_string();
+        for cap in captures.iter().rev() {
+            let shovel = cap.get(1).unwrap().as_str();
+            let obfuscated = self.get_or_create_shovel(shovel);
+            if !obfuscated.was_obfuscated {
+                continue;
+            }
+
+            let full_match = cap.get(0).unwrap();
+            let replacement = format!("Shovel {}:", obfuscated.value);
+
+            result.replace_range(full_match.range(), &replacement);
+        }
+        result
+    }
+
+    fn obfuscate_shovel_quoted(&mut self, input: &str) -> String {
+        let captures: Vec<_> = self.shovel_quoted_re.captures_iter(input).collect();
+        if captures.is_empty() {
+            return input.to_string();
+        }
+
+        let mut result = input.to_string();
+        for cap in captures.iter().rev() {
+            let shovel = cap.get(1).unwrap().as_str();
+            let obfuscated = self.get_or_create_shovel(shovel);
+            if !obfuscated.was_obfuscated {
+                continue;
+            }
+
+            let full_match = cap.get(0).unwrap();
+            let replacement = format!("Shovel '{}'", obfuscated.value);
+
+            result.replace_range(full_match.range(), &replacement);
+        }
+        result
+    }
+
+    fn obfuscate_shovel_erlang_binary(&mut self, input: &str) -> String {
+        let captures: Vec<_> = self.shovel_erlang_binary_re.captures_iter(input).collect();
+        if captures.is_empty() {
+            return input.to_string();
+        }
+
+        let mut result = input.to_string();
+        for cap in captures.iter().rev() {
+            let shovel = cap.get(1).unwrap().as_str();
+            let obfuscated = self.get_or_create_shovel(shovel);
+            if !obfuscated.was_obfuscated {
+                continue;
+            }
+
+            let full_match = cap.get(0).unwrap();
+            let replacement = format!("Shovel <<\"{}\">>", obfuscated.value);
 
             result.replace_range(full_match.range(), &replacement);
         }

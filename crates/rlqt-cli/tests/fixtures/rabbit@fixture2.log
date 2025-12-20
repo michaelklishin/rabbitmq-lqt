@@ -13,14 +13,14 @@
 2025-10-27 11:23:27.568937-07:00 [debug] <0.208.0>         server_sup => ra_coordination_server_sup_sup,
 2025-10-27 11:23:27.568937-07:00 [debug] <0.208.0>         wal => ra_coordination_log_wal,wal_sup => ra_coordination_log_wal_sup},
 2025-10-27 11:23:27.568937-07:00 [debug] <0.208.0>   data_dir =>
-2025-10-27 11:23:27.568937-07:00 [debug] <0.208.0>       "/Users/username/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/coordination/rabbit@sunnyside",
+2025-10-27 11:23:27.568937-07:00 [debug] <0.208.0>       /data/path1@host1/coordination/rabbit@host1",
 2025-10-27 11:23:27.568937-07:00 [debug] <0.208.0>   wal_max_size_bytes => 64000000,wal_max_batch_size => 4096,
 2025-10-27 11:23:27.568937-07:00 [debug] <0.208.0>   wal_max_entries => undefined,compress_mem_tables => false,
 2025-10-27 11:23:27.568937-07:00 [debug] <0.208.0>   default_max_append_entries_rpc_batch_size => 128,
 2025-10-27 11:23:27.568937-07:00 [debug] <0.208.0>   segment_compute_checksums => true,server_min_bin_vheap_size => 46422,
 2025-10-27 11:23:27.568937-07:00 [debug] <0.208.0>   wal_compute_checksums => true,wal_min_bin_vheap_size => 46422,
 2025-10-27 11:23:27.568937-07:00 [debug] <0.208.0>   wal_data_dir =>
-2025-10-27 11:23:27.568937-07:00 [debug] <0.208.0>       "/Users/username/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/coordination/rabbit@sunnyside",
+2025-10-27 11:23:27.568937-07:00 [debug] <0.208.0>       /data/path1@host1/coordination/rabbit@host1",
 2025-10-27 11:23:27.568937-07:00 [debug] <0.208.0>   segment_max_entries => 4096,segment_max_pending => 1024,
 2025-10-27 11:23:27.568937-07:00 [debug] <0.208.0>   segment_max_size_bytes => 64000000,wal_write_strategy => default,
 2025-10-27 11:23:27.568937-07:00 [debug] <0.208.0>   wal_sync_method => datasync,wal_garbage_collect => false,
@@ -54,7 +54,7 @@
 2025-10-27 11:23:27.569135-07:00 [debug] <0.208.0>                                                       wal_sup =>
 2025-10-27 11:23:27.569135-07:00 [debug] <0.208.0>                                                           ra_coordination_log_wal_sup},
 2025-10-27 11:23:27.569135-07:00 [debug] <0.208.0>                                                 data_dir =>
-2025-10-27 11:23:27.569135-07:00 [debug] <0.208.0>                                                     "/Users/username/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/coordination/rabbit@sunnyside",
+2025-10-27 11:23:27.569135-07:00 [debug] <0.208.0>                                                     /data/path1@host1/coordination/rabbit@host1",
 2025-10-27 11:23:27.569135-07:00 [debug] <0.208.0>                                                 wal_max_size_bytes => 64000000,
 2025-10-27 11:23:27.569135-07:00 [debug] <0.208.0>                                                 wal_max_batch_size => 4096,
 2025-10-27 11:23:27.569135-07:00 [debug] <0.208.0>                                                 wal_max_entries => undefined,
@@ -69,7 +69,7 @@
 2025-10-27 11:23:27.569135-07:00 [debug] <0.208.0>                                                 wal_min_bin_vheap_size =>
 2025-10-27 11:23:27.569135-07:00 [debug] <0.208.0>                                                     46422,
 2025-10-27 11:23:27.569135-07:00 [debug] <0.208.0>                                                 wal_data_dir =>
-2025-10-27 11:23:27.569135-07:00 [debug] <0.208.0>                                                     "/Users/username/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/coordination/rabbit@sunnyside",
+2025-10-27 11:23:27.569135-07:00 [debug] <0.208.0>                                                     /data/path1@host1/coordination/rabbit@host1",
 2025-10-27 11:23:27.569135-07:00 [debug] <0.208.0>                                                 segment_max_entries => 4096,
 2025-10-27 11:23:27.569135-07:00 [debug] <0.208.0>                                                 segment_max_pending => 1024,
 2025-10-27 11:23:27.569135-07:00 [debug] <0.208.0>                                                 segment_max_size_bytes =>
@@ -91,12 +91,12 @@
 2025-10-27 11:23:27.569135-07:00 [debug] <0.208.0>                                                     16,
 2025-10-27 11:23:27.569135-07:00 [debug] <0.208.0>                                                 machine_upgrade_strategy =>
 2025-10-27 11:23:27.569135-07:00 [debug] <0.208.0>                                                     all}
-2025-10-27 11:23:27.569414-07:00 [info] <0.208.0> starting Ra system: coordination in directory: /Users/username/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/coordination/rabbit@sunnyside
+2025-10-27 11:23:27.569414-07:00 [info] <0.208.0> starting Ra system: coordination in directory: /data/path1@host1/coordination/rabbit@host1
 2025-10-27 11:23:27.570606-07:00 [debug] <0.215.0> ra system 'coordination' starting
 2025-10-27 11:23:27.571736-07:00 [info] <0.216.0> ra_coordination_log_ets: in system coordination initialising. Mem table opts: [set,{write_concurrency,auto},public,{compressed,false}]
 2025-10-27 11:23:27.587876-07:00 [info] <0.222.0> ra system 'coordination' running pre init for 0 registered servers
 2025-10-27 11:23:27.590700-07:00 [info] <0.223.0> ra: meta data store initialised for system coordination. 0 record(s) recovered
-2025-10-27 11:23:27.592116-07:00 [info] <0.226.0> segment_writer: upgrading segment file names to new format in dirctory /Users/username/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/coordination/rabbit@sunnyside
+2025-10-27 11:23:27.592116-07:00 [info] <0.226.0> segment_writer: upgrading segment file names to new format in dirctory /data/path1@host1/coordination/rabbit@host1
 2025-10-27 11:23:27.598249-07:00 [notice] <0.228.0> WAL: ra_coordination_log_wal init, mem-tables table name: ra_coordination_log_open_mem_tables
 2025-10-27 11:23:27.598395-07:00 [debug] <0.228.0> wal: recovered 0 writers
 2025-10-27 11:23:27.598421-07:00 [debug] <0.228.0> wal: opening new file 0000000000000001.wal
@@ -112,7 +112,7 @@
 2025-10-27 11:23:27.602395-07:00 [debug] <0.208.0>         server_sup => ra_server_sup_sup,wal => ra_log_wal,
 2025-10-27 11:23:27.602395-07:00 [debug] <0.208.0>         wal_sup => ra_log_wal_sup},
 2025-10-27 11:23:27.602395-07:00 [debug] <0.208.0>   data_dir =>
-2025-10-27 11:23:27.602395-07:00 [debug] <0.208.0>       "/Users/username/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/quorum/rabbit@sunnyside",
+2025-10-27 11:23:27.602395-07:00 [debug] <0.208.0>       /data/path1@host1/quorum/rabbit@host1",
 2025-10-27 11:23:27.602395-07:00 [debug] <0.208.0>   wal_max_size_bytes => 536870912,wal_max_batch_size => 4096,
 2025-10-27 11:23:27.602395-07:00 [debug] <0.208.0>   wal_max_entries => 500000,compress_mem_tables => true,
 2025-10-27 11:23:27.602395-07:00 [debug] <0.208.0>   default_max_append_entries_rpc_batch_size => 16,
@@ -120,7 +120,7 @@
 2025-10-27 11:23:27.602395-07:00 [debug] <0.208.0>   server_recovery_strategy => {rabbit_quorum_queue,system_recover,[]},
 2025-10-27 11:23:27.602395-07:00 [debug] <0.208.0>   wal_compute_checksums => true,wal_min_bin_vheap_size => 2971008,
 2025-10-27 11:23:27.602395-07:00 [debug] <0.208.0>   wal_data_dir =>
-2025-10-27 11:23:27.602395-07:00 [debug] <0.208.0>       "/Users/username/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/quorum/rabbit@sunnyside",
+2025-10-27 11:23:27.602395-07:00 [debug] <0.208.0>       /data/path1@host1/quorum/rabbit@host1",
 2025-10-27 11:23:27.602395-07:00 [debug] <0.208.0>   segment_max_entries => 4096,segment_max_pending => 1024,
 2025-10-27 11:23:27.602395-07:00 [debug] <0.208.0>   segment_max_size_bytes => 64000000,wal_write_strategy => default,
 2025-10-27 11:23:27.602395-07:00 [debug] <0.208.0>   wal_sync_method => datasync,wal_garbage_collect => false,
@@ -149,7 +149,7 @@
 2025-10-27 11:23:27.602531-07:00 [debug] <0.208.0>                                                     wal => ra_log_wal,
 2025-10-27 11:23:27.602531-07:00 [debug] <0.208.0>                                                     wal_sup => ra_log_wal_sup},
 2025-10-27 11:23:27.602531-07:00 [debug] <0.208.0>                                                  data_dir =>
-2025-10-27 11:23:27.602531-07:00 [debug] <0.208.0>                                                   "/Users/username/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/quorum/rabbit@sunnyside",
+2025-10-27 11:23:27.602531-07:00 [debug] <0.208.0>                                                   /data/path1@host1/quorum/rabbit@host1",
 2025-10-27 11:23:27.602531-07:00 [debug] <0.208.0>                                                  wal_max_size_bytes =>
 2025-10-27 11:23:27.602531-07:00 [debug] <0.208.0>                                                   536870912,
 2025-10-27 11:23:27.602531-07:00 [debug] <0.208.0>                                                  wal_max_batch_size => 4096,
@@ -168,7 +168,7 @@
 2025-10-27 11:23:27.602531-07:00 [debug] <0.208.0>                                                  wal_min_bin_vheap_size =>
 2025-10-27 11:23:27.602531-07:00 [debug] <0.208.0>                                                   2971008,
 2025-10-27 11:23:27.602531-07:00 [debug] <0.208.0>                                                  wal_data_dir =>
-2025-10-27 11:23:27.602531-07:00 [debug] <0.208.0>                                                   "/Users/username/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/quorum/rabbit@sunnyside",
+2025-10-27 11:23:27.602531-07:00 [debug] <0.208.0>                                                   /data/path1@host1/quorum/rabbit@host1",
 2025-10-27 11:23:27.602531-07:00 [debug] <0.208.0>                                                  segment_max_entries => 4096,
 2025-10-27 11:23:27.602531-07:00 [debug] <0.208.0>                                                  segment_max_pending => 1024,
 2025-10-27 11:23:27.602531-07:00 [debug] <0.208.0>                                                  segment_max_size_bytes =>
@@ -191,12 +191,12 @@
 2025-10-27 11:23:27.602531-07:00 [debug] <0.208.0>                                                   16,
 2025-10-27 11:23:27.602531-07:00 [debug] <0.208.0>                                                  machine_upgrade_strategy =>
 2025-10-27 11:23:27.602531-07:00 [debug] <0.208.0>                                                   all}
-2025-10-27 11:23:27.602816-07:00 [info] <0.208.0> starting Ra system: quorum_queues in directory: /Users/username/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/quorum/rabbit@sunnyside
+2025-10-27 11:23:27.602816-07:00 [info] <0.208.0> starting Ra system: quorum_queues in directory: /data/path1@host1/quorum/rabbit@host1
 2025-10-27 11:23:27.603004-07:00 [debug] <0.231.0> ra system 'quorum_queues' starting
 2025-10-27 11:23:27.603028-07:00 [info] <0.232.0> ra_log_ets: in system quorum_queues initialising. Mem table opts: [set,{write_concurrency,auto},public,{compressed,true}]
 2025-10-27 11:23:27.603344-07:00 [info] <0.236.0> ra system 'quorum_queues' running pre init for 0 registered servers
 2025-10-27 11:23:27.603577-07:00 [info] <0.237.0> ra: meta data store initialised for system quorum_queues. 0 record(s) recovered
-2025-10-27 11:23:27.603630-07:00 [info] <0.240.0> segment_writer: upgrading segment file names to new format in dirctory /Users/username/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/quorum/rabbit@sunnyside
+2025-10-27 11:23:27.603630-07:00 [info] <0.240.0> segment_writer: upgrading segment file names to new format in dirctory /data/path1@host1/quorum/rabbit@host1
 2025-10-27 11:23:27.604651-07:00 [notice] <0.242.0> WAL: ra_log_wal init, mem-tables table name: ra_log_open_mem_tables
 2025-10-27 11:23:27.604747-07:00 [debug] <0.242.0> wal: recovered 0 writers
 2025-10-27 11:23:27.604759-07:00 [debug] <0.242.0> wal: opening new file 0000000000000001.wal
@@ -218,14 +218,14 @@
 2025-10-27 11:23:27.606394-07:00 [debug] <0.208.0>         server_sup => ra_coordination_server_sup_sup,
 2025-10-27 11:23:27.606394-07:00 [debug] <0.208.0>         wal => ra_coordination_log_wal,wal_sup => ra_coordination_log_wal_sup},
 2025-10-27 11:23:27.606394-07:00 [debug] <0.208.0>   data_dir =>
-2025-10-27 11:23:27.606394-07:00 [debug] <0.208.0>       "/Users/username/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/coordination/rabbit@sunnyside",
+2025-10-27 11:23:27.606394-07:00 [debug] <0.208.0>       /data/path1@host1/coordination/rabbit@host1",
 2025-10-27 11:23:27.606394-07:00 [debug] <0.208.0>   wal_max_size_bytes => 64000000,wal_max_batch_size => 4096,
 2025-10-27 11:23:27.606394-07:00 [debug] <0.208.0>   wal_max_entries => undefined,compress_mem_tables => false,
 2025-10-27 11:23:27.606394-07:00 [debug] <0.208.0>   default_max_append_entries_rpc_batch_size => 128,
 2025-10-27 11:23:27.606394-07:00 [debug] <0.208.0>   segment_compute_checksums => true,server_min_bin_vheap_size => 46422,
 2025-10-27 11:23:27.606394-07:00 [debug] <0.208.0>   wal_compute_checksums => true,wal_min_bin_vheap_size => 46422,
 2025-10-27 11:23:27.606394-07:00 [debug] <0.208.0>   wal_data_dir =>
-2025-10-27 11:23:27.606394-07:00 [debug] <0.208.0>       "/Users/username/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/coordination/rabbit@sunnyside",
+2025-10-27 11:23:27.606394-07:00 [debug] <0.208.0>       /data/path1@host1/coordination/rabbit@host1",
 2025-10-27 11:23:27.606394-07:00 [debug] <0.208.0>   segment_max_entries => 4096,segment_max_pending => 1024,
 2025-10-27 11:23:27.606394-07:00 [debug] <0.208.0>   segment_max_size_bytes => 64000000,wal_write_strategy => default,
 2025-10-27 11:23:27.606394-07:00 [debug] <0.208.0>   wal_sync_method => datasync,wal_garbage_collect => false,
@@ -259,7 +259,7 @@
 2025-10-27 11:23:27.606512-07:00 [debug] <0.208.0>                                                       wal_sup =>
 2025-10-27 11:23:27.606512-07:00 [debug] <0.208.0>                                                           ra_coordination_log_wal_sup},
 2025-10-27 11:23:27.606512-07:00 [debug] <0.208.0>                                                 data_dir =>
-2025-10-27 11:23:27.606512-07:00 [debug] <0.208.0>                                                     "/Users/username/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/coordination/rabbit@sunnyside",
+2025-10-27 11:23:27.606512-07:00 [debug] <0.208.0>                                                     /data/path1@host1/coordination/rabbit@host1",
 2025-10-27 11:23:27.606512-07:00 [debug] <0.208.0>                                                 wal_max_size_bytes => 64000000,
 2025-10-27 11:23:27.606512-07:00 [debug] <0.208.0>                                                 wal_max_batch_size => 4096,
 2025-10-27 11:23:27.606512-07:00 [debug] <0.208.0>                                                 wal_max_entries => undefined,
@@ -274,7 +274,7 @@
 2025-10-27 11:23:27.606512-07:00 [debug] <0.208.0>                                                 wal_min_bin_vheap_size =>
 2025-10-27 11:23:27.606512-07:00 [debug] <0.208.0>                                                     46422,
 2025-10-27 11:23:27.606512-07:00 [debug] <0.208.0>                                                 wal_data_dir =>
-2025-10-27 11:23:27.606512-07:00 [debug] <0.208.0>                                                     "/Users/username/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/coordination/rabbit@sunnyside",
+2025-10-27 11:23:27.606512-07:00 [debug] <0.208.0>                                                     /data/path1@host1/coordination/rabbit@host1",
 2025-10-27 11:23:27.606512-07:00 [debug] <0.208.0>                                                 segment_max_entries => 4096,
 2025-10-27 11:23:27.606512-07:00 [debug] <0.208.0>                                                 segment_max_pending => 1024,
 2025-10-27 11:23:27.606512-07:00 [debug] <0.208.0>                                                 segment_max_size_bytes =>
@@ -296,15 +296,15 @@
 2025-10-27 11:23:27.606512-07:00 [debug] <0.208.0>                                                     16,
 2025-10-27 11:23:27.606512-07:00 [debug] <0.208.0>                                                 machine_upgrade_strategy =>
 2025-10-27 11:23:27.606512-07:00 [debug] <0.208.0>                                                     all}
-2025-10-27 11:23:27.606724-07:00 [info] <0.208.0> starting Ra system: coordination in directory: /Users/username/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside/coordination/rabbit@sunnyside
+2025-10-27 11:23:27.606724-07:00 [info] <0.208.0> starting Ra system: coordination in directory: /data/path1@host1/coordination/rabbit@host1
 2025-10-27 11:23:27.606755-07:00 [debug] <0.208.0> Ra system "coordination" ready
 2025-10-27 11:23:27.610100-07:00 [debug] <0.208.0> Trying to restart local Ra server for store "rabbitmq_metadata" in Ra system "coordination"
 2025-10-27 11:23:27.611476-07:00 [debug] <0.208.0> Ra server for store "rabbitmq_metadata" not registered in Ra system "coordination", try to start a new one
 2025-10-27 11:23:27.611526-07:00 [debug] <0.208.0> Starting a Ra server with the following configuration:
-2025-10-27 11:23:27.611526-07:00 [debug] <0.208.0> #{id => {rabbitmq_metadata,rabbit@sunnyside},
+2025-10-27 11:23:27.611526-07:00 [debug] <0.208.0> #{id => {rabbitmq_metadata,rabbit@host1},
 2025-10-27 11:23:27.611526-07:00 [debug] <0.208.0>   machine =>
 2025-10-27 11:23:27.611526-07:00 [debug] <0.208.0>       {module,khepri_machine,
-2025-10-27 11:23:27.611526-07:00 [debug] <0.208.0>               #{member => {rabbitmq_metadata,rabbit@sunnyside},
+2025-10-27 11:23:27.611526-07:00 [debug] <0.208.0>               #{member => {rabbitmq_metadata,rabbit@host1},
 2025-10-27 11:23:27.611526-07:00 [debug] <0.208.0>                 store_id => rabbitmq_metadata}},
 2025-10-27 11:23:27.611526-07:00 [debug] <0.208.0>   friendly_name => "RabbitMQ metadata store",
 2025-10-27 11:23:27.611526-07:00 [debug] <0.208.0>   cluster_name => rabbitmq_metadata,
@@ -339,20 +339,20 @@
 2025-10-27 11:23:27.693061-07:00 [debug] <0.208.0>
 2025-10-27 11:23:27.693073-07:00 [debug] <0.208.0> == Prelaunch DONE ==
 2025-10-27 11:23:27.693298-07:00 [info] <0.208.0>
-2025-10-27 11:23:27.693298-07:00 [info] <0.208.0>  Starting RabbitMQ 4.2.0 on Erlang 27.3.4.2 [jit]
+2025-10-27 11:23:27.693298-07:00 [info] <0.208.0>  Starting RabbitMQ 4.2.0 on Erlang 10.0.0.1 [jit]
 2025-10-27 11:23:27.693298-07:00 [info] <0.208.0>  Copyright (c) 2007-2025 Broadcom Inc and/or its subsidiaries
 2025-10-27 11:23:27.693298-07:00 [info] <0.208.0>  Licensed under the MPL 2.0. Website: https://rabbitmq.com
 2025-10-27 11:23:27.693368-07:00 [debug] <0.264.0> Feature flags: controller standing by
 2025-10-27 11:23:27.693394-07:00 [debug] <0.208.0> Register `rabbit` process (<0.208.0>) for rabbit_node_monitor
 2025-10-27 11:23:27.693998-07:00 [info] <0.208.0>
-2025-10-27 11:23:27.693998-07:00 [info] <0.208.0>  node           : hare@sunnyside
-2025-10-27 11:23:27.693998-07:00 [info] <0.208.0>  home dir       : /Users/antares
-2025-10-27 11:23:27.693998-07:00 [info] <0.208.0>  config file(s) : /Users/username/Tools/rabbitmq/generic/etc/rabbitmq/advanced.config
-2025-10-27 11:23:27.693998-07:00 [info] <0.208.0>                 : /Users/username/Tools/rabbitmq/generic/etc/rabbitmq/rabbitmq.conf
+2025-10-27 11:23:27.693998-07:00 [info] <0.208.0>  node           : hare@host1
+2025-10-27 11:23:27.693998-07:00 [info] <0.208.0>  home dir       : /data/path2
+2025-10-27 11:23:27.693998-07:00 [info] <0.208.0>  config file(s) : /data/path3
+2025-10-27 11:23:27.693998-07:00 [info] <0.208.0>                 : /data/path4
 2025-10-27 11:23:27.693998-07:00 [info] <0.208.0>  cookie hash    : NdNYTSkVzI3As6xqYGJsHg==
-2025-10-27 11:23:27.693998-07:00 [info] <0.208.0>  log(s)         : /Users/username/Tools/rabbitmq/generic/var/log/rabbitmq/rabbit@sunnyside.log
+2025-10-27 11:23:27.693998-07:00 [info] <0.208.0>  log(s)         : /data/path5@host2
 2025-10-27 11:23:27.693998-07:00 [info] <0.208.0>                 : <stdout>
-2025-10-27 11:23:27.693998-07:00 [info] <0.208.0>  data dir       : /Users/username/Tools/rabbitmq/generic/var/lib/rabbitmq/mnesia/rabbit@sunnyside
+2025-10-27 11:23:27.693998-07:00 [info] <0.208.0>  data dir       : /data/path1@host1
 2025-10-27 11:23:27.694032-07:00 [debug] <0.208.0>
 2025-10-27 11:23:27.694039-07:00 [debug] <0.208.0> == Plugins (prelaunch phase) ==
 2025-10-27 11:23:27.694062-07:00 [debug] <0.208.0> Setting plugins up
@@ -373,8 +373,8 @@
 2025-10-27 11:23:27.735691-07:00 [debug] <0.208.0>                                 rabbitmq_prometheus]
 2025-10-27 11:23:27.744063-07:00 [debug] <0.208.0> Feature flags: REFRESHING after applications load...
 2025-10-27 11:23:27.744089-07:00 [debug] <0.264.0> Feature flags: registering controller globally before proceeding with task: refresh_after_app_load
-2025-10-27 11:23:27.744112-07:00 [debug] <0.264.0> Feature flags: [global sync] @ rabbit@sunnyside
-2025-10-27 11:23:27.744165-07:00 [debug] <0.264.0> Feature flags: [global register] @ rabbit@sunnyside
+2025-10-27 11:23:27.744112-07:00 [debug] <0.264.0> Feature flags: [global sync] @ rabbit@host1
+2025-10-27 11:23:27.744165-07:00 [debug] <0.264.0> Feature flags: [global register] @ rabbit@host1
 2025-10-27 11:23:27.744228-07:00 [debug] <0.264.0> Feature flags: controller globally registered; can proceed with task
 2025-10-27 11:23:27.744317-07:00 [debug] <0.264.0> Feature flags: acquired lock before initializing registry (<0.264.0>)
 2025-10-27 11:23:27.744334-07:00 [debug] <0.264.0> Feature flags: query feature flags in loaded applications
@@ -417,7 +417,7 @@
 2025-10-27 11:23:27.939374-07:00 [debug] <0.264.0> Feature flags: feature flag states written to disk: yes
 2025-10-27 11:23:27.939553-07:00 [debug] <0.264.0> Feature flags: time to regen registry: 259 us
 2025-10-27 11:23:27.939563-07:00 [debug] <0.264.0> Feature flags: releasing lock after initializing registry (<0.264.0>)
-2025-10-27 11:23:27.940196-07:00 [debug] <0.264.0> Feature flags: collecting inventory on nodes: [rabbit@sunnyside]
+2025-10-27 11:23:27.940196-07:00 [debug] <0.264.0> Feature flags: collecting inventory on nodes: [rabbit@host1]
 2025-10-27 11:23:27.940511-07:00 [debug] <0.264.0> Feature flags: acquiring lock {feature_flags_state_change,<0.264.0>}
 2025-10-27 11:23:27.940559-07:00 [debug] <0.264.0> Feature flags: acquired lock {feature_flags_state_change,<0.264.0>}
 2025-10-27 11:23:27.940569-07:00 [debug] <0.264.0> Feature flags: `classic_mirrored_queue_version`: supported; continuing
@@ -470,7 +470,7 @@
 2025-10-27 11:23:27.941339-07:00 [debug] <0.264.0> Feature flags: `virtual_host_metadata`: already enabled; skipping
 2025-10-27 11:23:27.941347-07:00 [debug] <0.264.0> Feature flags: releasing lock {feature_flags_state_change,<0.264.0>}
 2025-10-27 11:23:27.941368-07:00 [debug] <0.264.0> Feature flags: unregistering controller globally
-2025-10-27 11:23:27.941376-07:00 [debug] <0.264.0> Feature flags: [global unregister] @ rabbit@sunnyside
+2025-10-27 11:23:27.941376-07:00 [debug] <0.264.0> Feature flags: [global unregister] @ rabbit@host1
 2025-10-27 11:23:27.941428-07:00 [debug] <0.208.0>
 2025-10-27 11:23:27.941434-07:00 [debug] <0.208.0> == Boot steps ==
 2025-10-27 11:23:27.942011-07:00 [debug] <0.208.0> Boot steps: time to find boot steps: 562 us
@@ -509,7 +509,7 @@
 2025-10-27 11:23:27.994487-07:00 [debug] <0.208.0> Finished MFA: M = rabbit_sup, F = start_child, A = [rabbit_registry]
 2025-10-27 11:23:27.994497-07:00 [info] <0.208.0> Running boot step database defined by app rabbit
 2025-10-27 11:23:27.994508-07:00 [debug] <0.208.0> Applying MFA: M = rabbit_db, F = init, A = []
-2025-10-27 11:23:27.994603-07:00 [debug] <0.208.0> Files and directories found in node's data directory: cluster_nodes.config, coordination, nodes_running_at_shutdown, quorum, of them to be ignored: cluster_nodes.config, coordination, msg_stores, nodes_running_at_shutdown, quorum, rabbit@sunnyside, rabbit@sunnyside-feature_flags, rabbitmq_metadata, stream, user_provided_plugins_data_dir
+2025-10-27 11:23:27.994603-07:00 [debug] <0.208.0> Files and directories found in node's data directory: cluster_nodes.config, coordination, nodes_running_at_shutdown, quorum, of them to be ignored: cluster_nodes.config, coordination, msg_stores, nodes_running_at_shutdown, quorum, rabbit@host1, rabbit@host3, rabbitmq_metadata, stream, user_provided_plugins_data_dir
 2025-10-27 11:23:27.994630-07:00 [debug] <0.208.0> Files and directories found in node's data directory sans ignored ones:
 2025-10-27 11:23:27.994655-07:00 [debug] <0.208.0> DB: this node is virgin: true
 2025-10-27 11:23:27.994709-07:00 [info] <0.208.0> Peer discovery: configured backend: rabbit_peer_discovery_classic_config
@@ -517,16 +517,16 @@
 2025-10-27 11:23:27.994750-07:00 [debug] <0.208.0> Peer discovery: registration is not supported, skipping it
 2025-10-27 11:23:27.994928-07:00 [debug] <0.208.0> Feature flags: configure initial feature flags state
 2025-10-27 11:23:27.994949-07:00 [debug] <0.264.0> Feature flags: registering controller globally before proceeding with task: enable_default
-2025-10-27 11:23:27.994967-07:00 [debug] <0.264.0> Feature flags: [global sync] @ rabbit@sunnyside
-2025-10-27 11:23:27.995005-07:00 [debug] <0.264.0> Feature flags: [global register] @ rabbit@sunnyside
+2025-10-27 11:23:27.994967-07:00 [debug] <0.264.0> Feature flags: [global sync] @ rabbit@host1
+2025-10-27 11:23:27.995005-07:00 [debug] <0.264.0> Feature flags: [global register] @ rabbit@host1
 2025-10-27 11:23:27.995061-07:00 [debug] <0.264.0> Feature flags: controller globally registered; can proceed with task
 2025-10-27 11:23:27.995074-07:00 [info] <0.264.0> Feature flags: starting an unclustered node for the first time: all stable feature flags will be enabled by default
-2025-10-27 11:23:27.995096-07:00 [debug] <0.264.0> Feature flags: collecting inventory on nodes: [rabbit@sunnyside]
+2025-10-27 11:23:27.995096-07:00 [debug] <0.264.0> Feature flags: collecting inventory on nodes: [rabbit@host1]
 2025-10-27 11:23:27.995385-07:00 [debug] <0.264.0> Feature flags: acquiring lock {feature_flags_state_change,<0.264.0>}
 2025-10-27 11:23:27.995407-07:00 [debug] <0.264.0> Feature flags: acquired lock {feature_flags_state_change,<0.264.0>}
 2025-10-27 11:23:27.995418-07:00 [debug] <0.264.0> Feature flags: `detailed_queues_endpoint`: supported; continuing
 2025-10-27 11:23:27.995440-07:00 [notice] <0.264.0> Feature flags: attempt to enable `detailed_queues_endpoint`...
-2025-10-27 11:23:27.995457-07:00 [debug] <0.264.0> Feature flags: `detailed_queues_endpoint`: mark as enabled=state_changing on nodes [rabbit@sunnyside]
+2025-10-27 11:23:27.995457-07:00 [debug] <0.264.0> Feature flags: `detailed_queues_endpoint`: mark as enabled=state_changing on nodes [rabbit@host1]
 2025-10-27 11:23:27.995490-07:00 [debug] <0.301.0> Feature flags: `detailed_queues_endpoint`: mark as enabled=state_changing
 2025-10-27 11:23:27.995538-07:00 [debug] <0.301.0> Feature flags: acquired lock before initializing registry (<0.301.0>)
 2025-10-27 11:23:27.995559-07:00 [debug] <0.301.0> Feature flags: query feature flags in loaded applications
@@ -570,7 +570,7 @@
 2025-10-27 11:23:27.998100-07:00 [debug] <0.301.0> Feature flags: releasing lock after initializing registry (<0.301.0>)
 2025-10-27 11:23:27.998130-07:00 [debug] <0.264.0> Feature flags: `detailed_queues_endpoint`: enable dependencies: [feature_flags_v2]
 2025-10-27 11:23:27.998144-07:00 [debug] <0.264.0> Feature flags: `feature_flags_v2`: already enabled; skipping
-2025-10-27 11:23:27.998434-07:00 [debug] <0.264.0> Feature flags: `detailed_queues_endpoint`: mark as enabled=true on nodes [rabbit@sunnyside]
+2025-10-27 11:23:27.998434-07:00 [debug] <0.264.0> Feature flags: `detailed_queues_endpoint`: mark as enabled=true on nodes [rabbit@host1]
 2025-10-27 11:23:27.998467-07:00 [debug] <0.303.0> Feature flags: `detailed_queues_endpoint`: mark as enabled=true
 2025-10-27 11:23:27.998830-07:00 [debug] <0.303.0> Feature flags: acquired lock before initializing registry (<0.303.0>)
 2025-10-27 11:23:27.998848-07:00 [debug] <0.303.0> Feature flags: query feature flags in loaded applications
@@ -615,7 +615,7 @@
 2025-10-27 11:23:28.001557-07:00 [notice] <0.264.0> Feature flags: `detailed_queues_endpoint` enabled
 2025-10-27 11:23:28.001569-07:00 [debug] <0.264.0> Feature flags: `quorum_queue_non_voters`: supported; continuing
 2025-10-27 11:23:28.001648-07:00 [notice] <0.264.0> Feature flags: attempt to enable `quorum_queue_non_voters`...
-2025-10-27 11:23:28.001660-07:00 [debug] <0.264.0> Feature flags: `quorum_queue_non_voters`: mark as enabled=state_changing on nodes [rabbit@sunnyside]
+2025-10-27 11:23:28.001660-07:00 [debug] <0.264.0> Feature flags: `quorum_queue_non_voters`: mark as enabled=state_changing on nodes [rabbit@host1]
 2025-10-27 11:23:28.001684-07:00 [debug] <0.306.0> Feature flags: `quorum_queue_non_voters`: mark as enabled=state_changing
 2025-10-27 11:23:28.001718-07:00 [debug] <0.306.0> Feature flags: acquired lock before initializing registry (<0.306.0>)
 2025-10-27 11:23:28.001734-07:00 [debug] <0.306.0> Feature flags: query feature flags in loaded applications
@@ -659,7 +659,7 @@
 2025-10-27 11:23:28.004128-07:00 [debug] <0.306.0> Feature flags: releasing lock after initializing registry (<0.306.0>)
 2025-10-27 11:23:28.004168-07:00 [debug] <0.264.0> Feature flags: `quorum_queue_non_voters`: enable dependencies: [quorum_queue]
 2025-10-27 11:23:28.004187-07:00 [debug] <0.264.0> Feature flags: `quorum_queue`: already enabled; skipping
-2025-10-27 11:23:28.004199-07:00 [debug] <0.264.0> Feature flags: `quorum_queue_non_voters`: mark as enabled=true on nodes [rabbit@sunnyside]
+2025-10-27 11:23:28.004199-07:00 [debug] <0.264.0> Feature flags: `quorum_queue_non_voters`: mark as enabled=true on nodes [rabbit@host1]
 2025-10-27 11:23:28.004235-07:00 [debug] <0.308.0> Feature flags: `quorum_queue_non_voters`: mark as enabled=true
 2025-10-27 11:23:28.005178-07:00 [debug] <0.308.0> Feature flags: acquired lock before initializing registry (<0.308.0>)
 2025-10-27 11:23:28.005204-07:00 [debug] <0.308.0> Feature flags: query feature flags in loaded applications
@@ -704,7 +704,7 @@
 2025-10-27 11:23:28.007907-07:00 [notice] <0.264.0> Feature flags: `quorum_queue_non_voters` enabled
 2025-10-27 11:23:28.007927-07:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.0.0`: supported; continuing
 2025-10-27 11:23:28.007942-07:00 [notice] <0.264.0> Feature flags: attempt to enable `rabbitmq_4.0.0`...
-2025-10-27 11:23:28.007961-07:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.0.0`: mark as enabled=state_changing on nodes [rabbit@sunnyside]
+2025-10-27 11:23:28.007961-07:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.0.0`: mark as enabled=state_changing on nodes [rabbit@host1]
 2025-10-27 11:23:28.007989-07:00 [debug] <0.311.0> Feature flags: `rabbitmq_4.0.0`: mark as enabled=state_changing
 2025-10-27 11:23:28.008030-07:00 [debug] <0.311.0> Feature flags: acquired lock before initializing registry (<0.311.0>)
 2025-10-27 11:23:28.008046-07:00 [debug] <0.311.0> Feature flags: query feature flags in loaded applications
@@ -748,7 +748,7 @@
 2025-10-27 11:23:28.010691-07:00 [debug] <0.311.0> Feature flags: releasing lock after initializing registry (<0.311.0>)
 2025-10-27 11:23:28.010744-07:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.0.0`: enable dependencies: [message_containers]
 2025-10-27 11:23:28.010757-07:00 [debug] <0.264.0> Feature flags: `message_containers`: already enabled; skipping
-2025-10-27 11:23:28.010772-07:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.0.0`: mark as enabled=true on nodes [rabbit@sunnyside]
+2025-10-27 11:23:28.010772-07:00 [debug] <0.264.0> Feature flags: `rabbitmq_4.0.0`: mark as enabled=true on nodes [rabbit@host1]
 2025-10-27 11:23:28.010795-07:00 [debug] <0.313.0> Feature flags: `rabbitmq_4.0.0`: mark as enabled=true
 2025-10-27 11:23:28.011218-07:00 [debug] <0.313.0> Feature flags: acquired lock before initializing registry (<0.313.0>)
 2025-10-27 11:23:28.011232-07:00 [debug] <0.313.0> Feature flags: query feature flags in loaded applications
@@ -793,7 +793,7 @@
 2025-10-27 11:23:28.013879-07:00 [notice] <0.264.0> Feature flags: `rabbitmq_4.0.0` enabled
 2025-10-27 11:23:28.013892-07:00 [debug] <0.264.0> Feature flags: `khepri_db`: supported; continuing
 2025-10-27 11:23:28.013900-07:00 [notice] <0.264.0> Feature flags: attempt to enable `khepri_db`...
-2025-10-27 11:23:28.013910-07:00 [debug] <0.264.0> Feature flags: `khepri_db`: mark as enabled=state_changing on nodes [rabbit@sunnyside]
+2025-10-27 11:23:28.013910-07:00 [debug] <0.264.0> Feature flags: `khepri_db`: mark as enabled=state_changing on nodes [rabbit@host1]
 2025-10-27 11:23:28.013931-07:00 [debug] <0.316.0> Feature flags: `khepri_db`: mark as enabled=state_changing
 2025-10-27 11:23:28.013963-07:00 [debug] <0.316.0> Feature flags: acquired lock before initializing registry (<0.316.0>)
 2025-10-27 11:23:28.013973-07:00 [debug] <0.316.0> Feature flags: query feature flags in loaded applications
@@ -853,7 +853,7 @@
 2025-10-27 11:23:28.016704-07:00 [debug] <0.264.0> Feature flags: `listener_records_in_ets`: already enabled; skipping
 2025-10-27 11:23:28.016717-07:00 [debug] <0.264.0> Feature flags: `classic_queue_mirroring`: already enabled; skipping
 2025-10-27 11:23:28.016736-07:00 [notice] <0.264.0> Feature flags: attempt to enable `ram_node_type`...
-2025-10-27 11:23:28.016752-07:00 [debug] <0.264.0> Feature flags: `ram_node_type`: mark as enabled=state_changing on nodes [rabbit@sunnyside]
+2025-10-27 11:23:28.016752-07:00 [debug] <0.264.0> Feature flags: `ram_node_type`: mark as enabled=state_changing on nodes [rabbit@host1]
 2025-10-27 11:23:28.016773-07:00 [debug] <0.318.0> Feature flags: `ram_node_type`: mark as enabled=state_changing
 2025-10-27 11:23:28.016803-07:00 [debug] <0.318.0> Feature flags: acquired lock before initializing registry (<0.318.0>)
 2025-10-27 11:23:28.016821-07:00 [debug] <0.318.0> Feature flags: query feature flags in loaded applications
@@ -895,7 +895,7 @@
 2025-10-27 11:23:28.019127-07:00 [debug] <0.318.0> Feature flags: feature flag states written to disk: yes
 2025-10-27 11:23:28.019265-07:00 [debug] <0.318.0> Feature flags: time to regen registry: 204 us
 2025-10-27 11:23:28.019277-07:00 [debug] <0.318.0> Feature flags: releasing lock after initializing registry (<0.318.0>)
-2025-10-27 11:23:28.019320-07:00 [debug] <0.264.0> Feature flags: `ram_node_type`: mark as enabled=true on nodes [rabbit@sunnyside]
+2025-10-27 11:23:28.019320-07:00 [debug] <0.264.0> Feature flags: `ram_node_type`: mark as enabled=true on nodes [rabbit@host1]
 2025-10-27 11:23:28.019342-07:00 [debug] <0.320.0> Feature flags: `ram_node_type`: mark as enabled=true
 2025-10-27 11:23:28.019713-07:00 [debug] <0.320.0> Feature flags: acquired lock before initializing registry (<0.320.0>)
 2025-10-27 11:23:28.019730-07:00 [debug] <0.320.0> Feature flags: query feature flags in loaded applications
@@ -940,7 +940,7 @@
 2025-10-27 11:23:28.022498-07:00 [notice] <0.264.0> Feature flags: `ram_node_type` enabled
 2025-10-27 11:23:28.022509-07:00 [debug] <0.264.0> Feature flags: `khepri_db`: run callback rabbit_khepri:khepri_db_migration_enable (enable callback)
 2025-10-27 11:23:28.022509-07:00 [debug] <0.264.0> Feature flags:   with args = #{command => enable,
-2025-10-27 11:23:28.022509-07:00 [debug] <0.264.0>                                nodes => [rabbit@sunnyside],
+2025-10-27 11:23:28.022509-07:00 [debug] <0.264.0>                                nodes => [rabbit@host1],
 2025-10-27 11:23:28.022509-07:00 [debug] <0.264.0>                                feature_name => khepri_db,
 2025-10-27 11:23:28.022509-07:00 [debug] <0.264.0>                                feature_props =>
 2025-10-27 11:23:28.022509-07:00 [debug] <0.264.0>                                 #{name => khepri_db,
@@ -964,16 +964,16 @@
 2025-10-27 11:23:28.022509-07:00 [debug] <0.264.0>                                     listener_records_in_ets,
 2025-10-27 11:23:28.022509-07:00 [debug] <0.264.0>                                     classic_queue_mirroring,ram_node_type],
 2025-10-27 11:23:28.022509-07:00 [debug] <0.264.0>                                   provided_by => rabbit}}
-2025-10-27 11:23:28.022509-07:00 [debug] <0.264.0> Feature flags:   on nodes [rabbit@sunnyside]
+2025-10-27 11:23:28.022509-07:00 [debug] <0.264.0> Feature flags:   on nodes [rabbit@host1]
 2025-10-27 11:23:28.022607-07:00 [info] <0.322.0> Feature flag `khepri_db`: syncing cluster membership
 2025-10-27 11:23:28.026554-07:00 [info] <0.323.0> Syncing Mnesia->Khepri clusters membership
-2025-10-27 11:23:28.027879-07:00 [debug] <0.323.0> Mnesia->Khepri cluster sync: Mnesia cluster: [rabbit@sunnyside]
+2025-10-27 11:23:28.027879-07:00 [debug] <0.323.0> Mnesia->Khepri cluster sync: Mnesia cluster: [rabbit@host1]
 2025-10-27 11:23:28.027906-07:00 [debug] <0.323.0> Mnesia->Khepri cluster sync: Connected nodes to consider: []
-2025-10-27 11:23:28.027958-07:00 [debug] <0.323.0> Mnesia->Khepri cluster sync: Khepri clusters: [[rabbit@sunnyside]]
-2025-10-27 11:23:28.027971-07:00 [debug] <0.323.0> Mnesia->Khepri cluster sync: Largest Khepri cluster: [rabbit@sunnyside]
+2025-10-27 11:23:28.027958-07:00 [debug] <0.323.0> Mnesia->Khepri cluster sync: Khepri clusters: [[rabbit@host1]]
+2025-10-27 11:23:28.027971-07:00 [debug] <0.323.0> Mnesia->Khepri cluster sync: Largest Khepri cluster: [rabbit@host1]
 2025-10-27 11:23:28.027992-07:00 [debug] <0.323.0> Mnesia->Khepri cluster sync: Khepri nodes joining the largest Khepri cluster: []
 2025-10-27 11:23:28.028024-07:00 [debug] <0.323.0> Mnesia->Khepri cluster sync: Khepri nodes being removed from the expanded Khepri cluster: []
-2025-10-27 11:23:28.028063-07:00 [info] <0.322.0> Feature flag `khepri_db`: cluster membership synchronized; members are: [rabbit@sunnyside]
+2025-10-27 11:23:28.028063-07:00 [info] <0.322.0> Feature flag `khepri_db`: cluster membership synchronized; members are: [rabbit@host1]
 2025-10-27 11:23:28.028079-07:00 [info] <0.322.0> Feature flag `khepri_db`: unregistering legacy projections
 2025-10-27 11:23:28.030813-07:00 [info] <0.322.0> Feature flag `khepri_db`: registering projections
 2025-10-27 11:23:28.277491-07:00 [notice] <0.322.0> Feature flags: `khepri_db`: starting migration of 20 tables from Mnesia to Khepri; expect decrease in performance and increase in memory footprint

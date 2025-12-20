@@ -1,10 +1,14 @@
 # Change log
 
-## 0.17.0 (in development)
+## 0.17.0 (Dec 20, 2025)
 
 ### Enhancements
 
- * TBD
+ * New QL preset: `:raft` (aliases: `:raft_and_quorum_queues`, `:quorum_queues`) for Raft, quorum queue,
+   and Raft leader elections events
+ * More label annotators, in particular for the entries typical of RabbitMQ 3.13.x
+ * `logs parse` and `logs merge` now support compressed input files:
+   `.log.gz`, `.log.xz`, `.tar.gz`, `.tgz`, `.tar.xz`, `.txz`
 
 
 ## 0.16.0 (Dec 14, 2025)
