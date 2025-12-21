@@ -15,12 +15,12 @@ name = "rlqt_ql"
 path = "src/lib.rs"
 
 [dependencies]
-rlqt-ql-core = { version = "0.17.0", path = "../rlqt-ql-core" }
+rlqt-ql-core = { version = "0.18.0", path = "../rlqt-ql-core" }
 thiserror = { workspace = true }
 chrono = { workspace = true }
 chrono-english = { workspace = true }
 regex = { workspace = true }
-rlqt-lib = { version = "0.17.0", path = "../rlqt-lib" }
+rlqt-lib = { version = "0.18.0", path = "../rlqt-lib" }
 
 [dev-dependencies]
 tempfile = "3"
