@@ -161,6 +161,17 @@ fn main() {
         frontend_dir.join("postcss.config.js").display()
     );
 
+    // In CI, frontend is pre-built and downloaded as an artifact.
+    // Set RLQT_SKIP_FRONTEND_BUILD=1 to skip rebuilding.
+    if env::var("RLQT_SKIP_FRONTEND_BUILD").is_ok() {
+        let dist_dir = frontend_dir.join("dist");
+        if dist_dir.exists() && dist_dir.join("index.html").exists() {
+            println!("cargo:warning=RLQT_SKIP_FRONTEND_BUILD set, using pre-built frontend");
+            return;
+        }
+        println!("cargo:warning=RLQT_SKIP_FRONTEND_BUILD set but dist/ not found, building anyway");
+    }
+
     build_wasm(manifest_path, &frontend_dir);
 
     if !frontend_dir.join("node_modules").exists() {

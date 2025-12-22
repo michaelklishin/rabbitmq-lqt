@@ -14,8 +14,62 @@ permissions:
   contents: write
 
 jobs:
+  build_frontend:
+    name: Build WASM and Frontend
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Cache Rust compilation
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: "frontend-wasm"
+          cache-all-crates: true
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: crates/rlqt-ui/frontend/package-lock.json
+
+      - name: Cache wasm-pack binary
+        id: cache-wasm-pack
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/wasm-pack
+          key: wasm-pack-0.13.1-${{ runner.os }}-${{ runner.arch }}
+
+      - name: Install wasm-pack
+        if: steps.cache-wasm-pack.outputs.cache-hit != 'true'
+        run: cargo install wasm-pack --version 0.13.1
+
+      - name: Build WASM module
+        run: |
+          wasm-pack build crates/rlqt-ql-wasm --target web --out-dir ../rlqt-ui/frontend/src/wasm/pkg
+
+      - name: Build frontend
+        run: |
+          cd crates/rlqt-ui/frontend
+          npm install
+          npm run build
+
+      - name: Upload frontend dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: crates/rlqt-ui/frontend/dist
+          retention-days: 2
+
   release:
     name: Build and Archive
+    needs: [build_frontend]
 
     runs-on: ${{ matrix.os }}
 
@@ -26,9 +80,13 @@ jobs:
           - target: aarch64-apple-darwin
             os: macos-latest
             target_rustflags: ''
-          # Windoze, x86-64
+          # Windows, x86-64
           - target: x86_64-pc-windows-msvc
             os: windows-latest
+            target_rustflags: ''
+          # Windows, aarch64
+          - target: aarch64-pc-windows-msvc
+            os: windows-11-arm
             target_rustflags: ''
           # Linux, x86-64
           - target: x86_64-unknown-linux-gnu
@@ -58,31 +116,17 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         run: .github/scripts/free_disk_space.sh
 
-      - name: Install Rust toolchains
+      - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
           targets: ${{ matrix.target }}
 
-      - name: Install Node.js
-        uses: actions/setup-node@v4
+      - name: Download frontend dist
+        uses: actions/download-artifact@v4
         with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: crates/rlqt-ui/frontend/package-lock.json
-
-      - name: Install wasm-pack
-        run: cargo install wasm-pack
-
-      - name: Build WASM module
-        run: |
-          wasm-pack build crates/rlqt-ql-wasm --target web --out-dir ../rlqt-ui/frontend/src/wasm/pkg
-
-      - name: Build frontend
-        run: |
-          cd crates/rlqt-ui/frontend
-          npm install
-          npm run build
+          name: frontend-dist
+          path: crates/rlqt-ui/frontend/dist
 
       - name: Install Nu Shell
         uses: hustcer/setup-nu@v3
@@ -100,6 +144,7 @@ jobs:
           TARGET: ${{ matrix.target }}
           TARGET_RUSTFLAGS: ${{ matrix.target_rustflags }}
           SRC: ${{ github.workspace }}
+          RLQT_SKIP_FRONTEND_BUILD: "1"
       - name: Store macOS build artifact
         id: upload-macos-artifact
         if: ${{ matrix.os == 'macos-latest' }}
@@ -118,6 +163,7 @@ jobs:
           TARGET: ${{ matrix.target }}
           TARGET_RUSTFLAGS: ${{ matrix.target_rustflags }}
           SRC: ${{ github.workspace }}
+          RLQT_SKIP_FRONTEND_BUILD: "1"
       - name: Store x86-64 Linux build artifact
         id: upload-amd64-linux-artifact
         if: ${{ matrix.target == 'x86_64-unknown-linux-gnu' }}
@@ -136,6 +182,7 @@ jobs:
           TARGET: ${{ matrix.target }}
           TARGET_RUSTFLAGS: ${{ matrix.target_rustflags }}
           SRC: ${{ github.workspace }}
+          RLQT_SKIP_FRONTEND_BUILD: "1"
       - name: Store aarch64 Linux build artifact
         id: upload-aarch64-linux-artifact
         if: ${{ matrix.target == 'aarch64-unknown-linux-gnu' }}
@@ -154,6 +201,7 @@ jobs:
           TARGET: ${{ matrix.target }}
           TARGET_RUSTFLAGS: ${{ matrix.target_rustflags }}
           SRC: ${{ github.workspace }}
+          RLQT_SKIP_FRONTEND_BUILD: "1"
       - name: Store x86-64 Linux musl build artifact
         id: upload-amd64-linux-musl-artifact
         if: ${{ matrix.target == 'x86_64-unknown-linux-musl' }}
@@ -172,6 +220,7 @@ jobs:
           TARGET: ${{ matrix.target }}
           TARGET_RUSTFLAGS: ${{ matrix.target_rustflags }}
           SRC: ${{ github.workspace }}
+          RLQT_SKIP_FRONTEND_BUILD: "1"
       - name: Store aarch64 Linux musl build artifact
         id: upload-aarch64-linux-musl-artifact
         if: ${{ matrix.target == 'aarch64-unknown-linux-musl' }}
@@ -181,18 +230,38 @@ jobs:
           path: "${{ github.workspace }}/target/${{ matrix.target }}/release/rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}"
           retention-days: 2
 
-      - name: Build a rabbitmq-lqt release archive on Windows
+      - name: Build a rabbitmq-lqt release archive on Windows x86-64
         id: release-build-windows
-        if: ${{ matrix.os == 'windows-latest' }}
+        if: ${{ matrix.target == 'x86_64-pc-windows-msvc' }}
         run: nu ./scripts/release-windows.nu
         env:
           OS: ${{ matrix.os }}
           TARGET: ${{ matrix.target }}
           TARGET_RUSTFLAGS: ${{ matrix.target_rustflags }}
           SRC: ${{ github.workspace }}
-      - name: Store Windows build artifact
+          RLQT_SKIP_FRONTEND_BUILD: "1"
+      - name: Store Windows x86-64 build artifact
         id: upload-windows-artifact
-        if: ${{ matrix.os == 'windows-latest' }}
+        if: ${{ matrix.target == 'x86_64-pc-windows-msvc' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}.exe"
+          path: "${{ github.workspace }}/target/${{ matrix.target }}/release/rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}.exe"
+          retention-days: 2
+
+      - name: Build a rabbitmq-lqt release archive on Windows aarch64
+        id: release-build-windows-aarch64
+        if: ${{ matrix.target == 'aarch64-pc-windows-msvc' }}
+        run: nu ./scripts/release-windows.nu
+        env:
+          OS: ${{ matrix.os }}
+          TARGET: ${{ matrix.target }}
+          TARGET_RUSTFLAGS: ${{ matrix.target_rustflags }}
+          SRC: ${{ github.workspace }}
+          RLQT_SKIP_FRONTEND_BUILD: "1"
+      - name: Store Windows aarch64 build artifact
+        id: upload-windows-aarch64-artifact
+        if: ${{ matrix.target == 'aarch64-pc-windows-msvc' }}
         uses: actions/upload-artifact@v4
         with:
           name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}.exe"
@@ -228,10 +297,15 @@ jobs:
       with:
         name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-aarch64-unknown-linux-musl"
         path: ./artifacts
-    - name: Fetch Windows archive
+    - name: Fetch Windows x86-64 archive
       uses: actions/download-artifact@v4
       with:
         name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-x86_64-pc-windows-msvc.exe"
+        path: ./artifacts
+    - name: Fetch Windows aarch64 archive
+      uses: actions/download-artifact@v4
+      with:
+        name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-aarch64-pc-windows-msvc.exe"
         path: ./artifacts
     - name: Publish rabbitmq-lqt release archive
       uses: softprops/action-gh-release@v2
