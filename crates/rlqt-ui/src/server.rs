@@ -15,21 +15,20 @@
 use crate::api::{logs, metadata};
 use crate::errors::ServerError;
 use axum::Router;
-use axum::extract::Path as AxumPath;
-use axum::http::StatusCode;
-use axum::response::IntoResponse;
 use axum::routing::get;
 use clap::ArgMatches;
-use include_dir::{Dir, include_dir};
 use rlqt_lib::rel_db::FileMetadata;
 use rlqt_lib::{DatabaseConnection, NodeLogEntry, open_database};
+use rust_embed::Embed;
 use std::io::{Error as IoError, ErrorKind};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 
-static ASSETS_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/frontend/dist/assets");
+#[derive(Embed)]
+#[folder = "frontend/dist/"]
+struct Assets;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -119,20 +118,21 @@ pub async fn run_server(db_path: &Path, host: &str, port: u16) -> Result<(), Ser
     Ok(())
 }
 
-fn create_router(state: AppState) -> Router {
-    let api_routes = Router::new()
+fn api_routes(state: AppState) -> Router {
+    Router::new()
         .route("/logs", get(logs::query_logs))
         .route("/logs/ql", get(logs::query_logs_by_ql))
         .route("/logs/preset/{preset}", get(logs::query_logs_by_preset))
         .route("/metadata", get(metadata::get_metadata))
         .route("/stats", get(metadata::get_stats))
         .route("/file-metadata", get(metadata::get_file_metadata))
-        .with_state(state.clone());
+        .with_state(state)
+}
 
+fn create_router(state: AppState) -> Router {
     Router::new()
-        .route("/", get(root_handler))
-        .nest("/api", api_routes)
-        .route("/assets/{*path}", get(assets_handler))
+        .nest("/api", api_routes(state))
+        .fallback(bel7_axum::serve_spa_static::<Assets>)
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
 }
@@ -140,55 +140,5 @@ fn create_router(state: AppState) -> Router {
 #[allow(dead_code)]
 pub fn create_router_for_testing(db: Arc<DatabaseConnection>) -> Router {
     let state = AppState { db };
-    let api_routes = Router::new()
-        .route("/logs", get(logs::query_logs))
-        .route("/logs/ql", get(logs::query_logs_by_ql))
-        .route("/logs/preset/{preset}", get(logs::query_logs_by_preset))
-        .route("/metadata", get(metadata::get_metadata))
-        .route("/stats", get(metadata::get_stats))
-        .route("/file-metadata", get(metadata::get_file_metadata))
-        .with_state(state);
-
-    Router::new().nest("/api", api_routes)
-}
-
-async fn root_handler() -> impl IntoResponse {
-    (
-        StatusCode::OK,
-        [("content-type", "text/html")],
-        include_str!("../frontend/dist/index.html"),
-    )
-}
-
-async fn assets_handler(AxumPath(path): AxumPath<String>) -> impl IntoResponse {
-    let content_type = if path.ends_with(".js") {
-        "application/javascript"
-    } else if path.ends_with(".wasm") {
-        "application/wasm"
-    } else if path.ends_with(".css") {
-        "text/css"
-    } else if path.ends_with(".woff2") {
-        "font/woff2"
-    } else if path.ends_with(".woff") {
-        "font/woff"
-    } else if path.ends_with(".svg") {
-        "image/svg+xml"
-    } else if path.ends_with(".png") {
-        "image/png"
-    } else {
-        "application/octet-stream"
-    };
-
-    match ASSETS_DIR.get_file(&path) {
-        Some(file) => (
-            StatusCode::OK,
-            [("content-type", content_type)],
-            file.contents().to_vec(),
-        ),
-        None => (
-            StatusCode::NOT_FOUND,
-            [("content-type", "text/plain")],
-            b"Not found".to_vec(),
-        ),
-    }
+    Router::new().nest("/api", api_routes(state))
 }

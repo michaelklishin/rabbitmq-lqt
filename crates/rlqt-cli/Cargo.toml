@@ -25,7 +25,7 @@ rlqt-obfuscation = { version = "0.18.0", path = "../rlqt-obfuscation" }
 rlqt-ql = { version = "0.18.0", path = "../rlqt-ql" }
 rlqt-ui = { path = "../rlqt-ui", optional = true }
 clap = { workspace = true }
-sysexits = { workspace = true }
+bel7-cli = { workspace = true }
 tabled = { workspace = true }
 tokio = { workspace = true }
 thiserror = { workspace = true }

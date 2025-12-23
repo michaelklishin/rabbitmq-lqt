@@ -18,6 +18,7 @@ mod core;
 mod errors;
 mod output;
 
+use bel7_cli::ExitCode;
 use std::io::stderr;
 use std::process::exit;
 
@@ -31,14 +32,14 @@ async fn main() {
     let matches = cli::clap_parser().get_matches();
     let exit_code = dispatch_command(&matches).await;
 
-    if exit_code != sysexits::ExitCode::Ok {
+    if exit_code != ExitCode::Ok {
         exit(exit_code as i32);
     }
 }
 
 const BIN_NAME: &str = env!("CARGO_BIN_NAME");
 
-async fn dispatch_command(cli: &clap::ArgMatches) -> sysexits::ExitCode {
+async fn dispatch_command(cli: &clap::ArgMatches) -> ExitCode {
     match cli.subcommand() {
         Some(("logs", logs_args)) => match logs_args.subcommand() {
             Some(("parse", args)) => commands::handle_parse_command(args),
@@ -53,7 +54,7 @@ async fn dispatch_command(cli: &clap::ArgMatches) -> sysexits::ExitCode {
                     BIN_NAME
                 );
                 log::error!("Unknown logs subcommand");
-                sysexits::ExitCode::Usage
+                ExitCode::Usage
             }
         },
         #[cfg(feature = "web-ui")]
@@ -65,7 +66,7 @@ async fn dispatch_command(cli: &clap::ArgMatches) -> sysexits::ExitCode {
                     BIN_NAME
                 );
                 log::error!("Unknown web subcommand");
-                sysexits::ExitCode::Usage
+                ExitCode::Usage
             }
         },
         _ => {
@@ -74,13 +75,13 @@ async fn dispatch_command(cli: &clap::ArgMatches) -> sysexits::ExitCode {
                 BIN_NAME
             );
             log::error!("Unknown command group");
-            sysexits::ExitCode::Usage
+            ExitCode::Usage
         }
     }
 }
 
 #[cfg(feature = "web-ui")]
-async fn handle_web_serve_command(args: &clap::ArgMatches) -> sysexits::ExitCode {
+async fn handle_web_serve_command(args: &clap::ArgMatches) -> ExitCode {
     let db_path: PathBuf = args
         .get_one::<String>("input_db_file_path")
         .expect("input_db_file_path is required")
@@ -95,10 +96,10 @@ async fn handle_web_serve_command(args: &clap::ArgMatches) -> sysexits::ExitCode
         .expect("port must be a valid number");
 
     match rlqt_ui::run_server(&db_path, host, port).await {
-        Ok(()) => sysexits::ExitCode::Ok,
+        Ok(()) => ExitCode::Ok,
         Err(e) => {
             log::error!("Web UI startup error: {}", e);
-            sysexits::ExitCode::DataErr
+            ExitCode::DataErr
         }
     }
 }

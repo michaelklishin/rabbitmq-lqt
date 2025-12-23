@@ -18,6 +18,7 @@ use crate::archive::{
 use crate::core::Result;
 use crate::errors::CommandRunError;
 use crate::output;
+use bel7_cli::{ExitCode, ExitCodeProvider};
 use chrono::{DateTime, Utc};
 use clap::ArgMatches;
 use duckdb::Error as DuckDbError;
@@ -38,7 +39,6 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
-use sysexits::ExitCode;
 use tabled::{Table, Tabled, settings::Style};
 
 const PIPELINE_CHUNK_SIZE: usize = 25_000;
@@ -58,7 +58,7 @@ pub fn handle_parse_command(args: &ArgMatches) -> ExitCode {
         }
         Err(e) => {
             log::error!("Failed to parse logs: {}", e);
-            ExitCode::Software
+            e.exit_code()
         }
     }
 }
@@ -68,7 +68,7 @@ pub fn handle_query_command(args: &ArgMatches) -> ExitCode {
         Ok(_) => ExitCode::Ok,
         Err(e) => {
             log::error!("Failed to query logs: {}", e);
-            ExitCode::Software
+            e.exit_code()
         }
     }
 }
@@ -78,7 +78,7 @@ pub fn handle_overview_command(args: &ArgMatches) -> ExitCode {
         Ok(_) => ExitCode::Ok,
         Err(e) => {
             log::error!("Failed to show overview: {}", e);
-            ExitCode::Software
+            e.exit_code()
         }
     }
 }
@@ -93,7 +93,7 @@ pub fn handle_merge_command(args: &ArgMatches) -> ExitCode {
         }
         Err(e) => {
             log::error!("Failed to merge logs: {}", e);
-            ExitCode::Software
+            e.exit_code()
         }
     }
 }
@@ -108,7 +108,7 @@ pub fn handle_obfuscate_command(args: &ArgMatches) -> ExitCode {
         }
         Err(e) => {
             log::error!("Failed to obfuscate log: {}", e);
-            ExitCode::Software
+            e.exit_code()
         }
     }
 }
@@ -118,7 +118,7 @@ pub fn handle_ql_command(args: &ArgMatches) -> ExitCode {
         Ok(_) => ExitCode::Ok,
         Err(e) => {
             log::error!("Failed to execute QL query: {}", e);
-            ExitCode::Software
+            e.exit_code()
         }
     }
 }

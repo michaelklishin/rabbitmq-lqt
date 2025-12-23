@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+use bel7_cli::{ExitCode, ExitCodeProvider};
 use duckdb::Error as DuckDbError;
 use rlqt_lib::Error as LibError;
 use rlqt_ql::errors::Error as QlError;
@@ -28,6 +29,27 @@ pub enum CommandRunError {
 
     #[error("Query language error: {0}")]
     QueryLanguage(#[from] QlError),
+}
+
+impl ExitCodeProvider for CommandRunError {
+    fn exit_code(&self) -> ExitCode {
+        match self {
+            CommandRunError::Library(lib_err) => match lib_err {
+                LibError::Io(io_err) => match io_err.kind() {
+                    std::io::ErrorKind::NotFound => ExitCode::NoInput,
+                    std::io::ErrorKind::PermissionDenied => ExitCode::NoPerm,
+                    _ => ExitCode::IoErr,
+                },
+                LibError::Database(_) | LibError::ConnectionPool(_) => ExitCode::Software,
+                LibError::ParseEntry { .. }
+                | LibError::ParseTimestamp(_)
+                | LibError::ReadLine { .. } => ExitCode::DataErr,
+                _ => ExitCode::Software,
+            },
+            CommandRunError::DateTimeParse(_) => ExitCode::DataErr,
+            CommandRunError::QueryLanguage(_) => ExitCode::DataErr,
+        }
+    }
 }
 
 impl From<IoError> for CommandRunError {
