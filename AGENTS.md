@@ -124,3 +124,14 @@ and some individual parts such as log entry annotations.
 ## Refactoring Ideas To Never Suggest (or Try)
 
  * Using macros to refactor `crates/rlqt-lib/src/entry_metadata/labels.rs`
+
+## After Completing a Task
+
+### Iterative Reviews
+
+After completing a task, perform up to twenty iterative reviews of your changes.
+In every iteration, look for meaningful improvements that were missed, for gaps in test coverage,
+and for deviations from the instructions in this file.
+
+If no meaningful improvements are found for three iterations in a row,
+report it and stop iterating.
