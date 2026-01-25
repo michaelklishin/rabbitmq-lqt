@@ -291,3 +291,55 @@ fn ql_query_without_colors() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+#[test]
+fn ql_query_with_hashtag_label() -> Result<(), Box<dyn Error>> {
+    let db_file = setup_test_db()?;
+    let db_path = db_file.path().to_str().unwrap();
+
+    run_succeeds([
+        "logs",
+        "ql",
+        "--input-db-file-path",
+        db_path,
+        "--query",
+        "#connections",
+    ])
+    .stderr(output_includes("Found"));
+
+    Ok(())
+}
+
+#[test]
+fn ql_query_with_negated_hashtag_label() -> Result<(), Box<dyn Error>> {
+    let db_file = setup_test_db()?;
+    let db_path = db_file.path().to_str().unwrap();
+
+    run_succeeds([
+        "logs",
+        "ql",
+        "--input-db-file-path",
+        db_path,
+        "--query=-#timeouts",
+    ])
+    .stderr(output_includes("Found"));
+
+    Ok(())
+}
+
+#[test]
+fn ql_query_with_hashtag_label_combination() -> Result<(), Box<dyn Error>> {
+    let db_file = setup_test_db()?;
+    let db_path = db_file.path().to_str().unwrap();
+
+    run_succeeds([
+        "logs",
+        "ql",
+        "--input-db-file-path",
+        db_path,
+        "--query=#connections and -#timeouts",
+    ])
+    .stderr(output_includes("Found"));
+
+    Ok(())
+}

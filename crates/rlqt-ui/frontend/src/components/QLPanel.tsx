@@ -15,10 +15,10 @@ const EXAMPLE_QUERIES = [
   { query: ':errors', description: 'All error logs' },
   { query: '@24h subsystem == "connections"', description: 'Connection logs, last 24h' },
   { query: ':crashes | sort timestamp desc', description: 'Crashes preset, newest first' },
-  { query: 'labels any ["tls", "disconnects"]', description: 'TLS or disconnect events' },
+  { query: '#tls', description: 'TLS-related entries' },
+  { query: '#connections and -#timeouts', description: 'Connections without timeouts' },
   { query: 'message contains "timeout" | limit 50', description: 'Messages with "timeout"' },
   { query: '@1h severity == "warning" or severity == "error"', description: 'Warnings/errors last hour' },
-  { query: 'subsystem == "queues" | sort timestamp desc | limit 200', description: 'Recent queue logs' },
   { query: ':errors_or_crashes @7d', description: 'Errors or crashes in the last week' },
 ]
 
@@ -237,12 +237,18 @@ export function QLPanel({
                 <code className="bg-blue-100 px-1 rounded">@7d</code> (last week)
               </p>
               <p>
-                <span className="font-medium text-blue-700">3. Filters</span> match specific fields —
+                <span className="font-medium text-blue-700">3. Labels</span> start with <code className="bg-blue-100 px-1 rounded">#</code> —
+                like <code className="bg-blue-100 px-1 rounded">#tls</code>,{' '}
+                <code className="bg-blue-100 px-1 rounded">#connections</code>, or exclude with{' '}
+                <code className="bg-blue-100 px-1 rounded">-#timeouts</code>
+              </p>
+              <p>
+                <span className="font-medium text-blue-700">4. Filters</span> match specific fields —
                 like <code className="bg-blue-100 px-1 rounded">severity == "error"</code> or{' '}
                 <code className="bg-blue-100 px-1 rounded">message contains "timeout"</code>
               </p>
               <p>
-                <span className="font-medium text-blue-700">4. Pipeline</span> stages use <code className="bg-blue-100 px-1 rounded">|</code> —
+                <span className="font-medium text-blue-700">5. Pipeline</span> stages use <code className="bg-blue-100 px-1 rounded">|</code> —
                 like <code className="bg-blue-100 px-1 rounded">| limit 100</code> or{' '}
                 <code className="bg-blue-100 px-1 rounded">| sort timestamp desc</code>
               </p>
@@ -275,7 +281,8 @@ export function QLPanel({
               </p>
               <p>
                 <span className="font-medium text-blue-700">Labels:</span>{' '}
-                <code className="bg-blue-100 px-1 rounded">labels any ["tls", "auth"]</code> — entries with either label
+                <code className="bg-blue-100 px-1 rounded">#tls or #connections</code> — entries with either label,{' '}
+                <code className="bg-blue-100 px-1 rounded">#tls and -#timeouts</code> — TLS without timeouts
               </p>
             </div>
           </div>

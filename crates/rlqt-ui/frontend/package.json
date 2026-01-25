@@ -1,6 +1,6 @@
 {
   "name": "rlqt-ui-frontend",
-  "version": "0.2.0",
+  "version": "0.18.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

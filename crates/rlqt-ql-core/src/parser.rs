@@ -377,11 +377,26 @@ fn parse_primary_expr(input: &str) -> IResult<&str, FilterExpr> {
         parse_grouped_expr,
         parse_preset_expr,
         parse_special_filter,
+        parse_hashtag_label,
         parse_label_filter,
         parse_subsystem_filter,
         parse_comparison_expr,
     ))
     .parse(input)
+}
+
+fn parse_hashtag_label(input: &str) -> IResult<&str, FilterExpr> {
+    let (input, negated) = opt(char('-')).parse(input)?;
+    let (input, _) = take_while1(|c: char| c == '#').parse(input)?;
+    let (input, label) =
+        take_while1(|c: char| c.is_alphanumeric() || c == '_' || c == ':').parse(input)?;
+
+    let expr = FilterExpr::LabelAny(vec![label.to_string()]);
+    if negated.is_some() {
+        Ok((input, FilterExpr::Not(Box::new(expr))))
+    } else {
+        Ok((input, expr))
+    }
 }
 
 fn parse_grouped_expr(input: &str) -> IResult<&str, FilterExpr> {

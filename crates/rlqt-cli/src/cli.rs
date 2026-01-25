@@ -306,7 +306,7 @@ fn logs_subcommands() -> Vec<Command> {
                 .short('q')
                 .required(true)
                 .value_name("QUERY")
-                .help("RQL query string (e.g., 'severity == \"error\" | limit 100')"),
+                .help("RQL query string (e.g., ':errors | limit 100', '#tls and -#timeouts')"),
         )
         .arg(
             Arg::new("without_colors")

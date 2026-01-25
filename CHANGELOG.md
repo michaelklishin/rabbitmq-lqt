@@ -2,7 +2,16 @@
 
 ## 0.18.0 (in development)
 
-No changes yet.
+### Enhancements
+
+ * QL now supports hashtag syntax for labels: `#tls`, `#connections`, `#timeouts`
+ * QL now also supports negated labels with a syntax extension: `-#label` is a shorthand for `not #label`
+
+   Example queries:
+
+    * `#tls`: entries with the TLS label
+    * `#connections and -#timeouts`: connection entries without timeouts
+    * `:errors and #shovels`: errors related to shovels
 
 
 ## 0.17.0 (Dec 20, 2025)

@@ -297,3 +297,19 @@ fn test_parse_error_preserves_position() {
         _ => panic!("Expected ParseFailed error"),
     }
 }
+
+#[test]
+fn test_hashtag_label_unknown_produces_error() {
+    let query = parse("#nonexistent_label").unwrap();
+    let err = compile(&query).unwrap_err();
+    let msg = err.to_string();
+    assert!(msg.contains("Unknown label"));
+    assert!(msg.contains("nonexistent_label"));
+}
+
+#[test]
+fn test_hashtag_label_typo_suggests_correction() {
+    let query = parse("#connection").unwrap();
+    let err = compile(&query).unwrap_err();
+    assert!(err.to_string().contains("Did you mean 'connections'?"));
+}

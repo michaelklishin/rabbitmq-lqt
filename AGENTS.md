@@ -74,6 +74,10 @@ The tool supports querying by severity, time range, subsystem, labels, and text 
  * To run the tests, run `cargo nextest run --all`
  * To run benchmarks, run `cargo bench` from the `crates/rlqt-lib` directory
 
+## Versioning
+
+The version in `crates/rlqt-ui/frontend/package.json` must match the Rust workspace version in `Cargo.toml`. Keep them in sync when bumping versions.
+
 ## Target Rust Version
 
  * This tool targets cutting edge Rust (currently `1.91.0`)

@@ -118,3 +118,13 @@ fn show_obfuscate_command_help() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+#[test]
+fn show_ql_command_help() -> Result<(), Box<dyn Error>> {
+    run_succeeds(["logs", "ql", "--help"])
+        .stdout(output_includes("Query log entries using RQL"))
+        .stdout(output_includes("--query"))
+        .stdout(output_includes("#tls"));
+
+    Ok(())
+}

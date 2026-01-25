@@ -551,3 +551,43 @@ fn test_compile_count_without_by() {
     assert!(compiled.has_aggregation);
     assert!(compiled.count_by_field.is_none());
 }
+
+#[test]
+fn test_compile_hashtag_label() {
+    let query = parse("#connections").unwrap();
+    let compiled = compile(&query).unwrap();
+    let sql = &compiled.sql_where_fragments[0];
+    assert!(sql.contains("labels &"));
+    assert!(sql.contains("!= 0"));
+
+    let query2 = parse("##connections").unwrap();
+    let compiled2 = compile(&query2).unwrap();
+    assert!(compiled2.sql_where_fragments[0].contains("labels &"));
+
+    let query3 = parse("#peer_discovery:classic").unwrap();
+    assert!(compile(&query3).is_ok());
+}
+
+#[test]
+fn test_compile_hashtag_label_unknown() {
+    let query = parse("#nonexistent_label_xyz").unwrap();
+    assert!(compile(&query).is_err());
+}
+
+#[test]
+fn test_compile_hashtag_label_boolean_operators() {
+    let or_query = parse("#connections or #disconnects").unwrap();
+    let or_compiled = compile(&or_query).unwrap();
+    assert!(or_compiled.sql_where_fragments[0].contains("OR"));
+
+    let and_query = parse("#connections and #tls").unwrap();
+    assert!(compile(&and_query).is_ok());
+}
+
+#[test]
+fn test_compile_hashtag_label_negated() {
+    let query = parse("-#connections").unwrap();
+    let compiled = compile(&query).unwrap();
+    let sql = &compiled.sql_where_fragments[0];
+    assert!(sql.contains("NOT"));
+}

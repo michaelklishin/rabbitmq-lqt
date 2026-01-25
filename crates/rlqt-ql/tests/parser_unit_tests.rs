@@ -922,3 +922,126 @@ fn test_parse_order_by_case_insensitive() {
         panic!("Expected Sort stage");
     }
 }
+
+#[test]
+fn test_parse_hashtag_label() {
+    let query = parse("#connections").unwrap();
+    if let FilterExpr::LabelAny(labels) = query.filter.as_ref().unwrap() {
+        assert_eq!(labels, &["connections"]);
+    } else {
+        panic!("Expected LabelAny filter");
+    }
+}
+
+#[test]
+fn test_parse_hashtag_label_special_chars() {
+    let cases = [
+        ("#access_control", "access_control"),
+        ("#peer_discovery:classic", "peer_discovery:classic"),
+        ("#amqp10", "amqp10"),
+    ];
+    for (input, expected) in cases {
+        let query = parse(input).unwrap();
+        if let FilterExpr::LabelAny(labels) = query.filter.as_ref().unwrap() {
+            assert_eq!(labels[0], expected, "Failed for input: {}", input);
+        } else {
+            panic!("Expected LabelAny filter for {}", input);
+        }
+    }
+}
+
+#[test]
+fn test_parse_hashtag_label_normalizes_multiple_hashes() {
+    for input in ["##connections", "###connections", "######connections"] {
+        let query = parse(input).unwrap();
+        if let FilterExpr::LabelAny(labels) = query.filter.as_ref().unwrap() {
+            assert_eq!(labels[0], "connections");
+        } else {
+            panic!("Expected LabelAny filter for {}", input);
+        }
+    }
+}
+
+#[test]
+fn test_parse_hashtag_label_invalid() {
+    assert!(parse("#").is_err());
+    assert!(parse("##").is_err());
+    assert!(parse("# connections").is_err());
+    assert!(parse("-#").is_err());
+    assert!(parse("-##").is_err());
+    assert!(parse("- #connections").is_err());
+}
+
+#[test]
+fn test_parse_hashtag_label_boolean_operators() {
+    let and_query = parse(r#"#connections and severity == "error""#).unwrap();
+    assert!(matches!(
+        and_query.filter.as_ref().unwrap(),
+        FilterExpr::And(_, _)
+    ));
+
+    let or_query = parse("#connections or #disconnects").unwrap();
+    assert!(matches!(
+        or_query.filter.as_ref().unwrap(),
+        FilterExpr::Or(_, _)
+    ));
+
+    let not_query = parse("not #connections").unwrap();
+    assert!(matches!(
+        not_query.filter.as_ref().unwrap(),
+        FilterExpr::Not(_)
+    ));
+
+    let preset_and_hashtag = parse(":errors and #connections").unwrap();
+    assert!(matches!(
+        preset_and_hashtag.filter.as_ref().unwrap(),
+        FilterExpr::And(_, _)
+    ));
+}
+
+#[test]
+fn test_parse_hashtag_label_with_pipeline_and_time_range() {
+    let query = parse("@1h #tls | sort timestamp desc | limit 10").unwrap();
+    assert!(query.time_range.is_some());
+    assert!(matches!(
+        query.filter.as_ref().unwrap(),
+        FilterExpr::LabelAny(_)
+    ));
+    assert_eq!(query.pipeline.len(), 2);
+}
+
+#[test]
+fn test_parse_hashtag_label_grouped() {
+    let query =
+        parse(r#"(#connections or #disconnects) and severity == "error" | limit 50"#).unwrap();
+    assert!(matches!(
+        query.filter.as_ref().unwrap(),
+        FilterExpr::And(_, _)
+    ));
+    assert_eq!(query.pipeline.len(), 1);
+}
+
+#[test]
+fn test_parse_hashtag_label_negated() {
+    let query = parse("-#connections").unwrap();
+    if let FilterExpr::Not(inner) = query.filter.as_ref().unwrap() {
+        assert!(matches!(inner.as_ref(), FilterExpr::LabelAny(_)));
+    } else {
+        panic!("Expected Not filter");
+    }
+}
+
+#[test]
+fn test_parse_hashtag_label_negated_normalizes_hashes() {
+    let query = parse("-##connections").unwrap();
+    assert!(matches!(query.filter.as_ref().unwrap(), FilterExpr::Not(_)));
+}
+
+#[test]
+fn test_parse_hashtag_label_negated_in_expression() {
+    let query = parse("#tls and -#timeouts").unwrap();
+    assert!(matches!(
+        query.filter.as_ref().unwrap(),
+        FilterExpr::And(_, _)
+    ));
+}
