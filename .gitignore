@@ -6,7 +6,5 @@ profile.json
 *.proptest-regressions
 benchmarks/*
 
-# Frontend build artifacts
+# Frontend build artifacts (node_modules only, dist and wasm/pkg are committed for crates.io)
 crates/rlqt-ui/frontend/node_modules
-crates/rlqt-ui/frontend/dist
-crates/rlqt-ui/frontend/src/wasm/pkg

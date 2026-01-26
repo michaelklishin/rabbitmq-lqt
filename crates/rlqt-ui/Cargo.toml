@@ -5,15 +5,28 @@ edition.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
-publish = false
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+description = "Web UI for RabbitMQ Log Querying Tools"
+include = [
+    "src/**/*",
+    "build.rs",
+    "Cargo.toml",
+    "frontend/dist/**/*",
+    "frontend/src/wasm/pkg/*.wasm",
+    "frontend/src/wasm/pkg/*.js",
+    "frontend/src/wasm/pkg/*.d.ts",
+    "frontend/src/wasm/pkg/package.json",
+]
 
 [lib]
 name = "rlqt_ui"
 path = "src/lib.rs"
 
 [dependencies]
-rlqt-lib = { path = "../rlqt-lib" }
-rlqt-ql = { path = "../rlqt-ql" }
+rlqt-lib = { version = "0.18.0", path = "../rlqt-lib" }
+rlqt-ql = { version = "0.18.0", path = "../rlqt-ql" }
 clap = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }

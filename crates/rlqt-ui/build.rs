@@ -161,10 +161,18 @@ fn main() {
         frontend_dir.join("postcss.config.js").display()
     );
 
-    // In CI, frontend is pre-built and downloaded as an artifact.
-    // Set RLQT_SKIP_FRONTEND_BUILD=1 to skip rebuilding.
+    // Skip frontend build if pre-built assets exist (for crates.io publishing and CI)
+    let dist_dir = frontend_dir.join("dist");
+    if dist_dir.exists() && dist_dir.join("index.html").exists() {
+        // Also check WASM is present
+        let wasm_pkg = frontend_dir.join("src/wasm/pkg/rlqt_ql_wasm_bg.wasm");
+        if wasm_pkg.exists() {
+            return;
+        }
+    }
+
+    // RLQT_SKIP_FRONTEND_BUILD=1 forces skip even without pre-built assets (CI artifact download)
     if env::var("RLQT_SKIP_FRONTEND_BUILD").is_ok() {
-        let dist_dir = frontend_dir.join("dist");
         if dist_dir.exists() && dist_dir.join("index.html").exists() {
             println!("cargo:warning=RLQT_SKIP_FRONTEND_BUILD set, using pre-built frontend");
             return;
