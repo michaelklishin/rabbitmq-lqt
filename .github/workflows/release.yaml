@@ -132,7 +132,7 @@ jobs:
         if: contains(matrix.target, 'musl')
         run: |
           sudo apt-get update
-          sudo apt-get install -y musl-tools musl-dev
+          sudo apt-get install -y musl-tools musl-dev clang
 
       - name: Install Nu Shell
         uses: hustcer/setup-nu@v3
