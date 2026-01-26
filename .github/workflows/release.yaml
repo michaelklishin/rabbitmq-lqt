@@ -238,11 +238,10 @@ jobs:
       matrix:
         include:
           # Linux musl, x86-64 (static, for Alpine)
+          # Note: aarch64-unknown-linux-musl dropped - GitHub Actions doesn't support
+          # JavaScript actions in Alpine containers on ARM runners
           - target: x86_64-unknown-linux-musl
             os: ubuntu-22.04
-          # Linux musl, aarch64 (static, for Alpine)
-          - target: aarch64-unknown-linux-musl
-            os: ubuntu-24.04-arm
 
     permissions:
       id-token: write
@@ -317,11 +316,6 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-x86_64-unknown-linux-musl"
-        path: ./artifacts
-    - name: Fetch aarch64 Linux musl (static) archive
-      uses: actions/download-artifact@v4
-      with:
-        name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-aarch64-unknown-linux-musl"
         path: ./artifacts
     - name: Publish rabbitmq-lqt release archive
       uses: softprops/action-gh-release@v2
