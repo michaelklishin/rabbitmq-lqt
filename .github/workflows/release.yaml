@@ -128,6 +128,12 @@ jobs:
           name: frontend-dist
           path: crates/rlqt-ui/frontend/dist
 
+      - name: Install musl tools for static Linux builds
+        if: contains(matrix.target, 'musl')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools musl-dev
+
       - name: Install Nu Shell
         uses: hustcer/setup-nu@v3
         with:
@@ -202,6 +208,9 @@ jobs:
           TARGET_RUSTFLAGS: ${{ matrix.target_rustflags }}
           SRC: ${{ github.workspace }}
           RLQT_SKIP_FRONTEND_BUILD: "1"
+          CC_x86_64_unknown_linux_musl: clang
+          CXX_x86_64_unknown_linux_musl: clang++
+          AR_x86_64_unknown_linux_musl: ar
       - name: Store x86-64 Linux musl build artifact
         id: upload-amd64-linux-musl-artifact
         if: ${{ matrix.target == 'x86_64-unknown-linux-musl' }}
@@ -221,6 +230,9 @@ jobs:
           TARGET_RUSTFLAGS: ${{ matrix.target_rustflags }}
           SRC: ${{ github.workspace }}
           RLQT_SKIP_FRONTEND_BUILD: "1"
+          CC_aarch64_unknown_linux_musl: clang
+          CXX_aarch64_unknown_linux_musl: clang++
+          AR_aarch64_unknown_linux_musl: ar
       - name: Store aarch64 Linux musl build artifact
         id: upload-aarch64-linux-musl-artifact
         if: ${{ matrix.target == 'aarch64-unknown-linux-musl' }}
