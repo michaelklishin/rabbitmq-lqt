@@ -31,14 +31,6 @@ if ($os | str starts-with 'ubuntu') {
     build-with-cargo
   } else if $target == 'aarch64-unknown-linux-gnu' {
     build-with-cargo
-  } else if $target == 'x86_64-unknown-linux-musl' {
-    sudo apt-get update
-    sudo apt-get install -y musl-tools
-    build-static-with-cargo
-  } else if $target == 'aarch64-unknown-linux-musl' {
-    sudo apt-get update
-    sudo apt-get install -y musl-tools
-    build-static-with-cargo
   } else if $target == 'armv7-unknown-linux-gnueabihf' {
     sudo apt-get install pkg-config gcc-arm-linux-gnueabihf -y
     build-with-cargo
@@ -87,10 +79,5 @@ ls $release_dir | print
 echo $'artifact=($artifact_filename)' | save --append $env.GITHUB_OUTPUT
 
 def 'build-with-cargo' [] {
-  cargo rustc --package rlqt-cli --bin $binary --target $target --release
-}
-
-def 'build-static-with-cargo' [] {
-  $env.RUSTFLAGS = '-C target-feature=+crt-static'
   cargo rustc --package rlqt-cli --bin $binary --target $target --release
 }
