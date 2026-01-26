@@ -25,6 +25,8 @@ rlqt-obfuscation = { version = "0.19.0", path = "../rlqt-obfuscation" }
 rlqt-ql = { version = "0.19.0", path = "../rlqt-ql" }
 rlqt-ui = { version = "0.19.0", path = "../rlqt-ui", optional = true }
 clap = { workspace = true }
+clap_complete = { workspace = true }
+clap_complete_nushell = { workspace = true }
 bel7-cli = { workspace = true }
 tabled = { workspace = true }
 tokio = { workspace = true }
@@ -48,4 +50,5 @@ tempfile = { workspace = true }
 [dev-dependencies]
 assert_cmd = "2"
 predicates = "3"
+proptest = { workspace = true }
 tempfile = "3"

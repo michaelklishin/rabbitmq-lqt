@@ -11,13 +11,52 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-use clap::{Arg, ArgAction, Command};
+use clap::{Arg, ArgAction, Command, ValueEnum, value_parser};
+use std::env;
+use std::path::Path;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum CompletionShell {
+    Bash,
+    Elvish,
+    Fish,
+    #[value(name = "nushell", alias = "nu")]
+    Nushell,
+    Zsh,
+}
+
+impl CompletionShell {
+    pub fn detect() -> Self {
+        env::var("SHELL")
+            .ok()
+            .and_then(|s| {
+                let shell_name = Path::new(&s)
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or(&s);
+                match shell_name {
+                    "bash" => Some(CompletionShell::Bash),
+                    "zsh" => Some(CompletionShell::Zsh),
+                    "fish" => Some(CompletionShell::Fish),
+                    "elvish" => Some(CompletionShell::Elvish),
+                    "nu" | "nushell" => Some(CompletionShell::Nushell),
+                    _ => None,
+                }
+            })
+            .unwrap_or(CompletionShell::Bash)
+    }
+}
 
 pub fn clap_parser() -> Command {
     let logs_group = Command::new("logs")
         .about("Log file operations")
         .subcommand_required(true)
         .subcommands(logs_subcommands());
+
+    let shell_group = Command::new("shell")
+        .about("Shell-related operations")
+        .subcommand_required(true)
+        .subcommands(shell_subcommands());
 
     let about = format!(
         "RabbitMQ Log Query Toolkit (RLQT) {}: parse, query, analyze, obfuscate RabbitMQ log files",
@@ -28,7 +67,8 @@ pub fn clap_parser() -> Command {
         .long_about(&about)
         .about(&about)
         .subcommand_required(true)
-        .subcommand(logs_group);
+        .subcommand(logs_group)
+        .subcommand(shell_group);
 
     #[cfg(feature = "web-ui")]
     let cmd = {
@@ -40,6 +80,25 @@ pub fn clap_parser() -> Command {
     };
 
     cmd
+}
+
+fn shell_subcommands() -> Vec<Command> {
+    let completions_cmd = Command::new("completions")
+        .about("Generate shell completion scripts for the CLI")
+        .long_about(
+            "Generates shell completion scripts for bash, zsh, fish, elvish, or nushell.\n\n\
+             If --shell is not specified, the shell is detected from the SHELL environment variable.\n\
+             If detection fails, bash is used as the default.",
+        )
+        .arg(
+            Arg::new("shell")
+                .long("shell")
+                .help("Target shell (bash, zsh, fish, elvish, nushell)")
+                .required(false)
+                .value_parser(value_parser!(CompletionShell)),
+        );
+
+    vec![completions_cmd]
 }
 
 #[cfg(feature = "web-ui")]

@@ -14,6 +14,7 @@
 mod archive;
 mod cli;
 mod commands;
+mod completions;
 mod core;
 mod errors;
 mod output;
@@ -54,6 +55,24 @@ async fn dispatch_command(cli: &clap::ArgMatches) -> ExitCode {
                     BIN_NAME
                 );
                 log::error!("Unknown logs subcommand");
+                ExitCode::Usage
+            }
+        },
+        Some(("shell", shell_args)) => match shell_args.subcommand() {
+            Some(("completions", args)) => {
+                let shell = args
+                    .get_one::<cli::CompletionShell>("shell")
+                    .copied()
+                    .unwrap_or_else(cli::CompletionShell::detect);
+                completions::generate_completions(shell);
+                ExitCode::Ok
+            }
+            _ => {
+                eprintln!(
+                    "Unknown shell subcommand. Try '{} shell --help' for available commands.",
+                    BIN_NAME
+                );
+                log::error!("Unknown shell subcommand");
                 ExitCode::Usage
             }
         },
