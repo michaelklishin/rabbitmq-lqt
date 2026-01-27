@@ -25,8 +25,6 @@ rlqt-obfuscation = { version = "0.19.0", path = "../rlqt-obfuscation" }
 rlqt-ql = { version = "0.19.0", path = "../rlqt-ql" }
 rlqt-ui = { version = "0.19.0", path = "../rlqt-ui", optional = true }
 clap = { workspace = true }
-clap_complete = { workspace = true }
-clap_complete_nushell = { workspace = true }
 bel7-cli = { workspace = true }
 tabled = { workspace = true }
 tokio = { workspace = true }
@@ -38,10 +36,8 @@ chrono-english = { workspace = true }
 duckdb = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-terminal_size = { workspace = true }
 owo-colors = { workspace = true }
 rayon = { workspace = true }
-indicatif = { workspace = true }
 flate2 = { workspace = true }
 lzma-rs = { workspace = true }
 tar = { workspace = true }

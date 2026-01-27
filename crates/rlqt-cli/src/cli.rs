@@ -11,41 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-use clap::{Arg, ArgAction, Command, ValueEnum, value_parser};
-use std::env;
-use std::path::Path;
+use clap::{Arg, ArgAction, Command, value_parser};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
-pub enum CompletionShell {
-    Bash,
-    Elvish,
-    Fish,
-    #[value(name = "nushell", alias = "nu")]
-    Nushell,
-    Zsh,
-}
-
-impl CompletionShell {
-    pub fn detect() -> Self {
-        env::var("SHELL")
-            .ok()
-            .and_then(|s| {
-                let shell_name = Path::new(&s)
-                    .file_name()
-                    .and_then(|n| n.to_str())
-                    .unwrap_or(&s);
-                match shell_name {
-                    "bash" => Some(CompletionShell::Bash),
-                    "zsh" => Some(CompletionShell::Zsh),
-                    "fish" => Some(CompletionShell::Fish),
-                    "elvish" => Some(CompletionShell::Elvish),
-                    "nu" | "nushell" => Some(CompletionShell::Nushell),
-                    _ => None,
-                }
-            })
-            .unwrap_or(CompletionShell::Bash)
-    }
-}
+pub use bel7_cli::CompletionShell;
 
 pub fn clap_parser() -> Command {
     let logs_group = Command::new("logs")

@@ -18,11 +18,10 @@ use crate::archive::{
 use crate::core::Result;
 use crate::errors::CommandRunError;
 use crate::output;
-use bel7_cli::{ExitCode, ExitCodeProvider};
+use bel7_cli::{BRAILLE_TICK_CHARS, ExitCode, ExitCodeProvider, SpinnerReporter};
 use chrono::{DateTime, Utc};
 use clap::ArgMatches;
 use duckdb::Error as DuckDbError;
-use indicatif::{ProgressBar, ProgressStyle};
 use rayon::prelude::*;
 use rlqt_lib::file_set_metadata::extract_file_metadata;
 use rlqt_lib::parser::ParsedLogEntry;
@@ -300,39 +299,32 @@ fn collect_log_paths_from_args(args: &ArgMatches) -> Result<Vec<PathBuf>> {
 }
 
 fn process_log_file(log_path: &Path, tx: &mpsc::Sender<InsertionTask>, silent: bool) -> Result<()> {
-    let file_progress = if !silent {
-        let pb = ProgressBar::new_spinner();
-        pb.set_style(
-            ProgressStyle::default_spinner()
-                .template("{spinner:.green} {msg}")
-                .unwrap()
-                .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]),
-        );
-        pb.set_message(format!("Parsing {}", log_path.display()));
-        pb.enable_steady_tick(Duration::from_millis(100));
-        Some(pb)
+    let mut spinner = if !silent {
+        let mut s = SpinnerReporter::new().with_tick_chars(BRAILLE_TICK_CHARS);
+        s.start(&format!("Parsing {}", log_path.display()));
+        Some(s)
     } else {
         None
     };
 
     let node_name = extract_node_name(log_path)?;
 
-    if let Some(pb) = &file_progress {
-        pb.set_message(format!("Reading {}", log_path.display()));
+    if let Some(ref s) = spinner {
+        s.set_message(&format!("Reading {}", log_path.display()));
     }
 
     let reader = open_log_reader(log_path)?;
 
-    if let Some(pb) = &file_progress {
-        pb.set_message(format!("Parsing {}", log_path.display()));
+    if let Some(ref s) = spinner {
+        s.set_message(&format!("Parsing {}", log_path.display()));
     }
 
     let parse_result = parse_log_file(reader)?;
     let total_lines = parse_result.total_lines;
     let entries = parse_result.entries;
 
-    if let Some(pb) = &file_progress {
-        pb.set_message(format!("Processing {} entries", entries.len()));
+    if let Some(ref s) = spinner {
+        s.set_message(&format!("Processing {} entries", entries.len()));
     }
 
     let chunks: Vec<_> = entries
@@ -370,8 +362,8 @@ fn process_log_file(log_path: &Path, tx: &mpsc::Sender<InsertionTask>, silent: b
         ))))
     })?;
 
-    if let Some(pb) = &file_progress {
-        pb.finish_with_message(format!("✓ Parsed {}", log_path.display()));
+    if let Some(ref mut s) = spinner {
+        s.finish(&format!("✓ Parsed {}", log_path.display()));
     }
 
     Ok(())
@@ -431,16 +423,10 @@ fn parse_logs(args: &ArgMatches) -> Result<()> {
     wait_for_insertion_thread(insert_thread)?;
     drop(extracted_archives);
 
-    let index_progress = if !silent {
-        let pb = ProgressBar::new_spinner();
-        pb.set_style(
-            ProgressStyle::default_spinner()
-                .template("{spinner:.green} {msg}")
-                .unwrap(),
-        );
-        pb.set_message("Creating database indexes...");
-        pb.enable_steady_tick(Duration::from_millis(100));
-        Some(pb)
+    let mut index_spinner = if !silent {
+        let mut s = SpinnerReporter::new().with_tick_chars(BRAILLE_TICK_CHARS);
+        s.start("Creating database indexes...");
+        Some(s)
     } else {
         None
     };
@@ -448,8 +434,8 @@ fn parse_logs(args: &ArgMatches) -> Result<()> {
     post_insertion_operations(&db)?;
     finalize_bulk_import(&db)?;
 
-    if let Some(pb) = index_progress {
-        pb.finish_with_message("✓ Indexes created");
+    if let Some(ref mut s) = index_spinner {
+        s.finish("✓ Indexes created");
     }
 
     let total = NodeLogEntry::count_all(&db)?;
@@ -792,17 +778,10 @@ fn obfuscate_log(args: &ArgMatches) -> Result<()> {
 
     let silent = args.get_flag("silent");
 
-    let progress = if !silent {
-        let pb = ProgressBar::new_spinner();
-        pb.set_style(
-            ProgressStyle::default_spinner()
-                .template("{spinner:.green} {msg}")
-                .unwrap()
-                .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]),
-        );
-        pb.set_message(format!("Obfuscating {}", input_path.display()));
-        pb.enable_steady_tick(Duration::from_millis(100));
-        Some(pb)
+    let mut spinner = if !silent {
+        let mut s = SpinnerReporter::new().with_tick_chars(BRAILLE_TICK_CHARS);
+        s.start(&format!("Obfuscating {}", input_path.display()));
+        Some(s)
     } else {
         None
     };
@@ -860,8 +839,8 @@ fn obfuscate_log(args: &ArgMatches) -> Result<()> {
         )))
     })?;
 
-    if let Some(pb) = progress {
-        pb.finish_and_clear();
+    if let Some(ref mut s) = spinner {
+        s.finish_and_clear();
     }
 
     let stats = obfuscator.stats();

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 use crate::errors::CommandRunError;
+use bel7_cli::{responsive_width, should_colorize};
 use owo_colors::OwoColorize;
 use rlqt_lib::constants::{doc_url_from_id, resolution_or_discussion_url_from_id};
 use rlqt_lib::entry_metadata::subsystems::Subsystem;
@@ -19,25 +20,17 @@ use rlqt_lib::rel_db::file_metadata;
 use rlqt_lib::rel_db::node_log_entry::Model;
 use std::borrow::Cow;
 use std::collections::hash_map::DefaultHasher;
-use std::env;
 use std::hash::{Hash, Hasher};
-use std::io::{self, IsTerminal};
 use tabled::{
     Table, Tabled,
     settings::{Modify, Style, Width, object::Columns},
 };
-use terminal_size::{Width as TermWidth, terminal_size};
 
 fn should_use_colors(without_colors_flag: bool) -> bool {
     if without_colors_flag {
         return false;
     }
-
-    if env::var("NO_COLOR").is_ok() {
-        return false;
-    }
-
-    io::stdout().is_terminal()
+    should_colorize()
 }
 
 const ID_COLUMN_WIDTH: usize = 6;
@@ -78,7 +71,6 @@ const _: () = assert!(
 );
 
 const MIN_MESSAGE_WIDTH: usize = 60;
-const DEFAULT_TERMINAL_WIDTH: usize = 120;
 const TERMINAL_WIDTH_UTILIZATION: f64 = 0.85;
 
 fn colorize_node_name(node: &str, use_colors: bool) -> Cow<'_, str> {
@@ -209,11 +201,7 @@ pub fn display_log_entries(
     let mut table = Table::new(&display_entries);
     table.with(Style::modern());
 
-    let term_width = terminal_size()
-        .map(|(TermWidth(w), _)| w as usize)
-        .unwrap_or(DEFAULT_TERMINAL_WIDTH);
-
-    let target_width = (term_width as f64 * TERMINAL_WIDTH_UTILIZATION) as usize;
+    let target_width = responsive_width(TERMINAL_WIDTH_UTILIZATION);
 
     let message_width = target_width
         .saturating_sub(FIXED_COLUMNS_WIDTH)

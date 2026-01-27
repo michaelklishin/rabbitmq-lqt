@@ -12,22 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 use crate::cli::{CompletionShell, clap_parser};
-use clap_complete::Shell as ClapShell;
-use clap_complete::generate;
-use clap_complete_nushell::Nushell;
-use std::io;
+use bel7_cli::generate_completions_to_stdout;
 
 const BIN_NAME: &str = "rabbitmq-lqt";
 
 pub fn generate_completions(shell: CompletionShell) {
     let mut cmd = clap_parser();
-    match shell {
-        CompletionShell::Bash => generate(ClapShell::Bash, &mut cmd, BIN_NAME, &mut io::stdout()),
-        CompletionShell::Elvish => {
-            generate(ClapShell::Elvish, &mut cmd, BIN_NAME, &mut io::stdout())
-        }
-        CompletionShell::Fish => generate(ClapShell::Fish, &mut cmd, BIN_NAME, &mut io::stdout()),
-        CompletionShell::Nushell => generate(Nushell, &mut cmd, BIN_NAME, &mut io::stdout()),
-        CompletionShell::Zsh => generate(ClapShell::Zsh, &mut cmd, BIN_NAME, &mut io::stdout()),
-    }
+    generate_completions_to_stdout(shell, &mut cmd, BIN_NAME);
 }

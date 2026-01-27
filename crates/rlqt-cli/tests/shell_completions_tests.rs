@@ -26,6 +26,7 @@ where
 {
     let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("rabbitmq-lqt"));
     cmd.env("SHELL", shell_path);
+    cmd.env_remove("NU_VERSION");
     cmd.args(args);
     assert_cmd::assert::Assert::new(cmd.output().unwrap())
 }
@@ -37,6 +38,7 @@ where
 {
     let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("rabbitmq-lqt"));
     cmd.env_remove("SHELL");
+    cmd.env_remove("NU_VERSION");
     cmd.args(args);
     assert_cmd::assert::Assert::new(cmd.output().unwrap())
 }
@@ -276,6 +278,7 @@ mod property_tests {
     {
         let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("rabbitmq-lqt"));
         cmd.env("SHELL", shell_path);
+        cmd.env_remove("NU_VERSION");
         cmd.args(args);
         assert_cmd::assert::Assert::new(cmd.output().unwrap())
     }
