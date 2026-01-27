@@ -14,6 +14,7 @@
 
 mod test_helpers;
 
+use bel7_cli::CommandShellExt;
 use std::error::Error;
 use std::ffi::OsStr;
 use std::process::Command;
@@ -25,8 +26,8 @@ where
     S: AsRef<OsStr>,
 {
     let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("rabbitmq-lqt"));
+    cmd.clear_shell_detection_env();
     cmd.env("SHELL", shell_path);
-    cmd.env_remove("NU_VERSION");
     cmd.args(args);
     assert_cmd::assert::Assert::new(cmd.output().unwrap())
 }
@@ -37,8 +38,7 @@ where
     S: AsRef<OsStr>,
 {
     let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("rabbitmq-lqt"));
-    cmd.env_remove("SHELL");
-    cmd.env_remove("NU_VERSION");
+    cmd.clear_shell_detection_env();
     cmd.args(args);
     assert_cmd::assert::Assert::new(cmd.output().unwrap())
 }
@@ -267,6 +267,7 @@ fn shell_completions_nushell_has_valid_syntax() -> Result<(), Box<dyn Error>> {
 }
 
 mod property_tests {
+    use bel7_cli::CommandShellExt;
     use proptest::prelude::*;
     use std::ffi::OsStr;
     use std::process::Command;
@@ -277,8 +278,8 @@ mod property_tests {
         S: AsRef<OsStr>,
     {
         let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("rabbitmq-lqt"));
+        cmd.clear_shell_detection_env();
         cmd.env("SHELL", shell_path);
-        cmd.env_remove("NU_VERSION");
         cmd.args(args);
         assert_cmd::assert::Assert::new(cmd.output().unwrap())
     }
