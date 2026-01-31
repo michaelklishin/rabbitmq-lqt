@@ -1,6 +1,13 @@
-# Change log
+# rabbitmq-lqt Change Log
 
-## 0.18.0 (Jan 25, 2026)
+## v0.19.0 (in development)
+
+### Enhancements
+
+ * TBD
+
+
+## v0.18.0 (Jan 25, 2026)
 
 ### Enhancements
 
@@ -14,7 +21,7 @@
     * `:errors and #shovels`: errors related to shovels
 
 
-## 0.17.0 (Dec 20, 2025)
+## v0.17.0 (Dec 20, 2025)
 
 ### Enhancements
 
@@ -25,7 +32,7 @@
    `.log.gz`, `.log.xz`, `.tar.gz`, `.tgz`, `.tar.xz`, `.txz`
 
 
-## 0.16.0 (Dec 14, 2025)
+## v0.16.0 (Dec 14, 2025)
 
 ### Enhancements
 
@@ -33,7 +40,7 @@
  * `web serve` now automatically opens server URL in the browser
 
 
-## 0.15.0 (Dec 13, 2025)
+## v0.15.0 (Dec 13, 2025)
 
 ### Enhancements
 
@@ -54,14 +61,14 @@
    (`and`, `or`, `not`), grouping with parentheses, and pipeline stages (`| limit`, `| sort`)
 
 
-## 0.14.0 (Dec 11, 2025)
+## v0.14.0 (Dec 11, 2025)
 
 ### Enhancements
 
  * New command: `logs merge` merges additional log files into an existing database
 
 
-## 0.13.0 (Dec 11, 2025)
+## v0.13.0 (Dec 11, 2025)
 
 ### Bug Fixes
 
@@ -76,7 +83,7 @@
  * An experimental preset subsystem. A preset is a collection of filters used together.
  * Web UI now includes the first preset: Errors and Exceptions
 
-## 0.12.0 (Dec 6, 2025)
+## v0.12.0 (Dec 6, 2025)
 
 ### Enhancements
 
@@ -89,7 +96,7 @@
 
 
 
-## 0.11.0 (Dec 2, 2025)
+## v0.11.0 (Dec 2, 2025)
 
 ### Bug Fixes
 
