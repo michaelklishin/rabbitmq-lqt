@@ -38,7 +38,7 @@ fn strip_ansi_codes(input: &str) -> std::borrow::Cow<'_, str> {
 }
 
 /// Initial capacity for the entries vector during parsing.
-/// This value is not very scientific but helps a lot of reallocations
+/// This value is not very scientific but avoids many reallocations
 /// compared to the original version with a much smaller initial capacity,
 /// according to benchmarks and profiling.
 const INITIAL_ENTRIES_CAPACITY: usize = 16384;

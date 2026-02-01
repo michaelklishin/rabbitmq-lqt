@@ -94,7 +94,7 @@ The version in `crates/rlqt-ui/frontend/package.json` must match the Rust worksp
 
 ## Rust Code Style
 
- * Use top-level `use` statements (imports) to fully-qualified names, e.g. `Display` or `fmt::Display` with a `use` statement, to `std::fmt::Display`
+ * Prefer short names like `Display` or `fmt::Display` with a `use` statement over fully-qualified names like `std::fmt::Display`
  * Never use function-local `use` statements (imports)
  * Add tests to the modules under `tests`, never in the implementation files
  * At the end of each task, run `cargo fmt --all`

@@ -9,7 +9,7 @@ and its annotated data store is entirely local.
 
 ## Project Maturity
 
-This tool is is young and should be considered an emerging project
+This tool is young and should be considered an emerging project
 that will evolve over time, for example, by adding more annotators and
 improving the querying capabilities.
 
@@ -44,7 +44,7 @@ rabbitmq-lqt logs query --help
 
 ### Parsing and Annotating Log files
 
-This tool takes on a group of log files, one or more per node, using the standard RabbitMQ log file
+This tool takes a group of log files, one or more per node, using the standard RabbitMQ log file
 naming convention where the node name is included into the file (e.g. `rabbit@hostname1.eng.megacorp.local.log`),
 parses them, then annotates the log entries and produces a database file
 for querying.
@@ -82,7 +82,7 @@ rabbitmq-lqt logs query --input-db-file-path /tmp/log_set_abc.rlqt \
 # show up to 2000 most recent messages related to Raft leader elections
 rabbitmq-lqt logs query --input-db-file-path /tmp/log_set_abc.rlqt \
                         --label raft --label election \
-                        # combined the above labels using a logical "AND"
+                        # combines the above labels using a logical "AND"
                         --matching-all-labels \
                         --limit 2000
 
@@ -139,7 +139,7 @@ Incremental updates are intentionally not supported.
 
 ## Large Log File support
 
-This tool supports log files up to million lines long. Each input file is parsed in parallel.
+This tool supports log files up to a million lines long. Each input file is parsed in parallel.
 Result annotation is also optimized for multi-core CPUs.
 
 A 1M log file can be parsed and annotated in about a minute on an M1 MacBook Pro from late 2021,
