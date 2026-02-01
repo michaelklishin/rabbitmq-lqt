@@ -21,21 +21,26 @@ mod output;
 
 use bel7_cli::ExitCode;
 use std::io::stderr;
-use std::process::exit;
 
 #[cfg(feature = "web-ui")]
 use std::path::PathBuf;
 
-#[tokio::main]
-async fn main() {
-    init_logging();
+fn main() -> ExitCode {
+    if let Err(e) = init_logging() {
+        eprintln!("Failed to initialize logging: {}", e);
+        return ExitCode::Software;
+    }
+
+    let rt = match tokio::runtime::Runtime::new() {
+        Ok(rt) => rt,
+        Err(e) => {
+            eprintln!("Failed to create Tokio runtime: {}", e);
+            return ExitCode::OsErr;
+        }
+    };
 
     let matches = cli::clap_parser().get_matches();
-    let exit_code = dispatch_command(&matches).await;
-
-    if exit_code != ExitCode::Ok {
-        exit(exit_code as i32);
-    }
+    rt.block_on(dispatch_command(&matches))
 }
 
 const BIN_NAME: &str = env!("CARGO_BIN_NAME");
@@ -123,7 +128,7 @@ async fn handle_web_serve_command(args: &clap::ArgMatches) -> ExitCode {
     }
 }
 
-fn init_logging() {
+fn init_logging() -> Result<(), log::SetLoggerError> {
     fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!(
@@ -138,8 +143,4 @@ fn init_logging() {
         .level_for("sqlx::pool::acquire", log::LevelFilter::Off)
         .chain(stderr())
         .apply()
-        .unwrap_or_else(|e| {
-            eprintln!("Failed to initialize logging: {}", e);
-            exit(1);
-        });
 }
