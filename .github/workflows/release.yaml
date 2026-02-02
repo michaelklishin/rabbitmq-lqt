@@ -224,7 +224,7 @@ jobs:
       - name: Build static rabbitmq-lqt binary
         run: |
           source $HOME/.cargo/env
-          cargo build --release --locked --package rlqt-cli --no-default-features
+          cargo build --release --locked --package rlqt-cli --no-default-features --features mimalloc
         env:
           RLQT_SKIP_FRONTEND_BUILD: "1"
 
