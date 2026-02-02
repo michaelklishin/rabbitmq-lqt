@@ -6,6 +6,10 @@
 
  * TBD
 
+### Internal Changes
+
+ * Non-trivial build infrastructure changes
+
 
 ## v0.18.0 (Jan 25, 2026)
 

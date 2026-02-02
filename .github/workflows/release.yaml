@@ -14,23 +14,38 @@ permissions:
   contents: write
 
 jobs:
-  validate_version:
-    name: Validate Release Version
+  validate:
+    name: Validate Release
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
     outputs:
-      version: ${{ steps.validate.outputs.version }}
+      version: ${{ steps.version.outputs.version }}
     steps:
     - uses: actions/checkout@v6
 
     - uses: michaelklishin/rust-release-action@v1
-      id: validate
+      id: version
       with:
         command: validate-version
+        validate-cargo-toml: true
+
+    - uses: michaelklishin/rust-release-action@v1
+      id: changelog
+      with:
+        command: extract-changelog
+        version: ${{ steps.version.outputs.version }}
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: release-notes
+        path: ${{ steps.changelog.outputs.release_notes_file }}
+        retention-days: 1
 
   build_frontend:
     name: Build WASM and Frontend
-    needs: [validate_version]
+    needs: [validate]
     runs-on: ubuntu-22.04
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v6
@@ -84,8 +99,8 @@ jobs:
   release:
     name: Build and Archive
     needs: [build_frontend]
-
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
 
     strategy:
       matrix:
@@ -100,10 +115,6 @@ jobs:
             os: ubuntu-22.04
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-24.04-arm
-
-    permissions:
-      id-token: write
-      contents: write
 
     steps:
       - uses: actions/checkout@v6
@@ -133,6 +144,7 @@ jobs:
           binary-name: rabbitmq-lqt
           archive: true
           checksum: sha256
+          locked: true
         env:
           RLQT_SKIP_FRONTEND_BUILD: "1"
 
@@ -142,26 +154,17 @@ jobs:
           path: ${{ steps.build.outputs.artifact_path }}
           retention-days: 2
 
-  release_musl:
-    name: Build and Archive (musl/Alpine)
+  build_musl:
+    name: Build Static Binary (musl/Alpine)
     needs: [build_frontend]
-
     runs-on: ubuntu-22.04
+    timeout-minutes: 30
     container:
       image: alpine:3.21
 
     defaults:
       run:
         shell: sh
-
-    strategy:
-      matrix:
-        include:
-          - target: x86_64-unknown-linux-musl
-
-    permissions:
-      id-token: write
-      contents: write
 
     steps:
       - name: Install Alpine build dependencies
@@ -183,21 +186,22 @@ jobs:
       - name: Build static rabbitmq-lqt binary
         run: |
           source $HOME/.cargo/env
-          cargo build --release --package rlqt-cli --no-default-features
+          cargo build --release --locked --package rlqt-cli --no-default-features
         env:
           RLQT_SKIP_FRONTEND_BUILD: "1"
 
       - name: Upload raw binary for packaging
         uses: actions/upload-artifact@v4
         with:
-          name: rabbitmq-lqt-musl-raw
+          name: musl-binary-raw
           path: target/release/rabbitmq-lqt
           retention-days: 1
 
   package_musl:
     name: Package musl Binary
-    needs: [release_musl, validate_version]
+    needs: [build_musl, validate]
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v6
@@ -205,7 +209,7 @@ jobs:
       - name: Download raw musl binary
         uses: actions/download-artifact@v4
         with:
-          name: rabbitmq-lqt-musl-raw
+          name: musl-binary-raw
           path: target/release
 
       - uses: michaelklishin/rust-release-action@v1
@@ -226,17 +230,15 @@ jobs:
           path: ${{ steps.package.outputs.artifact_path }}
           retention-days: 2
 
-  create_gh_release:
-    needs: [release, package_musl, validate_version]
+  create_release:
+    name: Create GitHub Release
+    needs: [release, package_musl, validate]
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
-    - uses: actions/checkout@v6
-
-    - uses: michaelklishin/rust-release-action@v1
-      id: changelog
+    - uses: actions/download-artifact@v4
       with:
-        command: extract-changelog
-        version: ${{ needs.validate_version.outputs.version }}
+        name: release-notes
 
     - uses: actions/download-artifact@v4
       with:
@@ -247,9 +249,9 @@ jobs:
     - name: Publish rabbitmq-lqt release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v${{ needs.validate_version.outputs.version }}
+        tag_name: v${{ needs.validate.outputs.version }}
         draft: false
-        body_path: ${{ steps.changelog.outputs.release_notes_file }}
+        body_path: release_notes.md
         files: ./artifacts/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
