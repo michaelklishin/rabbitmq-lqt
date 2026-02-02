@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     tags:
-    - 'v\d\.\d+\.\d+'
+    - 'v[0-9]+.[0-9]+.[0-9]+*'
 
 defaults:
   run:
@@ -17,21 +17,15 @@ jobs:
   validate_version:
     name: Validate Release Version
     runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.validate.outputs.version }}
     steps:
     - uses: actions/checkout@v6
 
-    - name: Install Nu Shell
-      uses: hustcer/setup-nu@v3
+    - uses: michaelklishin/rust-release-action@v1
+      id: validate
       with:
-        version: '0.100'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Validate NEXT_RELEASE_VERSION matches tag
-      run: nu ./scripts/validate-release-version.nu
-      env:
-        NEXT_RELEASE_VERSION: ${{ vars.NEXT_RELEASE_VERSION }}
-        GITHUB_REF_NAME: ${{ github.ref_name }}
+        command: validate-version
 
   build_frontend:
     name: Build WASM and Frontend
@@ -96,26 +90,16 @@ jobs:
     strategy:
       matrix:
         include:
-          # macOS, aarch64
           - target: aarch64-apple-darwin
             os: macos-latest
-            target_rustflags: ''
-          # Windows, x86-64
           - target: x86_64-pc-windows-msvc
             os: windows-latest
-            target_rustflags: ''
-          # Windows, aarch64
           - target: aarch64-pc-windows-msvc
             os: windows-11-arm
-            target_rustflags: ''
-          # Linux, x86-64
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-22.04
-            target_rustflags: ''
-          # Linux, aarch64
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-24.04-arm
-            target_rustflags: ''
 
     permissions:
       id-token: write
@@ -140,113 +124,29 @@ jobs:
           name: frontend-dist
           path: crates/rlqt-ui/frontend/dist
 
-      - name: Install Nu Shell
-        uses: hustcer/setup-nu@v3
+      - uses: michaelklishin/rust-release-action@v1
+        id: build
         with:
-          version: '0.100'
+          command: release
+          target: ${{ matrix.target }}
+          package: rlqt-cli
+          binary-name: rabbitmq-lqt
+          archive: true
+          checksum: sha256
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build a rabbitmq-lqt release archive on macOS
-        id: release-build-macos
-        if: ${{ matrix.os == 'macos-latest' }}
-        run: nu ./scripts/release-macos.nu
-        env:
-          OS: ${{ matrix.os }}
-          TARGET: ${{ matrix.target }}
-          TARGET_RUSTFLAGS: ${{ matrix.target_rustflags }}
-          SRC: ${{ github.workspace }}
           RLQT_SKIP_FRONTEND_BUILD: "1"
-      - name: Store macOS build artifact
-        id: upload-macos-artifact
-        if: ${{ matrix.os == 'macos-latest' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}"
-          path: "${{ github.workspace }}/target/${{ matrix.target }}/release/rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}"
-          retention-days: 2
 
-      - name: Build a rabbitmq-lqt release archive on x86-64 Linux
-        id: release-build-amd64-linux
-        if: ${{ matrix.target == 'x86_64-unknown-linux-gnu' }}
-        run: nu ./scripts/release-linux.nu
-        env:
-          OS: ${{ matrix.os }}
-          TARGET: ${{ matrix.target }}
-          TARGET_RUSTFLAGS: ${{ matrix.target_rustflags }}
-          SRC: ${{ github.workspace }}
-          RLQT_SKIP_FRONTEND_BUILD: "1"
-      - name: Store x86-64 Linux build artifact
-        id: upload-amd64-linux-artifact
-        if: ${{ matrix.target == 'x86_64-unknown-linux-gnu' }}
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}"
-          path: "${{ github.workspace }}/target/${{ matrix.target }}/release/rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}"
-          retention-days: 2
-
-      - name: Build a rabbitmq-lqt release archive on aarch64 Linux
-        id: release-build-aarch64-linux
-        if: ${{ matrix.target == 'aarch64-unknown-linux-gnu' }}
-        run: nu ./scripts/release-linux.nu
-        env:
-          OS: ${{ matrix.os }}
-          TARGET: ${{ matrix.target }}
-          TARGET_RUSTFLAGS: ${{ matrix.target_rustflags }}
-          SRC: ${{ github.workspace }}
-          RLQT_SKIP_FRONTEND_BUILD: "1"
-      - name: Store aarch64 Linux build artifact
-        id: upload-aarch64-linux-artifact
-        if: ${{ matrix.target == 'aarch64-unknown-linux-gnu' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}"
-          path: "${{ github.workspace }}/target/${{ matrix.target }}/release/rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}"
-          retention-days: 2
-
-      - name: Build a rabbitmq-lqt release archive on Windows x86-64
-        id: release-build-windows
-        if: ${{ matrix.target == 'x86_64-pc-windows-msvc' }}
-        run: nu ./scripts/release-windows.nu
-        env:
-          OS: ${{ matrix.os }}
-          TARGET: ${{ matrix.target }}
-          TARGET_RUSTFLAGS: ${{ matrix.target_rustflags }}
-          SRC: ${{ github.workspace }}
-          RLQT_SKIP_FRONTEND_BUILD: "1"
-      - name: Store Windows x86-64 build artifact
-        id: upload-windows-artifact
-        if: ${{ matrix.target == 'x86_64-pc-windows-msvc' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}.exe"
-          path: "${{ github.workspace }}/target/${{ matrix.target }}/release/rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}.exe"
-          retention-days: 2
-
-      - name: Build a rabbitmq-lqt release archive on Windows aarch64
-        id: release-build-windows-aarch64
-        if: ${{ matrix.target == 'aarch64-pc-windows-msvc' }}
-        run: nu ./scripts/release-windows.nu
-        env:
-          OS: ${{ matrix.os }}
-          TARGET: ${{ matrix.target }}
-          TARGET_RUSTFLAGS: ${{ matrix.target_rustflags }}
-          SRC: ${{ github.workspace }}
-          RLQT_SKIP_FRONTEND_BUILD: "1"
-      - name: Store Windows aarch64 build artifact
-        id: upload-windows-aarch64-artifact
-        if: ${{ matrix.target == 'aarch64-pc-windows-msvc' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}.exe"
-          path: "${{ github.workspace }}/target/${{ matrix.target }}/release/rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}.exe"
+          name: ${{ steps.build.outputs.artifact }}
+          path: ${{ steps.build.outputs.artifact_path }}
           retention-days: 2
 
   release_musl:
     name: Build and Archive (musl/Alpine)
     needs: [build_frontend]
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-22.04
     container:
       image: alpine:3.21
 
@@ -257,11 +157,7 @@ jobs:
     strategy:
       matrix:
         include:
-          # Linux musl, x86-64 (static, for Alpine)
-          # Note: aarch64-unknown-linux-musl dropped - GitHub Actions doesn't support
-          # JavaScript actions in Alpine containers on ARM runners
           - target: x86_64-unknown-linux-musl
-            os: ubuntu-22.04
 
     permissions:
       id-token: write
@@ -284,80 +180,76 @@ jobs:
           name: frontend-dist
           path: crates/rlqt-ui/frontend/dist
 
-      - name: Build static rabbitmq-lqt release archive
+      - name: Build static rabbitmq-lqt binary
         run: |
           source $HOME/.cargo/env
           cargo build --release --package rlqt-cli --no-default-features
-          VERSION="${{ vars.NEXT_RELEASE_VERSION }}"
-          TARGET="${{ matrix.target }}"
-          ARCHIVE_NAME="rabbitmq-lqt-${VERSION}-${TARGET}"
-          mkdir -p "target/${TARGET}/release"
-          cp "target/release/rabbitmq-lqt" "target/${TARGET}/release/${ARCHIVE_NAME}"
         env:
           RLQT_SKIP_FRONTEND_BUILD: "1"
 
-      - name: Store musl build artifact
+      - name: Upload raw binary for packaging
         uses: actions/upload-artifact@v4
         with:
-          name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}"
-          path: "target/${{ matrix.target }}/release/rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-${{ matrix.target }}"
+          name: rabbitmq-lqt-musl-raw
+          path: target/release/rabbitmq-lqt
+          retention-days: 1
+
+  package_musl:
+    name: Package musl Binary
+    needs: [release_musl, validate_version]
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download raw musl binary
+        uses: actions/download-artifact@v4
+        with:
+          name: rabbitmq-lqt-musl-raw
+          path: target/release
+
+      - uses: michaelklishin/rust-release-action@v1
+        id: package
+        with:
+          command: release
+          target: x86_64-unknown-linux-musl
+          package: rlqt-cli
+          binary-name: rabbitmq-lqt
+          skip-build: true
+          binary-path: target/release/rabbitmq-lqt
+          archive: true
+          checksum: sha256
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.package.outputs.artifact }}
+          path: ${{ steps.package.outputs.artifact_path }}
           retention-days: 2
 
   create_gh_release:
-    needs: [release, release_musl]
+    needs: [release, package_musl, validate_version]
     runs-on: ubuntu-24.04
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+    - uses: actions/checkout@v6
 
-    - name: Install Nu Shell
-      uses: hustcer/setup-nu@v3
+    - uses: michaelklishin/rust-release-action@v1
+      id: changelog
       with:
-        version: '0.100'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        command: extract-changelog
+        version: ${{ needs.validate_version.outputs.version }}
 
-    - name: Extract changelog for release
-      run: nu ./scripts/extract-changelog.nu
-      env:
-        VERSION: ${{ vars.NEXT_RELEASE_VERSION }}
+    - uses: actions/download-artifact@v4
+      with:
+        pattern: rabbitmq-lqt-*
+        path: ./artifacts
+        merge-multiple: true
 
-    - name: Fetch macOS archive
-      uses: actions/download-artifact@v4
-      with:
-        name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-aarch64-apple-darwin"
-        path: ./artifacts
-    - name: Fetch amd64 Linux archive
-      uses: actions/download-artifact@v4
-      with:
-        name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-x86_64-unknown-linux-gnu"
-        path: ./artifacts
-    - name: Fetch aarch64 Linux archive
-      uses: actions/download-artifact@v4
-      with:
-        name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-aarch64-unknown-linux-gnu"
-        path: ./artifacts
-    - name: Fetch Windows x86-64 archive
-      uses: actions/download-artifact@v4
-      with:
-        name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-x86_64-pc-windows-msvc.exe"
-        path: ./artifacts
-    - name: Fetch Windows aarch64 archive
-      uses: actions/download-artifact@v4
-      with:
-        name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-aarch64-pc-windows-msvc.exe"
-        path: ./artifacts
-    - name: Fetch x86-64 Linux musl (static) archive
-      uses: actions/download-artifact@v4
-      with:
-        name: "rabbitmq-lqt-${{ vars.NEXT_RELEASE_VERSION }}-x86_64-unknown-linux-musl"
-        path: ./artifacts
-    - name: Publish rabbitmq-lqt release archive
+    - name: Publish rabbitmq-lqt release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v${{ vars.NEXT_RELEASE_VERSION }}
+        tag_name: v${{ needs.validate_version.outputs.version }}
         draft: false
-        body_path: release_notes.md
+        body_path: ${{ steps.changelog.outputs.release_notes_file }}
         files: ./artifacts/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
