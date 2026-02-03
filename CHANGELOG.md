@@ -1,14 +1,10 @@
 # rabbitmq-lqt Change Log
 
-## v0.19.0 (in development)
-
-### Enhancements
-
- * TBD
+## v0.19.0 (Feb 2, 2026)
 
 ### Internal Changes
 
- * Non-trivial build infrastructure changes
+ * Release infrastructure: adopt [`michaelklishin/rust-release-action`](https://github.com/michaelklishin/rust-release-action)
 
 
 ## v0.18.0 (Jan 25, 2026)

@@ -30,6 +30,8 @@ jobs:
         with:
           command: validate-version
           validate-cargo-toml: true
+        env:
+          NEXT_RELEASE_VERSION: ${{ vars.NEXT_RELEASE_VERSION }}
 
       - name: Validate changelog
         uses: michaelklishin/rust-release-action@v1
@@ -145,8 +147,6 @@ jobs:
             os: macos-latest
           - target: x86_64-pc-windows-msvc
             os: windows-latest
-          - target: aarch64-pc-windows-msvc
-            os: windows-11-arm
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-22.04
           - target: aarch64-unknown-linux-gnu
@@ -534,8 +534,6 @@ jobs:
           winget-tags: 'rabbitmq,logs,cli'
           winget-x64-url: https://github.com/michaelklishin/rabbitmq-lqt/releases/download/v${{ needs.validate.outputs.version }}/rabbitmq-lqt-${{ needs.validate.outputs.version }}-x86_64-pc-windows-msvc.zip
           winget-x64-sha256: ${{ steps.collect.outputs.windows_x64_sha256 }}
-          winget-arm64-url: https://github.com/michaelklishin/rabbitmq-lqt/releases/download/v${{ needs.validate.outputs.version }}/rabbitmq-lqt-${{ needs.validate.outputs.version }}-aarch64-pc-windows-msvc.zip
-          winget-arm64-sha256: ${{ steps.collect.outputs.windows_arm64_sha256 }}
           pkg-description: 'RabbitMQ Log Querying Tools - CLI for parsing and analyzing RabbitMQ log files'
           pkg-homepage: 'https://github.com/michaelklishin/rabbitmq-lqt'
           pkg-license: 'Apache-2.0 OR MIT'
