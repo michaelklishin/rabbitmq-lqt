@@ -133,6 +133,8 @@ and some individual parts such as log entry annotations.
 
 The release workflow uses [`michaelklishin/rust-release-action`](https://github.com/michaelklishin/rust-release-action) (its `@v1` tag).
 
+For verifying YAML file syntax, use `yq`, Ruby or Python YAML modules (whichever is available).
+
 ## After Completing a Task
 
 ### Iterative Reviews
