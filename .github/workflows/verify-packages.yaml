@@ -94,28 +94,28 @@ jobs:
             container: fedora:42
             arch: aarch64
             runner: ubuntu-24.04-arm
-          - distro: rocky-9
-            container: rockylinux:9
+          - distro: rocky-10
+            container: rockylinux:10
             arch: x86_64
             runner: ubuntu-latest
-          - distro: rocky-9
-            container: rockylinux:9
+          - distro: rocky-10
+            container: rockylinux:10
             arch: aarch64
             runner: ubuntu-24.04-arm
-          - distro: alma-9
-            container: almalinux:9
+          - distro: alma-10
+            container: almalinux:10
             arch: x86_64
             runner: ubuntu-latest
-          - distro: alma-9
-            container: almalinux:9
+          - distro: alma-10
+            container: almalinux:10
             arch: aarch64
             runner: ubuntu-24.04-arm
-          - distro: ubi-9
-            container: registry.access.redhat.com/ubi9/ubi
+          - distro: ubi-10
+            container: registry.access.redhat.com/ubi10/ubi
             arch: x86_64
             runner: ubuntu-latest
-          - distro: ubi-9
-            container: registry.access.redhat.com/ubi9/ubi
+          - distro: ubi-10
+            container: registry.access.redhat.com/ubi10/ubi
             arch: aarch64
             runner: ubuntu-24.04-arm
     steps:
