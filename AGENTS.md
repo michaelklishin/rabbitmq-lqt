@@ -129,6 +129,10 @@ and some individual parts such as log entry annotations.
 
  * Using macros to refactor `crates/rlqt-lib/src/entry_metadata/labels.rs`
 
+## Release Workflow
+
+The release workflow uses [`michaelklishin/rust-release-action`](https://github.com/michaelklishin/rust-release-action) (its `@v1` tag).
+
 ## After Completing a Task
 
 ### Iterative Reviews
