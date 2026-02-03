@@ -247,7 +247,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.target }}-deb
-          path: ${{ steps.deb.outputs.artifact_path }}
+          path: |
+            ${{ steps.deb.outputs.artifact_path }}
+            ${{ steps.deb.outputs.checksum_file }}
           retention-days: 2
 
       - name: Upload RPM package
@@ -255,7 +257,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.target }}-rpm
-          path: ${{ steps.rpm.outputs.artifact_path }}
+          path: |
+            ${{ steps.rpm.outputs.artifact_path }}
+            ${{ steps.rpm.outputs.checksum_file }}
           retention-days: 2
 
       - name: Upload MSI installer
@@ -263,7 +267,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.target }}-msi
-          path: ${{ steps.msi.outputs.artifact_path }}
+          path: |
+            ${{ steps.msi.outputs.artifact_path }}
+            ${{ steps.msi.outputs.checksum_file }}
           retention-days: 2
 
   build_musl:
@@ -366,7 +372,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-x86_64-unknown-linux-musl-apk
-          path: ${{ steps.apk.outputs.artifact_path }}
+          path: |
+            ${{ steps.apk.outputs.artifact_path }}
+            ${{ steps.apk.outputs.checksum_file }}
           retention-days: 2
 
   create_release:
