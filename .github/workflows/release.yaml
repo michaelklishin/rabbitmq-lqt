@@ -233,33 +233,6 @@ jobs:
           pkg-homepage: 'https://github.com/michaelklishin/rabbitmq-lqt'
           pkg-license: 'Apache-2.0 OR MIT'
 
-      - name: Sign archive
-        uses: michaelklishin/rust-release-action@v1
-        with:
-          command: sign-artifact
-          artifact: ${{ steps.build.outputs.artifact_path }}
-
-      - name: Sign DEB package
-        if: contains(matrix.target, 'linux-gnu')
-        uses: michaelklishin/rust-release-action@v1
-        with:
-          command: sign-artifact
-          artifact: ${{ steps.deb.outputs.artifact_path }}
-
-      - name: Sign RPM package
-        if: contains(matrix.target, 'linux-gnu')
-        uses: michaelklishin/rust-release-action@v1
-        with:
-          command: sign-artifact
-          artifact: ${{ steps.rpm.outputs.artifact_path }}
-
-      - name: Sign MSI installer
-        if: matrix.target == 'x86_64-pc-windows-msvc'
-        uses: michaelklishin/rust-release-action@v1
-        with:
-          command: sign-artifact
-          artifact: ${{ steps.msi.outputs.artifact_path }}
-
       - name: Upload archive
         uses: actions/upload-artifact@v4
         with:
@@ -267,8 +240,6 @@ jobs:
           path: |
             ${{ steps.build.outputs.artifact_path }}
             ${{ steps.build.outputs.artifact_path }}.sha256
-            ${{ steps.build.outputs.artifact_path }}.sig
-            ${{ steps.build.outputs.artifact_path }}.sigstore.json
           retention-days: 2
 
       - name: Upload DEB package
@@ -276,10 +247,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.target }}-deb
-          path: |
-            ${{ steps.deb.outputs.artifact_path }}
-            ${{ steps.deb.outputs.artifact_path }}.sig
-            ${{ steps.deb.outputs.artifact_path }}.sigstore.json
+          path: ${{ steps.deb.outputs.artifact_path }}
           retention-days: 2
 
       - name: Upload RPM package
@@ -287,10 +255,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.target }}-rpm
-          path: |
-            ${{ steps.rpm.outputs.artifact_path }}
-            ${{ steps.rpm.outputs.artifact_path }}.sig
-            ${{ steps.rpm.outputs.artifact_path }}.sigstore.json
+          path: ${{ steps.rpm.outputs.artifact_path }}
           retention-days: 2
 
       - name: Upload MSI installer
@@ -298,10 +263,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.target }}-msi
-          path: |
-            ${{ steps.msi.outputs.artifact_path }}
-            ${{ steps.msi.outputs.artifact_path }}.sig
-            ${{ steps.msi.outputs.artifact_path }}.sigstore.json
+          path: ${{ steps.msi.outputs.artifact_path }}
           retention-days: 2
 
   build_musl:
@@ -407,49 +369,9 @@ jobs:
           path: ${{ steps.apk.outputs.artifact_path }}
           retention-days: 2
 
-  sign_musl:
-    name: Sign musl Artifacts
-    needs: [package_musl]
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Download musl archive
-        uses: actions/download-artifact@v4
-        with:
-          name: build-x86_64-unknown-linux-musl
-          path: artifacts
-
-      - name: Download Alpine package
-        uses: actions/download-artifact@v4
-        with:
-          name: build-x86_64-unknown-linux-musl-apk
-          path: artifacts
-
-      - name: Sign musl archive
-        uses: michaelklishin/rust-release-action@v1
-        with:
-          command: sign-artifact
-          artifact: artifacts/*.tar.gz
-
-      - name: Sign Alpine package
-        uses: michaelklishin/rust-release-action@v1
-        with:
-          command: sign-artifact
-          artifact: artifacts/*.apk
-
-      - name: Upload signed musl artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: signed-musl-artifacts
-          path: artifacts/
-          retention-days: 2
-
   create_release:
     name: Create GitHub Release
-    needs: [validate, sbom, release, sign_musl]
+    needs: [validate, sbom, release, package_musl]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
 
@@ -468,17 +390,32 @@ jobs:
           path: artifacts
           merge-multiple: true
 
-      - name: Download signed musl artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: signed-musl-artifacts
-          path: artifacts
-
       - name: Download SBOM
         uses: actions/download-artifact@v4
         with:
           name: sbom
           path: artifacts
+
+      - name: Collect release files
+        run: |
+          mkdir -p release
+          find artifacts -type f \( -name "rabbitmq-lqt-*" -o -name "*.sha256" -o -name "*.deb" -o -name "*.rpm" -o -name "*.apk" -o -name "*.msi" -o -name "*.spdx.json" -o -name "*.cdx.json" \) -exec cp {} release/ \;
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign release archives
+        run: |
+          for artifact in release/*.tar.gz release/*.zip; do
+            if [ -f "$artifact" ]; then
+              echo "Signing $artifact"
+              cosign sign-blob --yes \
+                --output-signature "${artifact}.sig" \
+                --output-certificate "${artifact}.pem" \
+                --bundle "${artifact}.sigstore.json" \
+                "$artifact"
+            fi
+          done
 
       - name: Collect artifact checksums
         uses: michaelklishin/rust-release-action@v1
@@ -486,7 +423,7 @@ jobs:
         with:
           command: collect-artifacts
           binary-name: rabbitmq-lqt
-          artifacts-dir: artifacts
+          artifacts-dir: release
           base-url: https://github.com/michaelklishin/rabbitmq-lqt/releases/download/v${{ needs.validate.outputs.version }}
 
       - name: Generate Homebrew formula
@@ -544,11 +481,11 @@ jobs:
         with:
           command: format-release
           version: ${{ needs.validate.outputs.version }}
-          artifacts-dir: artifacts
+          artifacts-dir: release
           notes-file: release_notes.md
 
-      - name: Copy checksums file to artifacts
-        run: cp ${{ steps.collect.outputs.checksums_file }} artifacts/ || true
+      - name: Copy checksums file to release
+        run: cp ${{ steps.collect.outputs.checksums_file }} release/ || true
 
       - name: Publish rabbitmq-lqt release
         uses: softprops/action-gh-release@v2
@@ -556,7 +493,7 @@ jobs:
           tag_name: v${{ needs.validate.outputs.version }}
           draft: false
           body: ${{ steps.format.outputs.body }}
-          files: ./artifacts/*
+          files: release/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
