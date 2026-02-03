@@ -197,7 +197,7 @@ jobs:
           binary-name: rabbitmq-lqt
           skip-build: true
           binary-path: ${{ steps.build.outputs.binary_path }}
-          pkg-maintainer: 'RabbitMQ Core Team <info@rabbitmq.com>'
+          pkg-maintainer: 'RabbitMQ Core Team <teamrabbitmq@gmail.com>'
           pkg-description: 'RabbitMQ Log Querying Tools - CLI for parsing and analyzing RabbitMQ log files'
           pkg-homepage: 'https://github.com/michaelklishin/rabbitmq-lqt'
           pkg-license: 'Apache-2.0 OR MIT'
@@ -213,7 +213,7 @@ jobs:
           binary-name: rabbitmq-lqt
           skip-build: true
           binary-path: ${{ steps.build.outputs.binary_path }}
-          pkg-maintainer: 'RabbitMQ Core Team <info@rabbitmq.com>'
+          pkg-maintainer: 'RabbitMQ Core Team <teamrabbitmq@gmail.com>'
           pkg-description: 'RabbitMQ Log Querying Tools - CLI for parsing and analyzing RabbitMQ log files'
           pkg-homepage: 'https://github.com/michaelklishin/rabbitmq-lqt'
           pkg-license: 'Apache-2.0 OR MIT'
@@ -354,7 +354,7 @@ jobs:
           binary-name: rabbitmq-lqt
           skip-build: true
           binary-path: target/release/rabbitmq-lqt
-          pkg-maintainer: 'RabbitMQ Core Team <info@rabbitmq.com>'
+          pkg-maintainer: 'RabbitMQ Core Team <teamrabbitmq@gmail.com>'
           pkg-description: 'RabbitMQ Log Querying Tools - CLI for parsing and analyzing RabbitMQ log files'
           pkg-homepage: 'https://github.com/michaelklishin/rabbitmq-lqt'
           pkg-license: 'Apache-2.0 OR MIT'
@@ -462,7 +462,7 @@ jobs:
           pkg-description: 'RabbitMQ Log Querying Tools - CLI for parsing and analyzing RabbitMQ log files'
           pkg-homepage: 'https://github.com/michaelklishin/rabbitmq-lqt'
           pkg-license: 'Apache-2.0 OR MIT'
-          aur-maintainer: 'RabbitMQ Core Team <info@rabbitmq.com>'
+          aur-maintainer: 'RabbitMQ Core Team <teamrabbitmq@gmail.com>'
           aur-source-url: https://github.com/michaelklishin/rabbitmq-lqt/archive/refs/tags/v${{ needs.validate.outputs.version }}.tar.gz
           aur-source-sha256: 'SKIP'
 
