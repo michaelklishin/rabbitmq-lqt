@@ -139,7 +139,7 @@ Incremental updates are intentionally not supported.
 
 ## Large Log File support
 
-This tool supports log files up to a million lines long. Each input file is parsed in parallel.
+This tool supports log files that are millions lines long. Each input file is parsed in parallel.
 Result annotation is also optimized for multi-core CPUs.
 
 A 1M log file can be parsed and annotated in about a minute on an M1 MacBook Pro from late 2021,
