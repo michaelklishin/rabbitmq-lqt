@@ -7,4 +7,4 @@ profile.json
 benchmarks/*
 
 # Frontend build artifacts (node_modules only, dist and wasm/pkg are committed for crates.io)
-crates/rlqt-ui/frontend/node_modules
+crates/rabbitmq-lqt-ui/frontend/node_modules

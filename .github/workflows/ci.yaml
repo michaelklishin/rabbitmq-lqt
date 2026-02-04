@@ -38,18 +38,18 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: crates/rlqt-ui/frontend/package-lock.json
+          cache-dependency-path: crates/rabbitmq-lqt-ui/frontend/package-lock.json
 
       - name: Install wasm-pack
         run: cargo install wasm-pack
 
       - name: Build WASM module
         run: |
-          wasm-pack build crates/rlqt-ql-wasm --target web --out-dir ../rlqt-ui/frontend/src/wasm/pkg
+          wasm-pack build crates/rabbitmq-lqt-ql-wasm --target web --out-dir ../rabbitmq-lqt-ui/frontend/src/wasm/pkg
 
       - name: Build Web UI
         run: |
-          cd crates/rlqt-ui/frontend
+          cd crates/rabbitmq-lqt-ui/frontend
           npm install
           npm run build
 
@@ -88,18 +88,18 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: crates/rlqt-ui/frontend/package-lock.json
+          cache-dependency-path: crates/rabbitmq-lqt-ui/frontend/package-lock.json
 
       - name: Install wasm-pack
         run: cargo install wasm-pack
 
       - name: Build WASM module
         run: |
-          wasm-pack build crates/rlqt-ql-wasm --target web --out-dir ../rlqt-ui/frontend/src/wasm/pkg
+          wasm-pack build crates/rabbitmq-lqt-ql-wasm --target web --out-dir ../rabbitmq-lqt-ui/frontend/src/wasm/pkg
 
       - name: Build frontend
         run: |
-          cd crates/rlqt-ui/frontend
+          cd crates/rabbitmq-lqt-ui/frontend
           npm install
           npm run build
 

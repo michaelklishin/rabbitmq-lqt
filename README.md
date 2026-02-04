@@ -99,7 +99,7 @@ and annotated log entries:
 ```shell
 rabbitmq-lqt web serve -i /tmp/log_set_abc.rlqt
 # => (elided for brevity)
-# => [INFO][rlqt_ui::server] Server listening on http://127.0.0.1:15692
+# => [INFO][rabbitmq_lqt_ui::server] Server listening on http://127.0.0.1:15692
 ```
 
 then navigate to `http://127.0.0.1:15692`.
@@ -151,9 +151,9 @@ because annotation includes an inherent O(n) operation (all annotators must be t
 
 ## Subprojects
 
- * `crates/rlqt-lib` is a library that implements the parser and annotators
- * `crates/rlqt-cli` is the `rabbitmq-lqt` command line tool
- * `crates/rlqt-ui` is a Web UI
+ * `crates/rabbitmq-lqt-lib` is a library that implements the parser and annotators
+ * `crates/rabbitmq-lqt-cli` is the `rabbitmq-lqt` command line tool
+ * `crates/rabbitmq-lqt-ui` is a Web UI
 
 
 ## License

@@ -68,7 +68,7 @@ jobs:
         uses: michaelklishin/rust-release-action@v1
         with:
           command: generate-sbom
-          package: rlqt-cli
+          package: rabbitmq-lqt-cli
           binary-name: rabbitmq-lqt
 
       - name: Upload SBOM
@@ -103,7 +103,7 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: crates/rlqt-ui/frontend/package-lock.json
+          cache-dependency-path: crates/rabbitmq-lqt-ui/frontend/package-lock.json
 
       - name: Cache wasm-pack binary
         id: cache-wasm-pack
@@ -118,11 +118,11 @@ jobs:
 
       - name: Build WASM module
         run: |
-          wasm-pack build crates/rlqt-ql-wasm --target web --out-dir ../rlqt-ui/frontend/src/wasm/pkg
+          wasm-pack build crates/rabbitmq-lqt-ql-wasm --target web --out-dir ../rabbitmq-lqt-ui/frontend/src/wasm/pkg
 
       - name: Build frontend
         run: |
-          cd crates/rlqt-ui/frontend
+          cd crates/rabbitmq-lqt-ui/frontend
           npm install
           npm run build
 
@@ -130,7 +130,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
-          path: crates/rlqt-ui/frontend/dist
+          path: crates/rabbitmq-lqt-ui/frontend/dist
           retention-days: 2
 
   release:
@@ -169,7 +169,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
-          path: crates/rlqt-ui/frontend/dist
+          path: crates/rabbitmq-lqt-ui/frontend/dist
 
       - name: Build release archive
         uses: michaelklishin/rust-release-action@v1
@@ -177,7 +177,7 @@ jobs:
         with:
           command: release
           target: ${{ matrix.target }}
-          package: rlqt-cli
+          package: rabbitmq-lqt-cli
           binary-name: rabbitmq-lqt
           archive: true
           checksum: sha256
@@ -193,7 +193,7 @@ jobs:
         with:
           command: release-linux-deb
           target: ${{ matrix.target }}
-          package: rlqt-cli
+          package: rabbitmq-lqt-cli
           binary-name: rabbitmq-lqt
           skip-build: true
           binary-path: ${{ steps.build.outputs.binary_path }}
@@ -209,7 +209,7 @@ jobs:
         with:
           command: release-linux-rpm
           target: ${{ matrix.target }}
-          package: rlqt-cli
+          package: rabbitmq-lqt-cli
           binary-name: rabbitmq-lqt
           skip-build: true
           binary-path: ${{ steps.build.outputs.binary_path }}
@@ -225,7 +225,7 @@ jobs:
         with:
           command: release-windows-msi
           target: ${{ matrix.target }}
-          package: rlqt-cli
+          package: rabbitmq-lqt-cli
           binary-name: rabbitmq-lqt
           skip-build: true
           binary-path: ${{ steps.build.outputs.binary_path }}
@@ -299,12 +299,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
-          path: crates/rlqt-ui/frontend/dist
+          path: crates/rabbitmq-lqt-ui/frontend/dist
 
       - name: Build static rabbitmq-lqt binary
         run: |
           source $HOME/.cargo/env
-          cargo build --release --locked --package rlqt-cli --no-default-features --features mimalloc
+          cargo build --release --locked --package rabbitmq-lqt-cli --no-default-features --features mimalloc
         env:
           RLQT_SKIP_FRONTEND_BUILD: "1"
 
@@ -336,7 +336,7 @@ jobs:
         with:
           command: release
           target: x86_64-unknown-linux-musl
-          package: rlqt-cli
+          package: rabbitmq-lqt-cli
           binary-name: rabbitmq-lqt
           skip-build: true
           binary-path: target/release/rabbitmq-lqt
@@ -350,7 +350,7 @@ jobs:
         with:
           command: release-linux-apk
           target: x86_64-unknown-linux-musl
-          package: rlqt-cli
+          package: rabbitmq-lqt-cli
           binary-name: rabbitmq-lqt
           skip-build: true
           binary-path: target/release/rabbitmq-lqt

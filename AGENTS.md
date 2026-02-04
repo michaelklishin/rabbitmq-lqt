@@ -10,38 +10,38 @@ RabbitMQ log files for more efficient analysis.
 This is a Rust workspace managed by `cargo`. The repository layout is as follows:
 
  * `Cargo.toml`: the workspace manifest file
- * `crates/rlqt-cli`: CLI tool for parsing and querying RabbitMQ log files
- * `crates/rlqt-lib`: a core library for log parsing, annotation, metadata management, and database operations
+ * `crates/rabbitmq-lqt-cli`: CLI tool for parsing and querying RabbitMQ log files
+ * `crates/rabbitmq-lqt-lib`: a core library for log parsing, annotation, metadata management, and database operations
 
-### `rabbitmq-lqt`, a.k.a. the `rlqt-cli` crate
+### `rabbitmq-lqt`, a.k.a. the `rabbitmq-lqt-cli` crate
 
 This crate contains `rabbitmq-lqt`, a CLI tool, including its CLI parser,
 core execution parts, error handling, configuration, integration tests, and so on.
 
  * `main.rs` contains the entry point
- * the `cli` module at `crates/rlqt-cli/src/cli.rs` that defines a [`clap`](https://crates.io/crates/clap)-based CLI parser
- * the `commands` module at `crates/rlqt-cli/src/commands.rs` implements command handlers
- * the `core` module at `crates/rlqt-cli/src/core.rs` contains core business logic
- * the `errors` module at `crates/rlqt-cli/src/errors.rs` defines CLI tool errors
- * the `output` module at `crates/rlqt-cli/src/output.rs` handles formatting and display of query results
+ * the `cli` module at `crates/rabbitmq-lqt-cli/src/cli.rs` that defines a [`clap`](https://crates.io/crates/clap)-based CLI parser
+ * the `commands` module at `crates/rabbitmq-lqt-cli/src/commands.rs` implements command handlers
+ * the `core` module at `crates/rabbitmq-lqt-cli/src/core.rs` contains core business logic
+ * the `errors` module at `crates/rabbitmq-lqt-cli/src/errors.rs` defines CLI tool errors
+ * the `output` module at `crates/rabbitmq-lqt-cli/src/output.rs` handles formatting and display of query results
 
-`rlqt-lib` provides the key building blocks used by `rlqt-cli`.
+`rabbitmq-lqt-lib` provides the key building blocks used by `rabbitmq-lqt-cli`.
 
-### The `rlqt-lib` crate
+### The `rabbitmq-lqt-lib` crate
 
 This library is the heart of the codebase.
 
-Key modules in the `rlqt-lib` crate are:
+Key modules in the `rabbitmq-lqt-lib` crate are:
 
- * `crates/rlqt-lib/src/lib.rs` is the library entry point
- * the `parser` module at `crates/rlqt-lib/src/parser.rs`: parsing of RabbitMQ log files
- * the `severity` module at `crates/rlqt-lib/src/severity.rs`: log severity levels
- * the `errors` module at `crates/rlqt-lib/src/errors.rs` defines library errors
- * the `constants` module at `crates/rlqt-lib/src/constants.rs`: constant values used across the library
- * the `metadata` module at `crates/rlqt-lib/src/metadata/`: log entry annotations (classification, labelling)
- * the `rel_db` module at `crates/rlqt-lib/src/rel_db/`: relational database models and operations
+ * `crates/rabbitmq-lqt-lib/src/lib.rs` is the library entry point
+ * the `parser` module at `crates/rabbitmq-lqt-lib/src/parser.rs`: parsing of RabbitMQ log files
+ * the `severity` module at `crates/rabbitmq-lqt-lib/src/severity.rs`: log severity levels
+ * the `errors` module at `crates/rabbitmq-lqt-lib/src/errors.rs` defines library errors
+ * the `constants` module at `crates/rabbitmq-lqt-lib/src/constants.rs`: constant values used across the library
+ * the `metadata` module at `crates/rabbitmq-lqt-lib/src/metadata/`: log entry annotations (classification, labelling)
+ * the `rel_db` module at `crates/rabbitmq-lqt-lib/src/rel_db/`: relational database models and operations
 
-### The `rlqt-obfuscation` crate
+### The `rabbitmq-lqt-obfuscation` crate
 
 This crate obfuscates log file entries, namely:
 
@@ -70,13 +70,13 @@ The tool supports querying by severity, time range, subsystem, labels, and text 
 ## Build System
 
  * To build the workspace, run `cargo build --all`
- * To run the `rabbitmq-lqt` CLI, run `cargo run --package rlqt-cli --bin rabbitmq-lqt`
+ * To run the `rabbitmq-lqt` CLI, run `cargo run --package rabbitmq-lqt-cli --bin rabbitmq-lqt`
  * To run the tests, run `cargo nextest run --all`
- * To run benchmarks, run `cargo bench` from the `crates/rlqt-lib` directory
+ * To run benchmarks, run `cargo bench` from the `crates/rabbitmq-lqt-lib` directory
 
 ## Versioning
 
-The version in `crates/rlqt-ui/frontend/package.json` must match the Rust workspace version in `Cargo.toml`. Keep them in sync when bumping versions.
+The version in `crates/rabbitmq-lqt-ui/frontend/package.json` must match the Rust workspace version in `Cargo.toml`. Keep them in sync when bumping versions.
 
 ## Target Rust Version
 
@@ -109,7 +109,7 @@ For false positive tests, use real log entries from other tests, not dummy fabri
 
 ## Benchmarks
 
-The `rlqt-lib` crate includes comprehensive benchmarks for the parse-annotate-store pipeline
+The `rabbitmq-lqt-lib` crate includes comprehensive benchmarks for the parse-annotate-store pipeline
 and some individual parts such as log entry annotations.
 
 ## Comments
@@ -127,7 +127,7 @@ and some individual parts such as log entry annotations.
 
 ## Refactoring Ideas To Never Suggest (or Try)
 
- * Using macros to refactor `crates/rlqt-lib/src/entry_metadata/labels.rs`
+ * Using macros to refactor `crates/rabbitmq-lqt-lib/src/entry_metadata/labels.rs`
 
 ## Release Workflow
 

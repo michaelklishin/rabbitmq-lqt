@@ -1,0 +1,158 @@
+// Copyright (C) 2025-2026 Michael S. Klishin and Contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+use crate::errors::ServerError;
+use crate::server::AppState;
+use axum::Json;
+use axum::extract::State;
+use rabbitmq_lqt_lib::Severity;
+use rabbitmq_lqt_lib::entry_metadata::labels::LABEL_NAMES;
+use rabbitmq_lqt_lib::rel_db::{FileMetadata, NodeLogEntry};
+use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
+use std::io::Error as IoError;
+
+#[derive(Debug, Serialize)]
+pub struct MetadataResponse {
+    severities: Vec<String>,
+    subsystems: Vec<String>,
+    labels: Vec<String>,
+    nodes: Vec<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct StatsResponse {
+    total_entries: u64,
+    nodes: Vec<NodeStats>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct NodeStats {
+    node: String,
+    count: u64,
+}
+
+fn hashset_to_sorted_vec(set: HashSet<String>) -> Vec<String> {
+    let mut vec: Vec<_> = set.into_iter().collect();
+    vec.sort_unstable();
+    vec
+}
+
+pub async fn get_metadata(
+    State(state): State<AppState>,
+) -> Result<Json<MetadataResponse>, ServerError> {
+    let severities: Vec<String> = Severity::all()
+        .iter()
+        .map(|s| s.as_str().to_string())
+        .collect();
+
+    let db = state.db.clone();
+    let file_metadata_list = tokio::task::spawn_blocking(move || FileMetadata::find_all(&db))
+        .await
+        .map_err(|e| ServerError::Io(IoError::other(format!("Task join error: {}", e))))??;
+
+    let mut nodes_set = HashSet::new();
+    let mut subsystems_set = HashSet::new();
+
+    for metadata in &file_metadata_list {
+        nodes_set.extend(metadata.nodes.iter().cloned());
+        subsystems_set.extend(metadata.subsystems.iter().cloned());
+    }
+
+    let nodes = hashset_to_sorted_vec(nodes_set);
+    let subsystems = hashset_to_sorted_vec(subsystems_set);
+    let mut labels: Vec<String> = LABEL_NAMES.iter().map(|s| s.to_string()).collect();
+    labels.sort();
+
+    Ok(Json(MetadataResponse {
+        severities,
+        subsystems,
+        labels,
+        nodes,
+    }))
+}
+
+pub async fn get_stats(State(state): State<AppState>) -> Result<Json<StatsResponse>, ServerError> {
+    let db = state.db.clone();
+    let (total, node_counts) = tokio::task::spawn_blocking(move || {
+        let total = NodeLogEntry::count_all(&db)?;
+        let node_counts = NodeLogEntry::get_node_counts(&db)?;
+        Ok::<_, duckdb::Error>((total, node_counts))
+    })
+    .await
+    .map_err(|e| ServerError::Io(IoError::other(format!("Task join error: {}", e))))??;
+
+    let nodes = node_counts
+        .into_iter()
+        .map(|(node, count)| NodeStats {
+            node,
+            count: count as u64,
+        })
+        .collect();
+
+    Ok(Json(StatsResponse {
+        total_entries: total,
+        nodes,
+    }))
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct FileMetadataResponse {
+    pub file_path: String,
+    pub rabbitmq_versions: Vec<String>,
+    pub erlang_versions: Vec<String>,
+    pub tls_library: Option<String>,
+    pub oldest_entry_at: Option<String>,
+    pub most_recent_entry_at: Option<String>,
+    pub total_lines: i64,
+    pub total_entries: i64,
+    pub nodes: Vec<String>,
+    pub subsystems: Vec<String>,
+    pub labels: Vec<String>,
+    pub enabled_plugins: Vec<String>,
+}
+
+impl From<rabbitmq_lqt_lib::rel_db::file_metadata::Model> for FileMetadataResponse {
+    fn from(model: rabbitmq_lqt_lib::rel_db::file_metadata::Model) -> Self {
+        Self {
+            file_path: model.file_path,
+            rabbitmq_versions: model.rabbitmq_versions,
+            erlang_versions: model.erlang_versions,
+            tls_library: model.tls_library,
+            oldest_entry_at: model.oldest_entry_at.map(|dt| dt.to_rfc3339()),
+            most_recent_entry_at: model.most_recent_entry_at.map(|dt| dt.to_rfc3339()),
+            total_lines: model.total_lines,
+            total_entries: model.total_entries,
+            nodes: model.nodes,
+            subsystems: model.subsystems,
+            labels: model.labels,
+            enabled_plugins: model.enabled_plugins,
+        }
+    }
+}
+
+pub async fn get_file_metadata(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<FileMetadataResponse>>, ServerError> {
+    let db = state.db.clone();
+    let metadata_list = tokio::task::spawn_blocking(move || FileMetadata::find_all(&db))
+        .await
+        .map_err(|e| ServerError::Io(IoError::other(format!("Task join error: {}", e))))??;
+
+    let response = metadata_list
+        .into_iter()
+        .map(FileMetadataResponse::from)
+        .collect();
+    Ok(Json(response))
+}

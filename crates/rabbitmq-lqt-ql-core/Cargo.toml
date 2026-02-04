@@ -1,0 +1,27 @@
+[package]
+name = "rabbitmq-lqt-ql-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+description = "Core query language parser and autocomplete for RabbitMQ Log Querying Tools"
+
+[lib]
+name = "rabbitmq_lqt_ql_core"
+path = "src/lib.rs"
+
+[dependencies]
+nom = { workspace = true }
+thiserror = { workspace = true }
+chrono = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+
+[lints]
+workspace = true
