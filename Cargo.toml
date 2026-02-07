@@ -3,7 +3,7 @@ members = ["crates/rabbitmq-lqt-lib", "crates/rabbitmq-lqt-cli", "crates/rabbitm
 resolver = "3"
 
 [workspace.package]
-version = "0.20.0"
+version = "0.21.0"
 edition = "2024"
 license = "MPL-2.0"
 authors = ["Michael S. Klishin and Contributors"]
