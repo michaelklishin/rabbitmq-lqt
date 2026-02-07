@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use predicates::prelude::*;
 use std::error::Error;
 use tempfile::NamedTempFile;
 
@@ -232,7 +231,37 @@ fn query_nonexistent_database_fails() -> Result<(), Box<dyn Error>> {
         "--input-db-file-path",
         "/nonexistent/database.db",
     ])
-    .stderr(output_includes("unable to open database file").or(output_includes("Database error")));
+    .stderr(output_includes("Database file not found"));
+
+    Ok(())
+}
+
+#[test]
+fn overview_displays_file_metadata() -> Result<(), Box<dyn Error>> {
+    let db_file = setup_test_db()?;
+    let db_path = db_file.path().to_str().unwrap();
+
+    run_succeeds(["logs", "overview", "--input-db-file-path", db_path])
+        .stdout(output_includes("File:"))
+        .stdout(output_includes("RabbitMQ Versions:"))
+        .stdout(output_includes("Total Lines:"))
+        .stdout(output_includes("Total Entries:"))
+        .stdout(output_includes("Nodes:"))
+        .stdout(output_includes("Subsystems:"))
+        .stdout(output_includes("Labels:"));
+
+    Ok(())
+}
+
+#[test]
+fn overview_nonexistent_database_fails() -> Result<(), Box<dyn Error>> {
+    run_fails([
+        "logs",
+        "overview",
+        "--input-db-file-path",
+        "/nonexistent/database.db",
+    ])
+    .stderr(output_includes("Database file not found"));
 
     Ok(())
 }

@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use predicates::prelude::*;
 use std::error::Error;
 use tempfile::NamedTempFile;
 
@@ -203,7 +202,7 @@ fn ql_query_nonexistent_database_fails() -> Result<(), Box<dyn Error>> {
         "--query",
         "*",
     ])
-    .stderr(output_includes("unable to open database file").or(output_includes("Database error")));
+    .stderr(output_includes("Database file not found"));
 
     Ok(())
 }

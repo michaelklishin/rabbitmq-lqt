@@ -16,8 +16,8 @@ use crate::parser::ParsedLogEntry;
 use crate::rel_db::DatabaseConnection;
 use crate::rel_db::presets::QueryPreset;
 use chrono::{DateTime, Utc};
-use duckdb::types::Value;
-use duckdb::{Error as DuckDbError, params};
+use duckdb::types::{TimeUnit, Value};
+use duckdb::{Error as DuckDbError, ToSql, params};
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::io::Error as IoError;
@@ -47,6 +47,8 @@ pub struct QueryContext {
     pub(crate) limit: Option<u64>,
     pub(crate) has_resolution_or_discussion_url: bool,
     pub(crate) has_doc_url: bool,
+    pub(crate) offset: Option<u64>,
+    pub(crate) tail: Option<u64>,
     pub(crate) preset: Option<QueryPreset>,
     pub(crate) raw_where_clauses: Vec<String>,
 }
@@ -121,6 +123,18 @@ impl QueryContext {
     #[must_use]
     pub fn has_doc_url(mut self, has: bool) -> Self {
         self.has_doc_url = has;
+        self
+    }
+
+    #[must_use]
+    pub fn offset(mut self, n: u64) -> Self {
+        self.offset = Some(n);
+        self
+    }
+
+    #[must_use]
+    pub fn tail(mut self, n: u64) -> Self {
+        self.tail = Some(n);
         self
     }
 
@@ -228,7 +242,7 @@ impl NodeLogEntry {
         if let Some(since) = ctx.since_time {
             conditions.push("timestamp >= ?".to_string());
             params.push(Value::Timestamp(
-                duckdb::types::TimeUnit::Microsecond,
+                TimeUnit::Microsecond,
                 since.timestamp_micros(),
             ));
         }
@@ -236,7 +250,7 @@ impl NodeLogEntry {
         if let Some(to) = ctx.to_time {
             conditions.push("timestamp <= ?".to_string());
             params.push(Value::Timestamp(
-                duckdb::types::TimeUnit::Microsecond,
+                TimeUnit::Microsecond,
                 to.timestamp_micros(),
             ));
         }
@@ -321,18 +335,34 @@ impl NodeLogEntry {
             format!("WHERE {}", conditions.join(" AND "))
         };
 
-        let sql = format!(
-            "SELECT id, node, timestamp, severity, erlang_pid, subsystem_id, message, labels, resolution_or_discussion_url_id, doc_url_id
-             FROM node_log_entries
-             {}
-             ORDER BY timestamp ASC
-             LIMIT {}",
-            where_clause, effective_limit
-        );
+        let offset_clause = match ctx.offset {
+            Some(n) => format!(" OFFSET {}", n),
+            None => String::new(),
+        };
+
+        let sql = if let Some(tail_n) = ctx.tail {
+            format!(
+                "SELECT * FROM (SELECT id, node, timestamp, severity, erlang_pid, subsystem_id, message, labels, resolution_or_discussion_url_id, doc_url_id
+                 FROM node_log_entries
+                 {}
+                 ORDER BY timestamp DESC
+                 LIMIT {}{}) sub
+                 ORDER BY timestamp ASC",
+                where_clause, tail_n, offset_clause
+            )
+        } else {
+            format!(
+                "SELECT id, node, timestamp, severity, erlang_pid, subsystem_id, message, labels, resolution_or_discussion_url_id, doc_url_id
+                 FROM node_log_entries
+                 {}
+                 ORDER BY timestamp ASC
+                 LIMIT {}{}",
+                where_clause, effective_limit, offset_clause
+            )
+        };
 
         let mut stmt = conn.prepare(&sql)?;
-        let params_slice: Vec<&dyn duckdb::ToSql> =
-            params.iter().map(|p| p as &dyn duckdb::ToSql).collect();
+        let params_slice: Vec<&dyn ToSql> = params.iter().map(|p| p as &dyn ToSql).collect();
 
         let rows = stmt.query_map(params_slice.as_slice(), |row| {
             let timestamp_micros: i64 = row.get(2)?;
@@ -353,11 +383,7 @@ impl NodeLogEntry {
             })
         })?;
 
-        let mut results = Vec::new();
-        for row_result in rows {
-            results.push(row_result?);
-        }
-        Ok(results)
+        rows.collect()
     }
 
     pub fn insert_parsed_entries(
@@ -396,7 +422,7 @@ impl NodeLogEntry {
                 appender.append_row(params![
                     id,
                     node,
-                    Value::Timestamp(duckdb::types::TimeUnit::Microsecond, timestamp_micros),
+                    Value::Timestamp(TimeUnit::Microsecond, timestamp_micros),
                     entry.severity.to_string(),
                     entry.process_id,
                     entry.subsystem_id,
@@ -441,11 +467,7 @@ impl NodeLogEntry {
             })
         })?;
 
-        let mut results = Vec::new();
-        for row_result in rows {
-            results.push(row_result?);
-        }
-        Ok(results)
+        rows.collect()
     }
 
     pub fn get_node_counts(db: &DatabaseConnection) -> Result<Vec<(String, i64)>, DuckDbError> {
@@ -457,10 +479,6 @@ impl NodeLogEntry {
 
         let rows = stmt.query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?;
 
-        let mut results = Vec::new();
-        for row_result in rows {
-            results.push(row_result?);
-        }
-        Ok(results)
+        rows.collect()
     }
 }

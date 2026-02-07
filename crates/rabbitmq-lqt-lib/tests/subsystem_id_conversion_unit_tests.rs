@@ -41,6 +41,10 @@ fn test_subsystem_to_id_all_variants() {
     assert_eq!(Subsystem::Logging.to_id(), 23);
     assert_eq!(Subsystem::Streams.to_id(), 24);
     assert_eq!(Subsystem::Queues.to_id(), 25);
+    assert_eq!(Subsystem::OAuth2.to_id(), 26);
+    assert_eq!(Subsystem::Management.to_id(), 27);
+    assert_eq!(Subsystem::Metrics.to_id(), 28);
+    assert_eq!(Subsystem::Amqp10.to_id(), 29);
 }
 
 #[test]
@@ -70,12 +74,17 @@ fn test_subsystem_from_id_all_variants() {
     assert_eq!(Subsystem::from_id(23), Some(Subsystem::Logging));
     assert_eq!(Subsystem::from_id(24), Some(Subsystem::Streams));
     assert_eq!(Subsystem::from_id(25), Some(Subsystem::Queues));
+    assert_eq!(Subsystem::from_id(26), Some(Subsystem::OAuth2));
+    assert_eq!(Subsystem::from_id(27), Some(Subsystem::Management));
+    assert_eq!(Subsystem::from_id(28), Some(Subsystem::Metrics));
+    assert_eq!(Subsystem::from_id(29), Some(Subsystem::Amqp10));
 }
 
 #[test]
 fn test_subsystem_from_id_invalid() {
     assert_eq!(Subsystem::from_id(0), None);
     assert_eq!(Subsystem::from_id(30), None);
+    assert_eq!(Subsystem::from_id(31), None);
     assert_eq!(Subsystem::from_id(-1), None);
     assert_eq!(Subsystem::from_id(100), None);
     assert_eq!(Subsystem::from_id(i16::MAX), None);
@@ -110,6 +119,10 @@ fn test_subsystem_round_trip_conversion() {
         Subsystem::Logging,
         Subsystem::Streams,
         Subsystem::Queues,
+        Subsystem::OAuth2,
+        Subsystem::Management,
+        Subsystem::Metrics,
+        Subsystem::Amqp10,
     ];
 
     for subsystem in subsystems {
@@ -153,6 +166,10 @@ fn test_subsystem_id_uniqueness() {
         Subsystem::Logging,
         Subsystem::Streams,
         Subsystem::Queues,
+        Subsystem::OAuth2,
+        Subsystem::Management,
+        Subsystem::Metrics,
+        Subsystem::Amqp10,
     ];
 
     let mut ids = Vec::new();
@@ -167,7 +184,7 @@ fn test_subsystem_id_uniqueness() {
         ids.push(id);
     }
 
-    assert_eq!(ids.len(), 25, "Expected 25 unique subsystem IDs");
+    assert_eq!(ids.len(), 29, "Expected 29 unique subsystem IDs");
 }
 
 #[test]
@@ -198,13 +215,17 @@ fn test_subsystem_id_range() {
         Subsystem::Logging,
         Subsystem::Streams,
         Subsystem::Queues,
+        Subsystem::OAuth2,
+        Subsystem::Management,
+        Subsystem::Metrics,
+        Subsystem::Amqp10,
     ];
 
     for subsystem in subsystems {
         let id = subsystem.to_id();
         assert!(
-            (1..=25).contains(&id),
-            "ID {} for {:?} is outside expected range [1, 25]",
+            (1..=29).contains(&id),
+            "ID {} for {:?} is outside expected range [1, 29]",
             id,
             subsystem
         );

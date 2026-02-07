@@ -21,6 +21,8 @@ use flate2::read::GzDecoder;
 use tar::Archive;
 use tempfile::TempDir;
 
+use rabbitmq_lqt_lib::Error as LibError;
+
 use crate::errors::CommandRunError;
 
 type Result<T> = std::result::Result<T, CommandRunError>;
@@ -128,7 +130,7 @@ impl Read for XzReader {
 pub fn open_log_reader(path: &Path) -> Result<LogReader> {
     let archive_type = ArchiveType::from_path(path);
     let file = File::open(path).map_err(|e| {
-        CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::new(
+        CommandRunError::Library(LibError::Io(IoError::new(
             e.kind(),
             format!("Failed to open file '{}': {}", path.display(), e),
         )))
@@ -142,22 +144,22 @@ pub fn open_log_reader(path: &Path) -> Result<LogReader> {
         }
         ArchiveType::XzLog => {
             let xz_reader = XzReader::new(file).map_err(|e| {
-                CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::new(
+                CommandRunError::Library(LibError::Io(IoError::new(
                     e.kind(),
                     format!("Failed to decompress XZ file '{}': {}", path.display(), e),
                 )))
             })?;
             Ok(LogReader::Xz(BufReader::new(xz_reader)))
         }
-        ArchiveType::TarGz | ArchiveType::TarXz => Err(CommandRunError::Library(
-            rabbitmq_lqt_lib::Error::Io(IoError::new(
+        ArchiveType::TarGz | ArchiveType::TarXz => {
+            Err(CommandRunError::Library(LibError::Io(IoError::new(
                 ErrorKind::InvalidInput,
                 format!(
                     "Cannot open tar archive as a single file: {}. Use extract_tar_archive instead.",
                     path.display()
                 ),
-            )),
-        )),
+            ))))
+        }
     }
 }
 
@@ -170,14 +172,14 @@ pub struct ExtractedArchive {
 pub fn extract_tar_archive(path: &Path) -> Result<ExtractedArchive> {
     let archive_type = ArchiveType::from_path(path);
     let file = File::open(path).map_err(|e| {
-        CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::new(
+        CommandRunError::Library(LibError::Io(IoError::new(
             e.kind(),
             format!("Failed to open archive '{}': {}", path.display(), e),
         )))
     })?;
 
     let temp_dir = TempDir::new().map_err(|e| {
-        CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::new(
+        CommandRunError::Library(LibError::Io(IoError::new(
             e.kind(),
             format!("Failed to create temp directory: {}", e),
         )))
@@ -190,7 +192,7 @@ pub fn extract_tar_archive(path: &Path) -> Result<ExtractedArchive> {
             archive.set_preserve_permissions(false);
             archive.set_preserve_mtime(false);
             archive.unpack(temp_dir.path()).map_err(|e| {
-                CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::new(
+                CommandRunError::Library(LibError::Io(IoError::new(
                     e.kind(),
                     format!(
                         "Failed to extract tar.gz archive '{}': {}",
@@ -204,7 +206,7 @@ pub fn extract_tar_archive(path: &Path) -> Result<ExtractedArchive> {
             let mut compressed = Vec::new();
             let mut file = file;
             file.read_to_end(&mut compressed).map_err(|e| {
-                CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::new(
+                CommandRunError::Library(LibError::Io(IoError::new(
                     e.kind(),
                     format!("Failed to read archive '{}': {}", path.display(), e),
                 )))
@@ -212,7 +214,7 @@ pub fn extract_tar_archive(path: &Path) -> Result<ExtractedArchive> {
 
             let mut decompressed = Vec::new();
             lzma_rs::xz_decompress(&mut compressed.as_slice(), &mut decompressed).map_err(|e| {
-                CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::new(
+                CommandRunError::Library(LibError::Io(IoError::new(
                     ErrorKind::InvalidData,
                     format!(
                         "Failed to decompress XZ archive '{}': {}",
@@ -226,7 +228,7 @@ pub fn extract_tar_archive(path: &Path) -> Result<ExtractedArchive> {
             archive.set_preserve_permissions(false);
             archive.set_preserve_mtime(false);
             archive.unpack(temp_dir.path()).map_err(|e| {
-                CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::new(
+                CommandRunError::Library(LibError::Io(IoError::new(
                     e.kind(),
                     format!(
                         "Failed to extract tar.xz archive '{}': {}",
@@ -237,12 +239,10 @@ pub fn extract_tar_archive(path: &Path) -> Result<ExtractedArchive> {
             })?;
         }
         _ => {
-            return Err(CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(
-                IoError::new(
-                    ErrorKind::InvalidInput,
-                    format!("Not a tar archive: {}", path.display()),
-                ),
-            )));
+            return Err(CommandRunError::Library(LibError::Io(IoError::new(
+                ErrorKind::InvalidInput,
+                format!("Not a tar archive: {}", path.display()),
+            ))));
         }
     }
 
@@ -257,7 +257,7 @@ pub fn extract_tar_archive(path: &Path) -> Result<ExtractedArchive> {
 fn find_log_files_in_dir(dir: &Path) -> Result<Vec<PathBuf>> {
     let mut log_files = Vec::new();
     collect_log_files_recursive(dir, &mut log_files, 0)?;
-    log_files.sort();
+    log_files.sort_unstable();
     Ok(log_files)
 }
 
@@ -272,7 +272,7 @@ fn collect_log_files_recursive(
     }
 
     let entries = fs::read_dir(dir).map_err(|e| {
-        CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::new(
+        CommandRunError::Library(LibError::Io(IoError::new(
             e.kind(),
             format!("Failed to read directory '{}': {}", dir.display(), e),
         )))
@@ -280,7 +280,7 @@ fn collect_log_files_recursive(
 
     for entry in entries {
         let entry = entry.map_err(|e| {
-            CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::new(
+            CommandRunError::Library(LibError::Io(IoError::new(
                 e.kind(),
                 format!("Failed to read directory entry: {}", e),
             )))

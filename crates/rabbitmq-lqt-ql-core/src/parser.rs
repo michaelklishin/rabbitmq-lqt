@@ -26,6 +26,7 @@ use nom::{
     bytes::complete::{escaped_transform, tag, tag_no_case, take_until, take_while1},
     character::complete::{char, digit1, multispace0, multispace1, none_of},
     combinator::{all_consuming, map, map_res, opt, value},
+    error::{Error as NomError, ErrorKind},
     multi::{many0, separated_list0, separated_list1},
     sequence::{delimited, pair, preceded},
 };
@@ -166,10 +167,7 @@ fn parse_field(input: &str) -> IResult<&str, Field> {
         "timestamp" | "time" | "ts" => Field::Timestamp,
         "id" => Field::Id,
         _ => {
-            return Err(nom::Err::Error(nom::error::Error::new(
-                input,
-                nom::error::ErrorKind::Tag,
-            )));
+            return Err(nom::Err::Error(NomError::new(input, ErrorKind::Tag)));
         }
     };
 
@@ -297,9 +295,9 @@ fn parse_integer_value(input: &str) -> IResult<&str, Value> {
     let (input, neg) = opt(char('-')).parse(input)?;
     let (input, digits) = digit1.parse(input)?;
 
-    let value: i64 = digits.parse().map_err(|_| {
-        nom::Err::Error(nom::error::Error::new(input, nom::error::ErrorKind::Digit))
-    })?;
+    let value: i64 = digits
+        .parse()
+        .map_err(|_| nom::Err::Error(NomError::new(input, ErrorKind::Digit)))?;
 
     let value = if neg.is_some() { -value } else { value };
     Ok((input, Value::Integer(value)))
@@ -414,9 +412,8 @@ fn parse_preset_expr(input: &str) -> IResult<&str, FilterExpr> {
     let (input, _) = char(':').parse(input)?;
     let (input, name) = take_while1(|c: char| c.is_alphanumeric() || c == '_').parse(input)?;
 
-    let preset = PresetName::from_str(name).map_err(|_| {
-        nom::Err::Failure(nom::error::Error::new(input, nom::error::ErrorKind::Tag))
-    })?;
+    let preset = PresetName::from_str(name)
+        .map_err(|_| nom::Err::Failure(NomError::new(input, ErrorKind::Tag)))?;
 
     Ok((input, FilterExpr::Preset(preset)))
 }

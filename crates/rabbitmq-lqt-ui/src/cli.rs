@@ -23,7 +23,7 @@ pub fn clap_parser() -> Command {
                 .short('d')
                 .required(true)
                 .value_name("PATH")
-                .help("Path to the SQLite database file"),
+                .help("Path to the database file"),
         )
         .arg(
             Arg::new("host")

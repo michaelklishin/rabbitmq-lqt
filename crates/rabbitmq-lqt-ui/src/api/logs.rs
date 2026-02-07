@@ -15,14 +15,17 @@
 use crate::errors::ServerError;
 use crate::server::AppState;
 use axum::Json;
-use axum::extract::{Query, State};
+use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use chrono::{DateTime, Utc};
+use rabbitmq_lqt_lib::constants::{doc_url_from_id, resolution_or_discussion_url_from_id};
 use rabbitmq_lqt_lib::entry_metadata::labels::LABEL_NAMES;
+use rabbitmq_lqt_lib::entry_metadata::subsystems::Subsystem;
 use rabbitmq_lqt_lib::rel_db::node_log_entry::Model;
 use rabbitmq_lqt_lib::rel_db::presets::QueryPreset;
 use rabbitmq_lqt_lib::{NodeLogEntry, QueryContext};
+use rabbitmq_lqt_ql::to_query_context;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::Error as IoError;
@@ -75,16 +78,14 @@ impl From<Model> for LogEntry {
 
         let subsystem = model
             .subsystem_id
-            .and_then(rabbitmq_lqt_lib::entry_metadata::subsystems::Subsystem::from_id)
+            .and_then(Subsystem::from_id)
             .map(|s| s.to_string());
 
-        let doc_url = model
-            .doc_url_id
-            .and_then(rabbitmq_lqt_lib::constants::doc_url_from_id);
+        let doc_url = model.doc_url_id.and_then(doc_url_from_id);
 
         let resolution_or_discussion_url = model
             .resolution_or_discussion_url_id
-            .and_then(rabbitmq_lqt_lib::constants::resolution_or_discussion_url_from_id);
+            .and_then(resolution_or_discussion_url_from_id);
 
         Self {
             id: model.id,
@@ -219,12 +220,10 @@ pub struct PresetQueryParams {
 
 pub async fn query_logs_by_preset(
     State(state): State<AppState>,
-    axum::extract::Path(preset_name): axum::extract::Path<String>,
+    Path(preset_name): Path<String>,
     Query(params): Query<PresetQueryParams>,
 ) -> Result<Json<LogQueryResponse>, ServerError> {
-    let preset: QueryPreset = preset_name
-        .parse()
-        .map_err(|e: String| ServerError::InvalidPreset(e))?;
+    let preset: QueryPreset = preset_name.parse().map_err(ServerError::InvalidPreset)?;
 
     let mut ctx = QueryContext::from(preset);
 
@@ -277,8 +276,8 @@ pub async fn query_logs_by_ql(
     State(state): State<AppState>,
     Query(params): Query<QLQueryParams>,
 ) -> Result<Json<LogQueryResponse>, ServerError> {
-    let mut ctx = rabbitmq_lqt_ql::to_query_context(&params.query)
-        .map_err(|e| ServerError::InvalidQuery(e.to_string()))?;
+    let mut ctx =
+        to_query_context(&params.query).map_err(|e| ServerError::InvalidQuery(e.to_string()))?;
 
     if let Some(l) = params.limit
         && l > 0

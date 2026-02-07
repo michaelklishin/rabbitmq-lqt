@@ -17,15 +17,17 @@ mod test_helpers;
 use rabbitmq_lqt_lib::entry_metadata::Annotator;
 use rabbitmq_lqt_lib::entry_metadata::LABEL_NAMES;
 use rabbitmq_lqt_lib::entry_metadata::label_annotators::{
-    DeletionProtectionAnnotator, ElectionsAnnotator, ErlProcessCrashAnnotator, ExchangesAnnotator,
-    LabelAnnotator, LimitsAnnotator, MultilineAnnotator, PeerDiscoveryClassicAnnotator,
-    PluginsLabelAnnotator, ProcessStopsAnnotator, RaftBasedAnnotator, StartupBannerAnnotator,
-    StreamsAnnotator, UndefinedFnAnnotator, WorkerPoolAnnotator, annotate_labels,
+    ConnectionsAnnotator, DeletionProtectionAnnotator, ElectionsAnnotator,
+    ErlProcessCrashAnnotator, ExchangesAnnotator, LabelAnnotator, LimitsAnnotator,
+    MultilineAnnotator, PeerDiscoveryClassicAnnotator, PluginsLabelAnnotator,
+    ProcessStopsAnnotator, RaftBasedAnnotator, StartupBannerAnnotator, StreamsAnnotator,
+    UndefinedFnAnnotator, WorkerPoolAnnotator, annotate_labels,
 };
 use rabbitmq_lqt_lib::entry_metadata::labels::LogEntryLabels;
 use rabbitmq_lqt_lib::{Severity, parse_log_file};
 use std::fs::File;
 use std::io::BufReader;
+use std::path::Path;
 use test_helpers::create_test_entry;
 
 #[test]
@@ -607,7 +609,7 @@ fn test_mixed_case_patterns() {
 fn test_real_rabbitmq_log_fixture_annotation() {
     // Parse the real RabbitMQ log fixture
     let manifest_dir = env!("CARGO_MANIFEST_DIR");
-    let fixture_path = std::path::Path::new(manifest_dir)
+    let fixture_path = Path::new(manifest_dir)
         .parent()
         .unwrap()
         .join("rabbitmq-lqt-cli")
@@ -1161,7 +1163,7 @@ fn test_raft_annotator_matches_wal_min() {
 fn test_connections_annotator_matches_handshake() {
     let entry = create_test_entry("Connection closed: handshake_timeout", Severity::Warning);
 
-    let annotator = rabbitmq_lqt_lib::entry_metadata::label_annotators::ConnectionsAnnotator;
+    let annotator = ConnectionsAnnotator;
     assert!(annotator.does_match(&entry));
 }
 

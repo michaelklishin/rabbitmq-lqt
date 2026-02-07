@@ -12,12 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::entry_metadata::labels::{
-    LABEL_ACCESS_CONTROL, LABEL_AUTO_DELETE, LABEL_CONNECTIONS, LABEL_CQ_STORES, LABEL_DELETE,
-    LABEL_DISCONNECTS, LABEL_ELECTIONS, LABEL_ERL_PROCESS_CRASH, LABEL_EXCEPTIONS, LABEL_EXCLUSIVE,
-    LABEL_FEDERATION, LABEL_PROCESS_STOPS, LABEL_QUEUE_FEDERATION, LABEL_QUEUES, LABEL_RAFT,
-    LABEL_SHOVELS, LABEL_UNDEFINED_FN, LABEL_VIRTUAL_HOSTS, LogEntryLabels,
-};
+use crate::entry_metadata::labels::{LABEL_NAMES, LogEntryLabels};
 use crate::entry_metadata::subsystems::Subsystem;
 use crate::parser::ParsedLogEntry;
 use crate::rel_db::file_metadata;
@@ -63,26 +58,7 @@ impl FileMetadataContext {
     }
 
     pub fn aggregate_from_entries(&mut self, entries: &[ParsedLogEntry]) {
-        const LABEL_FLAGS: [(LogEntryLabels, &str); 18] = [
-            (LogEntryLabels::ERL_PROCESS_CRASH, LABEL_ERL_PROCESS_CRASH),
-            (LogEntryLabels::UNDEFINED_FN, LABEL_UNDEFINED_FN),
-            (LogEntryLabels::PROCESS_STOPS, LABEL_PROCESS_STOPS),
-            (LogEntryLabels::RAFT, LABEL_RAFT),
-            (LogEntryLabels::ELECTIONS, LABEL_ELECTIONS),
-            (LogEntryLabels::QUEUES, LABEL_QUEUES),
-            (LogEntryLabels::AUTO_DELETE, LABEL_AUTO_DELETE),
-            (LogEntryLabels::EXCLUSIVE, LABEL_EXCLUSIVE),
-            (LogEntryLabels::EXCEPTIONS, LABEL_EXCEPTIONS),
-            (LogEntryLabels::DELETE, LABEL_DELETE),
-            (LogEntryLabels::QUEUE_FEDERATION, LABEL_QUEUE_FEDERATION),
-            (LogEntryLabels::VIRTUAL_HOSTS, LABEL_VIRTUAL_HOSTS),
-            (LogEntryLabels::CONNECTIONS, LABEL_CONNECTIONS),
-            (LogEntryLabels::ACCESS_CONTROL, LABEL_ACCESS_CONTROL),
-            (LogEntryLabels::SHOVELS, LABEL_SHOVELS),
-            (LogEntryLabels::CQ_STORES, LABEL_CQ_STORES),
-            (LogEntryLabels::DISCONNECTS, LABEL_DISCONNECTS),
-            (LogEntryLabels::FEDERATION, LABEL_FEDERATION),
-        ];
+        let mut combined_labels = LogEntryLabels::empty();
 
         for entry in entries {
             if let Some(subsystem_id) = entry.subsystem_id
@@ -91,8 +67,13 @@ impl FileMetadataContext {
                 self.subsystems.insert(subsystem.to_string());
             }
 
-            for (flag, name) in &LABEL_FLAGS {
-                if entry.labels.contains(*flag) {
+            combined_labels |= entry.labels;
+        }
+
+        for &name in LABEL_NAMES {
+            if let Some(bit) = LogEntryLabels::bit_for_label(name) {
+                let flag = LogEntryLabels::from_bits_truncate(bit);
+                if combined_labels.contains(flag) {
                     self.labels.insert(name.to_string());
                 }
             }
@@ -102,7 +83,7 @@ impl FileMetadataContext {
 
 fn sorted_vec_from_hashset(set: &HashSet<String>) -> Vec<String> {
     let mut vec: Vec<String> = set.iter().cloned().collect();
-    vec.sort();
+    vec.sort_unstable();
     vec
 }
 

@@ -16,6 +16,7 @@ use bel7_cli::{responsive_width, should_colorize};
 use owo_colors::OwoColorize;
 use rabbitmq_lqt_lib::constants::{doc_url_from_id, resolution_or_discussion_url_from_id};
 use rabbitmq_lqt_lib::entry_metadata::subsystems::Subsystem;
+use rabbitmq_lqt_lib::parser::ParsedLogEntry;
 use rabbitmq_lqt_lib::rel_db::file_metadata;
 use rabbitmq_lqt_lib::rel_db::node_log_entry::Model;
 use std::borrow::Cow;
@@ -178,6 +179,21 @@ impl DisplayLogEntry {
                 .unwrap_or("-")
                 .to_string(),
         }
+    }
+}
+
+pub fn parsed_entry_to_model(entry: &ParsedLogEntry, node: &str, id: i64) -> Model {
+    Model {
+        id,
+        node: node.to_string(),
+        timestamp: entry.timestamp,
+        severity: entry.severity.to_string(),
+        erlang_pid: entry.process_id.clone(),
+        subsystem_id: entry.subsystem_id,
+        message: entry.message.clone(),
+        labels: entry.labels.to_bits_i64(),
+        resolution_or_discussion_url_id: entry.resolution_or_discussion_url_id,
+        doc_url_id: entry.doc_url_id,
     }
 }
 

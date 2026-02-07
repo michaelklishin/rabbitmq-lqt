@@ -13,7 +13,7 @@ publish = false
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-rabbitmq-lqt-ql-core = { path = "../rabbitmq-lqt-ql-core" }
+rabbitmq-lqt-ql-core = { version = "0.20.0", path = "../rabbitmq-lqt-ql-core" }
 wasm-bindgen = "0.2"
 serde = { workspace = true }
 serde-wasm-bindgen = "0.6"

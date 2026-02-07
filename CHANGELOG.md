@@ -2,7 +2,17 @@
 
 ## v0.20.0 (in development)
 
-No changes yet.
+### Bug Fixes
+
+ * Updated `logs query --label` to validate against an up-to-date list of labels
+ * `logs query --label` now correctly matches `amqp10` for AMQP 1.0-related events (and not `amqp1_0`)
+ * `logs query --subsystem` now validates against a few more subsystems: `amqp10`, `management`, `metrics`, `oauth2`
+ * `logs query --label` now recognizes a few missing labels: `mnesia`, `oauth2`, `sql`
+ * `logs ql`: two pipeline stages, `| tail N` and `| offset N`, were unintentionally ignored
+
+### Enhancements
+
+ * Experimental I/O stream parser and filtering (as opposed to the original file-based one)
 
 
 ## v0.19.0 (Feb 2, 2026)

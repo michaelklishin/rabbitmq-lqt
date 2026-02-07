@@ -18,6 +18,7 @@ use rabbitmq_lqt_ql::ast::{
     DurationUnit, Field, FilterExpr, MatchOp, PipelineStage, SortDirection, Value,
 };
 use rabbitmq_lqt_ql::builder::{FilterBuilder, QueryBuilder, and, comparison, not, or};
+use rabbitmq_lqt_ql::parse;
 use rabbitmq_lqt_ql::presets::PresetName;
 
 #[test]
@@ -714,8 +715,7 @@ fn test_until_filter() {
 fn test_builder_equivalence_to_parsed_query() {
     let built_query = QueryBuilder::new().severity("error").limit(100).build();
 
-    let parsed_query =
-        rabbitmq_lqt_ql::parse(r#"{severity="error"} | limit 100"#).expect("should parse");
+    let parsed_query = parse(r#"{severity="error"} | limit 100"#).expect("should parse");
 
     assert!(built_query.selector.is_some());
     assert!(parsed_query.selector.is_some());

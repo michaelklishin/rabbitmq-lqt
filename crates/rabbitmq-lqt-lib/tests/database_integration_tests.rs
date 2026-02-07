@@ -19,6 +19,7 @@ use rabbitmq_lqt_lib::{
     NodeLogEntry, ParsedLogEntry, QueryContext, Severity, Subsystem, create_database,
     open_database, parse_log_file,
 };
+use std::fs;
 use std::io::BufReader;
 use tempfile::TempDir;
 
@@ -93,7 +94,7 @@ fn test_query_with_severity_filter() {
             message: "Info message".to_string(),
             message_lowercased: "Info message".to_lowercase(),
             subsystem_id: None,
-            labels: rabbitmq_lqt_lib::entry_metadata::labels::LogEntryLabels::default(),
+            labels: LogEntryLabels::default(),
             resolution_or_discussion_url_id: None,
             doc_url_id: None,
         },
@@ -106,7 +107,7 @@ fn test_query_with_severity_filter() {
             message: "Error message".to_string(),
             message_lowercased: "Error message".to_lowercase(),
             subsystem_id: None,
-            labels: rabbitmq_lqt_lib::entry_metadata::labels::LogEntryLabels::default(),
+            labels: LogEntryLabels::default(),
             resolution_or_discussion_url_id: None,
             doc_url_id: None,
         },
@@ -136,7 +137,7 @@ fn test_query_with_limit() {
             message: format!("Message {}", i),
             message_lowercased: format!("Message {}", i).to_lowercase(),
             subsystem_id: None,
-            labels: rabbitmq_lqt_lib::entry_metadata::labels::LogEntryLabels::default(),
+            labels: LogEntryLabels::default(),
             resolution_or_discussion_url_id: None,
             doc_url_id: None,
         })
@@ -165,7 +166,7 @@ fn test_open_existing_database() {
             message: "Test".to_string(),
             message_lowercased: "Test".to_lowercase(),
             subsystem_id: None,
-            labels: rabbitmq_lqt_lib::entry_metadata::labels::LogEntryLabels::default(),
+            labels: LogEntryLabels::default(),
             resolution_or_discussion_url_id: None,
             doc_url_id: None,
         }];
@@ -205,7 +206,7 @@ fn test_query_with_subsystem_filter() {
             message: "RabbitMQ metadata store: ra_log:init recovered".to_string(),
             message_lowercased: "RabbitMQ metadata store: ra_log:init recovered".to_lowercase(),
             subsystem_id: Some(Subsystem::MetadataStore.to_id()),
-            labels: rabbitmq_lqt_lib::entry_metadata::labels::LogEntryLabels::default(),
+            labels: LogEntryLabels::default(),
             resolution_or_discussion_url_id: None,
             doc_url_id: None,
         },
@@ -218,7 +219,7 @@ fn test_query_with_subsystem_filter() {
             message: "Feature flags: controller standing by".to_string(),
             message_lowercased: "Feature flags: controller standing by".to_lowercase(),
             subsystem_id: Some(Subsystem::FeatureFlags.to_id()),
-            labels: rabbitmq_lqt_lib::entry_metadata::labels::LogEntryLabels::default(),
+            labels: LogEntryLabels::default(),
             resolution_or_discussion_url_id: None,
             doc_url_id: None,
         },
@@ -231,7 +232,7 @@ fn test_query_with_subsystem_filter() {
             message: "Regular log message".to_string(),
             message_lowercased: "Regular log message".to_lowercase(),
             subsystem_id: None,
-            labels: rabbitmq_lqt_lib::entry_metadata::labels::LogEntryLabels::default(),
+            labels: LogEntryLabels::default(),
             resolution_or_discussion_url_id: None,
             doc_url_id: None,
         },
@@ -438,7 +439,7 @@ fn test_query_with_has_doc_url_filter() {
             message: "Entry with doc URL".to_string(),
             message_lowercased: "Entry with doc URL".to_lowercase(),
             subsystem_id: None,
-            labels: rabbitmq_lqt_lib::entry_metadata::labels::LogEntryLabels::default(),
+            labels: LogEntryLabels::default(),
             resolution_or_discussion_url_id: None,
             doc_url_id: Some(1),
         },
@@ -451,7 +452,7 @@ fn test_query_with_has_doc_url_filter() {
             message: "Entry without doc URL".to_string(),
             message_lowercased: "Entry without doc URL".to_lowercase(),
             subsystem_id: None,
-            labels: rabbitmq_lqt_lib::entry_metadata::labels::LogEntryLabels::default(),
+            labels: LogEntryLabels::default(),
             resolution_or_discussion_url_id: None,
             doc_url_id: None,
         },
@@ -464,7 +465,7 @@ fn test_query_with_has_doc_url_filter() {
             message: "Another entry with doc URL".to_string(),
             message_lowercased: "Another entry with doc URL".to_lowercase(),
             subsystem_id: None,
-            labels: rabbitmq_lqt_lib::entry_metadata::labels::LogEntryLabels::default(),
+            labels: LogEntryLabels::default(),
             resolution_or_discussion_url_id: None,
             doc_url_id: Some(2),
         },
@@ -498,7 +499,7 @@ fn test_query_with_has_resolution_or_discussion_url_filter() {
             message: "Entry with issue URL".to_string(),
             message_lowercased: "Entry with issue URL".to_lowercase(),
             subsystem_id: None,
-            labels: rabbitmq_lqt_lib::entry_metadata::labels::LogEntryLabels::default(),
+            labels: LogEntryLabels::default(),
             resolution_or_discussion_url_id: Some(123),
             doc_url_id: None,
         },
@@ -511,7 +512,7 @@ fn test_query_with_has_resolution_or_discussion_url_filter() {
             message: "Entry without issue URL".to_string(),
             message_lowercased: "Entry without issue URL".to_lowercase(),
             subsystem_id: None,
-            labels: rabbitmq_lqt_lib::entry_metadata::labels::LogEntryLabels::default(),
+            labels: LogEntryLabels::default(),
             resolution_or_discussion_url_id: None,
             doc_url_id: None,
         },
@@ -545,7 +546,7 @@ fn test_query_with_both_url_filters() {
             message: "Entry with both URLs".to_string(),
             message_lowercased: "Entry with both URLs".to_lowercase(),
             subsystem_id: None,
-            labels: rabbitmq_lqt_lib::entry_metadata::labels::LogEntryLabels::default(),
+            labels: LogEntryLabels::default(),
             resolution_or_discussion_url_id: Some(100),
             doc_url_id: Some(3),
         },
@@ -558,7 +559,7 @@ fn test_query_with_both_url_filters() {
             message: "Entry with only doc URL".to_string(),
             message_lowercased: "Entry with only doc URL".to_lowercase(),
             subsystem_id: None,
-            labels: rabbitmq_lqt_lib::entry_metadata::labels::LogEntryLabels::default(),
+            labels: LogEntryLabels::default(),
             resolution_or_discussion_url_id: None,
             doc_url_id: Some(3),
         },
@@ -571,7 +572,7 @@ fn test_query_with_both_url_filters() {
             message: "Entry with only issue URL".to_string(),
             message_lowercased: "Entry with only issue URL".to_lowercase(),
             subsystem_id: None,
-            labels: rabbitmq_lqt_lib::entry_metadata::labels::LogEntryLabels::default(),
+            labels: LogEntryLabels::default(),
             resolution_or_discussion_url_id: Some(100),
             doc_url_id: None,
         },
@@ -584,7 +585,7 @@ fn test_query_with_both_url_filters() {
             message: "Entry with no URLs".to_string(),
             message_lowercased: "Entry with no URLs".to_lowercase(),
             subsystem_id: None,
-            labels: rabbitmq_lqt_lib::entry_metadata::labels::LogEntryLabels::default(),
+            labels: LogEntryLabels::default(),
             resolution_or_discussion_url_id: None,
             doc_url_id: None,
         },
@@ -714,9 +715,9 @@ fn test_end_to_end_unlabelled_annotation() {
 2025-10-27 18:23:03.456789+00:00 [info] <0.4.0> Deleting auto-delete queue 'my.queue' in vhost '/' because all consumers were removed
 "#;
 
-    std::fs::write(&temp_log_file, log_contents).unwrap();
+    fs::write(&temp_log_file, log_contents).unwrap();
 
-    let file = std::fs::File::open(&temp_log_file).unwrap();
+    let file = fs::File::open(&temp_log_file).unwrap();
     let reader = BufReader::new(file);
     let parse_results = parse_log_file(reader).unwrap();
     assert_eq!(parse_results.entries.len(), 4, "Expected 4 log entries");
@@ -816,4 +817,62 @@ fn test_bulk_insert_with_chunking() {
     let ctx = QueryContext::default().severity("error");
     let results = NodeLogEntry::query(&db, &ctx).unwrap();
     assert_eq!(results.len(), 1500);
+}
+
+#[test]
+fn test_query_with_offset() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
+
+    let entries: Vec<ParsedLogEntry> = (0..10)
+        .map(|i| ParsedLogEntry {
+            sequence_id: 0,
+            explicit_id: None,
+            timestamp: Utc::now(),
+            severity: Severity::Info,
+            process_id: format!("<0.{}.0>", i),
+            message: format!("Message {}", i),
+            message_lowercased: format!("message {}", i),
+            subsystem_id: None,
+            labels: LogEntryLabels::default(),
+            resolution_or_discussion_url_id: None,
+            doc_url_id: None,
+        })
+        .collect();
+
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
+
+    let ctx = QueryContext::default().offset(7);
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
+    assert_eq!(results.len(), 3);
+}
+
+#[test]
+fn test_query_with_tail() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("test.db");
+    let db = create_database(&db_path).unwrap();
+
+    let entries: Vec<ParsedLogEntry> = (0..10)
+        .map(|i| ParsedLogEntry {
+            sequence_id: 0,
+            explicit_id: None,
+            timestamp: Utc::now(),
+            severity: Severity::Info,
+            process_id: format!("<0.{}.0>", i),
+            message: format!("Message {}", i),
+            message_lowercased: format!("message {}", i),
+            subsystem_id: None,
+            labels: LogEntryLabels::default(),
+            resolution_or_discussion_url_id: None,
+            doc_url_id: None,
+        })
+        .collect();
+
+    NodeLogEntry::insert_parsed_entries(&db, &entries, "test-node").unwrap();
+
+    let ctx = QueryContext::default().tail(3);
+    let results = NodeLogEntry::query(&db, &ctx).unwrap();
+    assert_eq!(results.len(), 3);
 }

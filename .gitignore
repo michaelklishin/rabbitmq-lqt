@@ -1,4 +1,5 @@
 /target
+crates/target-wasm
 .idea/*
 .fleet/*
 profile.json

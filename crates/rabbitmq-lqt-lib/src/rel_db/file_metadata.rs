@@ -14,7 +14,7 @@
 
 use crate::rel_db::DatabaseConnection;
 use chrono::{DateTime, Utc};
-use duckdb::types::Value;
+use duckdb::types::{TimeUnit, Value};
 use duckdb::{Error as DuckDbError, params};
 use serde::{Deserialize, Serialize};
 use std::io::Error as IoError;
@@ -92,12 +92,12 @@ impl FileMetadata {
             DuckDbError::ToSqlConversionFailure(Box::new(IoError::other(e.to_string())))
         })?;
 
-        let oldest_entry_at = metadata.oldest_entry_at.map(|dt| {
-            Value::Timestamp(duckdb::types::TimeUnit::Microsecond, dt.timestamp_micros())
-        });
-        let most_recent_entry_at = metadata.most_recent_entry_at.map(|dt| {
-            Value::Timestamp(duckdb::types::TimeUnit::Microsecond, dt.timestamp_micros())
-        });
+        let oldest_entry_at = metadata
+            .oldest_entry_at
+            .map(|dt| Value::Timestamp(TimeUnit::Microsecond, dt.timestamp_micros()));
+        let most_recent_entry_at = metadata
+            .most_recent_entry_at
+            .map(|dt| Value::Timestamp(TimeUnit::Microsecond, dt.timestamp_micros()));
 
         conn.execute(
             "INSERT INTO file_metadata (file_path, rabbitmq_versions, erlang_versions, tls_library, oldest_entry_at, most_recent_entry_at, total_lines, total_entries, nodes, subsystems, labels, enabled_plugins)
@@ -126,12 +126,12 @@ impl FileMetadata {
             DuckDbError::ToSqlConversionFailure(Box::new(IoError::other(e.to_string())))
         })?;
 
-        let oldest_entry_at = metadata.oldest_entry_at.map(|dt| {
-            Value::Timestamp(duckdb::types::TimeUnit::Microsecond, dt.timestamp_micros())
-        });
-        let most_recent_entry_at = metadata.most_recent_entry_at.map(|dt| {
-            Value::Timestamp(duckdb::types::TimeUnit::Microsecond, dt.timestamp_micros())
-        });
+        let oldest_entry_at = metadata
+            .oldest_entry_at
+            .map(|dt| Value::Timestamp(TimeUnit::Microsecond, dt.timestamp_micros()));
+        let most_recent_entry_at = metadata
+            .most_recent_entry_at
+            .map(|dt| Value::Timestamp(TimeUnit::Microsecond, dt.timestamp_micros()));
 
         conn.execute(
             "INSERT OR REPLACE INTO file_metadata (file_path, rabbitmq_versions, erlang_versions, tls_library, oldest_entry_at, most_recent_entry_at, total_lines, total_entries, nodes, subsystems, labels, enabled_plugins)

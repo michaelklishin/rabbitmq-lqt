@@ -14,7 +14,8 @@
 
 //! Unit tests for query language presets.
 
-use rabbitmq_lqt_ql::ast::FilterExpr;
+use rabbitmq_lqt_ql::ast::{Field, FilterExpr};
+use rabbitmq_lqt_ql::parse_filter_only;
 use rabbitmq_lqt_ql::presets::PresetName;
 use std::str::FromStr;
 
@@ -28,7 +29,7 @@ fn test_all_presets_have_valid_query_strings() {
             preset
         );
 
-        let result = rabbitmq_lqt_ql::parse_filter_only(query_string);
+        let result = parse_filter_only(query_string);
         assert!(
             result.is_ok(),
             "Preset {:?} query string '{}' failed to parse: {:?}",
@@ -197,7 +198,7 @@ fn test_errors_preset_produces_comparison() {
     let expr = PresetName::Errors.to_filter_expr();
     match expr {
         FilterExpr::Comparison(matcher) => {
-            assert_eq!(matcher.field, rabbitmq_lqt_ql::ast::Field::Severity);
+            assert_eq!(matcher.field, Field::Severity);
         }
         _ => panic!("Expected Comparison for :errors preset"),
     }

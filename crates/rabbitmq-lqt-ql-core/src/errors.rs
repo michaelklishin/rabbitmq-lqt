@@ -168,8 +168,7 @@ fn format_invalid_field(name: &str, suggestions: &[String]) -> String {
 }
 
 fn format_unknown_preset(name: &str, suggestions: &[String]) -> String {
-    let valid =
-        "errors, crashes, errors_or_crashes, disconnects, tls_issues, access_denied, timeouts";
+    let valid = "errors, crashes, errors_or_crashes, disconnects, tls_issues, access_denied, timeouts, raft_and_quorum_queues";
     let mut msg = format!("Unknown preset ':{name}'. Valid presets: {valid}");
     append_suggestions(&mut msg, suggestions);
     msg
@@ -287,7 +286,7 @@ impl From<&ParseError> for Diagnostic {
             .with_help("Valid fields: severity, subsystem, node, erlang_pid, message, labels, timestamp, id"),
 
             ParseError::UnknownPreset { name, suggestions } => Diagnostic::new(format!(
-                "Unknown preset ':{}'. Valid presets: errors, crashes, errors_or_crashes, disconnects, tls_issues, access_denied, timeouts",
+                "Unknown preset ':{}'. Valid presets: errors, crashes, errors_or_crashes, disconnects, tls_issues, access_denied, timeouts, raft_and_quorum_queues",
                 name
             ))
             .with_suggestions(suggestions.clone()),

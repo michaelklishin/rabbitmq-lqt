@@ -23,6 +23,7 @@ use chrono_english::{Dialect, parse_date_string};
 use rabbitmq_lqt_lib::QueryContext;
 use rabbitmq_lqt_lib::entry_metadata::labels::LogEntryLabels;
 use rabbitmq_lqt_lib::entry_metadata::subsystems::Subsystem;
+use regex::Regex;
 use std::mem;
 use std::str::FromStr;
 
@@ -486,7 +487,7 @@ fn validate_severity(s: &str) -> Result<(), CompileError> {
 }
 
 fn validate_regex(pattern: &str) -> Result<(), CompileError> {
-    regex::Regex::new(pattern).map_err(|e| CompileError::RegexCompilation {
+    Regex::new(pattern).map_err(|e| CompileError::RegexCompilation {
         pattern: pattern.to_string(),
         reason: e.to_string(),
     })?;

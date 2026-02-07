@@ -20,7 +20,7 @@
 //! - crates/rabbitmq-lqt-cli/tests/fixtures/rabbit@fixture3.log
 //! - crates/rabbitmq-lqt-cli/tests/fixtures/rabbit@fixture4.log
 
-use rabbitmq_lqt_ql::{parse, parse_and_compile};
+use rabbitmq_lqt_ql::{compile, parse, parse_and_compile};
 
 #[test]
 fn test_parse_and_compile_severity_error() {
@@ -442,7 +442,7 @@ fn test_invalid_severity_fails() {
     let query = r#"{severity="invalid_level"}"#;
     let parsed = parse(query);
     assert!(parsed.is_ok());
-    let compiled = rabbitmq_lqt_ql::compile(&parsed.unwrap());
+    let compiled = compile(&parsed.unwrap());
     assert!(compiled.is_err());
 }
 
@@ -451,7 +451,7 @@ fn test_invalid_regex_fails() {
     let query = r#"message =~ "[invalid""#;
     let parsed = parse(query);
     assert!(parsed.is_ok());
-    let compiled = rabbitmq_lqt_ql::compile(&parsed.unwrap());
+    let compiled = compile(&parsed.unwrap());
     assert!(compiled.is_err());
 }
 
@@ -460,7 +460,7 @@ fn test_unknown_label_fails() {
     let query = r#"labels any ["nonexistent_label_xyz"]"#;
     let parsed = parse(query);
     assert!(parsed.is_ok());
-    let compiled = rabbitmq_lqt_ql::compile(&parsed.unwrap());
+    let compiled = compile(&parsed.unwrap());
     assert!(compiled.is_err());
 }
 

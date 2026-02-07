@@ -159,6 +159,63 @@ pub fn parse_log_file<R: BufRead>(reader: R) -> Result<ParseResult> {
     })
 }
 
+pub struct IncrementalParser {
+    next_sequence_id: usize,
+    current_entry: Option<ParsedLogEntry>,
+}
+
+impl IncrementalParser {
+    pub fn new(start_sequence_id: usize) -> Self {
+        Self {
+            next_sequence_id: start_sequence_id,
+            current_entry: None,
+        }
+    }
+
+    pub fn feed_line(&mut self, line: &str) -> Option<ParsedLogEntry> {
+        let stripped_line = strip_ansi_codes(line);
+        match parse_log_entry(&stripped_line) {
+            Ok((_, new_entry)) => {
+                let is_continuation = self
+                    .current_entry
+                    .as_ref()
+                    .is_some_and(|prev| new_entry.is_continuation_of(prev));
+
+                match (is_continuation, self.current_entry.as_mut()) {
+                    (true, Some(prev_entry)) => {
+                        prev_entry.append_continuation(&new_entry.message);
+                        None
+                    }
+                    (false, _) => {
+                        let completed = self.current_entry.take().map(|mut e| {
+                            e.sequence_id = self.next_sequence_id;
+                            self.next_sequence_id += 1;
+                            e
+                        });
+                        self.current_entry = Some(new_entry);
+                        completed
+                    }
+                    (true, None) => None,
+                }
+            }
+            Err(_) => {
+                if let Some(entry) = self.current_entry.as_mut() {
+                    entry.append_continuation(stripped_line.trim_end());
+                }
+                None
+            }
+        }
+    }
+
+    pub fn flush(&mut self) -> Option<ParsedLogEntry> {
+        self.current_entry.take().map(|mut e| {
+            e.sequence_id = self.next_sequence_id;
+            self.next_sequence_id += 1;
+            e
+        })
+    }
+}
+
 pub fn count_log_lines(path: &Path) -> Result<usize> {
     let file = File::open(path)?;
     let reader = BufReader::new(file);

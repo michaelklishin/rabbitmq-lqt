@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use rabbitmq_lqt_lib::entry_metadata::labels::{LABEL_NAMES, LogEntryLabels};
+use serde_json::Value as JsonValue;
 
 #[test]
 fn test_serialize_deserialize_roundtrip_empty() {
@@ -143,12 +144,12 @@ fn test_deserialize_ignores_false_values() {
 fn test_serialize_only_includes_set_labels() {
     let labels = LogEntryLabels::ELECTIONS | LogEntryLabels::RAFT;
     let serialized = serde_json::to_string(&labels).unwrap();
-    let value: serde_json::Value = serde_json::from_str(&serialized).unwrap();
+    let value: JsonValue = serde_json::from_str(&serialized).unwrap();
     let obj = value.as_object().unwrap();
 
     assert_eq!(obj.len(), 2);
-    assert_eq!(obj.get("elections"), Some(&serde_json::Value::Bool(true)));
-    assert_eq!(obj.get("raft"), Some(&serde_json::Value::Bool(true)));
+    assert_eq!(obj.get("elections"), Some(&JsonValue::Bool(true)));
+    assert_eq!(obj.get("raft"), Some(&JsonValue::Bool(true)));
 }
 
 #[test]

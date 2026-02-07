@@ -135,6 +135,7 @@ pub struct ObfuscationStats {
     pub ipv6_addresses_obfuscated: usize,
 }
 
+#[derive(Debug)]
 pub struct LogObfuscator {
     hostname_map: HashMap<String, String>,
     directory_map: HashMap<String, String>,
@@ -212,64 +213,73 @@ impl LogObfuscator {
 
             // Matches Erlang node names like rabbit@hostname, hare@sunnyside
             node_name_re: Regex::new(r"([a-zA-Z_][a-zA-Z0-9_]*)@([a-zA-Z][a-zA-Z0-9._-]*)")
-                .unwrap(),
+                .expect("node_name_re is a valid regex"),
 
             // Matches IPv4 addresses
-            ipv4_re: Regex::new(r"\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b").unwrap(),
+            ipv4_re: Regex::new(r"\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b")
+                .expect("ipv4_re is a valid regex"),
 
             // Matches IPv6 addresses in bracketed form like [::1] or [fe80::1]
-            ipv6_re: Regex::new(r"\[([0-9a-fA-F:]+)\]").unwrap(),
+            ipv6_re: Regex::new(r"\[([0-9a-fA-F:]+)\]").expect("ipv6_re is a valid regex"),
 
             // Matches Unix-style paths starting with /Users, /home, /var, /tmp, /opt, /etc
             unix_path_re: Regex::new(
                 r#"(?:"|')?(/(?:Users|home|var|tmp|opt|etc|data)/[a-zA-Z0-9._/-]+)(?:"|')?"#,
             )
-            .unwrap(),
+            .expect("unix_path_re is a valid regex"),
 
             // Matches user patterns like: user 'username', User 'username', user: 'username'
-            user_pattern_re: Regex::new(r#"(?i)user[:\s]+['"]([^'"]+)['"]"#).unwrap(),
+            user_pattern_re: Regex::new(r#"(?i)user[:\s]+['"]([^'"]+)['"]"#)
+                .expect("user_pattern_re is a valid regex"),
 
             // Matches vhost patterns like: vhost '/', vhost: 'name', vhost "name", virtual host '/'
             vhost_pattern_re: Regex::new(r#"(?:vhost|virtual\s+host)[:\s]+['"]([^'"]+)['"]"#)
-                .unwrap(),
+                .expect("vhost_pattern_re is a valid regex"),
 
             // Matches queue patterns like: queue 'name', Queue 'name'
-            queue_pattern_re: Regex::new(r#"(?i)queue[:\s]+['"]([^'"]+)['"]"#).unwrap(),
+            queue_pattern_re: Regex::new(r#"(?i)queue[:\s]+['"]([^'"]+)['"]"#)
+                .expect("queue_pattern_re is a valid regex"),
 
             // Matches exchange patterns like: exchange 'name', Exchange 'name'
-            exchange_pattern_re: Regex::new(r#"(?i)exchange[:\s]+['"]([^'"]+)['"]"#).unwrap(),
+            exchange_pattern_re: Regex::new(r#"(?i)exchange[:\s]+['"]([^'"]+)['"]"#)
+                .expect("exchange_pattern_re is a valid regex"),
 
             // Matches stream patterns like: stream 'name', Stream 'name', Stream: 'name'
-            stream_pattern_re: Regex::new(r#"(?i)stream[:\s]+['"]([^'"]+)['"]"#).unwrap(),
+            stream_pattern_re: Regex::new(r#"(?i)stream[:\s]+['"]([^'"]+)['"]"#)
+                .expect("stream_pattern_re is a valid regex"),
 
             // Matches policy patterns like: policy 'name', Policy 'name'
-            policy_pattern_re: Regex::new(r#"(?i)policy[:\s]+['"]([^'"]+)['"]"#).unwrap(),
+            policy_pattern_re: Regex::new(r#"(?i)policy[:\s]+['"]([^'"]+)['"]"#)
+                .expect("policy_pattern_re is a valid regex"),
 
             // Matches federation link patterns like:
             // Federation link (upstream: name, policy: name)
             federation_link_re: Regex::new(
                 r"Federation link \(upstream: ([^,]+), policy: ([^)]+)\)",
             )
-            .unwrap(),
+            .expect("federation_link_re is a valid regex"),
 
             // Matches shovel connection name patterns like:
             // Shovel name: (without quotes, in connection descriptions)
-            shovel_connection_re: Regex::new(r"Shovel ([a-zA-Z0-9._-]+):").unwrap(),
+            shovel_connection_re: Regex::new(r"Shovel ([a-zA-Z0-9._-]+):")
+                .expect("shovel_connection_re is a valid regex"),
 
             // Matches quoted shovel name patterns like:
             // Shovel 'name' connected, Shovel 'name' in virtual host
-            shovel_quoted_re: Regex::new(r"Shovel '([^']+)'").unwrap(),
+            shovel_quoted_re: Regex::new(r"Shovel '([^']+)'")
+                .expect("shovel_quoted_re is a valid regex"),
 
             // Matches Erlang binary shovel name patterns like:
             // Shovel <<"name">> received a 'basic.cancel'
-            shovel_erlang_binary_re: Regex::new(r#"Shovel <<"([^"]+)">>"#).unwrap(),
+            shovel_erlang_binary_re: Regex::new(r#"Shovel <<"([^"]+)">>"#)
+                .expect("shovel_erlang_binary_re is a valid regex"),
 
             // Matches Erlang tuples containing queue names and node names like:
             // {'QueueName','rabbit@host'} in quorum queue Raft log messages
             erlang_queue_tuple_re: Regex::new(
                 r#"\{'([^']+)','([a-zA-Z_][a-zA-Z0-9_]*)@([a-zA-Z][a-zA-Z0-9._-]*)'\}"#,
             )
-            .unwrap(),
+            .expect("erlang_queue_tuple_re is a valid regex"),
 
             stats: ObfuscationStats::default(),
         }

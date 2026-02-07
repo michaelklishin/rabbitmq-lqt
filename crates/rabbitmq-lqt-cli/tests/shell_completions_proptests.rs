@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use assert_cmd::assert::Assert;
 use bel7_cli::CommandShellExt;
 use proptest::prelude::*;
 use std::ffi::OsStr;
 use std::process::Command;
 
-fn run_with_shell_env<I, S>(args: I, shell_path: &str) -> assert_cmd::assert::Assert
+fn run_with_shell_env<I, S>(args: I, shell_path: &str) -> Assert
 where
     I: IntoIterator<Item = S>,
     S: AsRef<OsStr>,
@@ -26,7 +27,7 @@ where
     cmd.clear_shell_detection_env();
     cmd.env("SHELL", shell_path);
     cmd.args(args);
-    assert_cmd::assert::Assert::new(cmd.output().unwrap())
+    Assert::new(cmd.output().unwrap())
 }
 
 proptest! {

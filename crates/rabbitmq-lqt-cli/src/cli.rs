@@ -79,7 +79,7 @@ fn web_subcommands() -> Vec<Command> {
                 .short('i')
                 .required(true)
                 .value_name("PATH")
-                .help("Path to the SQLite database file"),
+                .help("Path to the database file"),
         )
         .arg(
             Arg::new("host")
@@ -98,6 +98,55 @@ fn web_subcommands() -> Vec<Command> {
         );
 
     vec![serve_cmd]
+}
+
+fn filter_args() -> Vec<Arg> {
+    vec![
+        Arg::new("since_time")
+            .long("since-time")
+            .value_name("DATETIME")
+            .help("Lower bound of datetime range. Accepts: dates (2025-10-27), datetime (2025-10-27 18:23:00), RFC 3339, or human formats ('yesterday', '2 days ago', 'last Monday')"),
+        Arg::new("to_time")
+            .long("to-time")
+            .value_name("DATETIME")
+            .help("Upper bound of datetime range (defaults to now). Accepts: dates (2025-10-27), datetime (2025-10-27 18:23:00), RFC 3339, or human formats ('yesterday', '2 days ago', 'now')"),
+        Arg::new("severity")
+            .long("severity")
+            .value_name("SEVERITY")
+            .value_parser(["debug", "info", "notice", "warning", "error", "critical"])
+            .help("Filter by severity level"),
+        Arg::new("erlang_pid")
+            .long("erlang-pid")
+            .value_name("PID")
+            .help("Filter by Erlang process ID (e.g., <0.208.0>)"),
+        Arg::new("subsystem")
+            .long("subsystem")
+            .value_name("SUBSYSTEM")
+            .value_parser(["access_control", "amqp10", "boot", "channels", "classic_queues", "clustering", "connections", "erlang_otp", "exchanges", "feature_flags", "federation", "limits", "logging", "maintenance_mode", "management", "metadata_store", "metrics", "mqtt", "oauth2", "peer_discovery", "plugins", "policies", "queues", "raft", "runtime_parameters", "shovels", "shutdown", "streams", "virtual_hosts"])
+            .help("Filter by subsystem"),
+        Arg::new("label")
+            .long("label")
+            .value_name("LABEL")
+            .action(ArgAction::Append)
+            .value_parser(["access_control", "amqp10", "auto_delete", "channels", "classic_queues", "clustering", "connections", "consumers", "cq_stores", "definitions", "delete", "deletion_protection", "deprecated_features", "disconnects", "election", "elections", "erl_process_crash", "exceptions", "exchanges", "exclusive", "feature_flags", "federation", "http", "khepri", "limits", "maintenance_mode", "metrics", "mnesia", "mqtt", "multiline", "networking", "oauth2", "peer_discovery:classic", "plugins", "policies", "process_stops", "queue_federation", "queues", "quorum_queues", "raft", "runtime_parameters", "sessions", "shovels", "shutdown", "sql", "startup_banner", "stomp", "streams", "timeouts", "tls", "undefined_fn", "unlabelled", "virtual_hosts", "websockets", "worker_pool"])
+            .help("Filter by label (can be specified multiple times). Matches entries with ANY of the specified labels set to true. Note: 'election' is an alias for 'elections', and 'unlabelled' matches entries with no labels."),
+        Arg::new("matching_all_labels")
+            .long("matching-all-labels")
+            .action(ArgAction::SetTrue)
+            .help("When multiple --label filters are specified, require ALL labels to be set (logical AND) instead of ANY (logical OR)"),
+        Arg::new("has_resolution_or_discussion_url")
+            .long("has-resolution-or-discussion-url")
+            .action(ArgAction::SetTrue)
+            .help("Filter entries that have a resolution or discussion URL"),
+        Arg::new("has_doc_url")
+            .long("has-doc-url")
+            .action(ArgAction::SetTrue)
+            .help("Filter entries that have a documentation URL"),
+        Arg::new("unlabelled")
+            .long("unlabelled")
+            .action(ArgAction::SetTrue)
+            .help("Filter entries that have no labels set (equivalent to --label unlabelled)"),
+    ]
 }
 
 fn logs_subcommands() -> Vec<Command> {
@@ -132,7 +181,7 @@ fn logs_subcommands() -> Vec<Command> {
                 .short('o')
                 .required(true)
                 .value_name("PATH")
-                .help("Path to the output SQLite database file"),
+                .help("Path to the output database file"),
         )
         .arg(
             Arg::new("silent")
@@ -207,66 +256,21 @@ fn logs_subcommands() -> Vec<Command> {
         );
 
     let query_cmd = Command::new("query")
-        .about("Query log entries from a SQLite database")
+        .about("Query log entries from a database")
         .arg(
             Arg::new("input_db_file_path")
                 .long("input-db-file-path")
                 .short('i')
                 .required(true)
                 .value_name("PATH")
-                .help("Path to the SQLite database file"),
+                .help("Path to the database file"),
         )
-        .arg(
-            Arg::new("since_time")
-                .long("since-time")
-                .value_name("DATETIME")
-                .help("Lower bound of datetime range. Accepts: dates (2025-10-27), datetime (2025-10-27 18:23:00), RFC 3339, or human formats ('yesterday', '2 days ago', 'last Monday')"),
-        )
-        .arg(
-            Arg::new("to_time")
-                .long("to-time")
-                .value_name("DATETIME")
-                .help("Upper bound of datetime range (defaults to now). Accepts: dates (2025-10-27), datetime (2025-10-27 18:23:00), RFC 3339, or human formats ('yesterday', '2 days ago', 'now')"),
-        )
-        .arg(
-            Arg::new("severity")
-                .long("severity")
-                .value_name("SEVERITY")
-                .value_parser(["debug", "info", "notice", "warning", "error", "critical"])
-                .help("Filter by severity level"),
-        )
-        .arg(
-            Arg::new("erlang_pid")
-                .long("erlang-pid")
-                .value_name("PID")
-                .help("Filter by Erlang process ID (e.g., <0.208.0>)"),
-        )
+        .args(filter_args())
         .arg(
             Arg::new("node")
                 .long("node")
                 .value_name("NODE")
                 .help("Filter by node name (e.g., rabbit@sunnyside)"),
-        )
-        .arg(
-            Arg::new("subsystem")
-                .long("subsystem")
-                .value_name("SUBSYSTEM")
-                .value_parser(["access_control", "boot", "channels", "classic_queues", "clustering", "connections", "erlang_otp", "exchanges", "feature_flags", "federation", "limits", "logging", "maintenance_mode", "metadata_store", "mqtt", "peer_discovery", "plugins", "policies", "queues", "raft", "runtime_parameters", "shovels", "shutdown", "streams", "virtual_hosts"])
-                .help("Filter by subsystem"),
-        )
-        .arg(
-            Arg::new("label")
-                .long("label")
-                .value_name("LABEL")
-                .action(ArgAction::Append)
-                .value_parser(["access_control", "amqp1_0", "auto_delete", "channels", "classic_queues", "clustering", "connections", "consumers", "cq_stores", "definitions", "delete", "deletion_protection", "deprecated_features", "disconnects", "election", "elections", "erl_process_crash", "exceptions", "exchanges", "exclusive", "feature_flags", "federation", "handshake", "http", "khepri", "limits", "maintenance_mode", "metrics", "mqtt", "multiline", "networking", "peer_discovery:classic", "plugins", "policies", "process_stops", "queue_federation", "queues", "quorum_queues", "raft", "runtime_parameters", "sessions", "shovels", "shutdown", "startup_banner", "stomp", "streams", "timeouts", "tls", "undefined_fn", "unlabelled", "virtual_hosts", "wal", "websockets", "worker_pool"])
-                .help("Filter by label (can be specified multiple times). Matches entries with ANY of the specified labels set to true. Note: 'election' is an alias for 'elections', and 'unlabelled' matches entries with no labels."),
-        )
-        .arg(
-            Arg::new("matching_all_labels")
-                .long("matching-all-labels")
-                .action(ArgAction::SetTrue)
-                .help("When multiple --label filters are specified, require ALL labels to be set (logical AND) instead of ANY (logical OR)"),
         )
         .arg(
             Arg::new("limit")
@@ -280,24 +284,6 @@ fn logs_subcommands() -> Vec<Command> {
                 .long("without-colors")
                 .action(ArgAction::SetTrue)
                 .help("Disable colored output"),
-        )
-        .arg(
-            Arg::new("has_resolution_or_discussion_url")
-                .long("has-resolution-or-discussion-url")
-                .action(ArgAction::SetTrue)
-                .help("Filter entries that have a resolution or discussion URL"),
-        )
-        .arg(
-            Arg::new("has_doc_url")
-                .long("has-doc-url")
-                .action(ArgAction::SetTrue)
-                .help("Filter entries that have a documentation URL"),
-        )
-        .arg(
-            Arg::new("unlabelled")
-                .long("unlabelled")
-                .action(ArgAction::SetTrue)
-                .help("Filter entries that have no labels set (equivalent to --label unlabelled)"),
         );
 
     let overview_cmd = Command::new("overview")
@@ -308,7 +294,7 @@ fn logs_subcommands() -> Vec<Command> {
                 .short('i')
                 .required(true)
                 .value_name("PATH")
-                .help("Path to the SQLite database file"),
+                .help("Path to the database file"),
         )
         .arg(
             Arg::new("without_colors")
@@ -325,7 +311,7 @@ fn logs_subcommands() -> Vec<Command> {
                 .short('i')
                 .required(true)
                 .value_name("PATH")
-                .help("Path to the SQLite database file"),
+                .help("Path to the database file"),
         )
         .arg(
             Arg::new("query")
@@ -342,6 +328,40 @@ fn logs_subcommands() -> Vec<Command> {
                 .help("Disable colored output"),
         );
 
+    let tail_cmd = Command::new("tail")
+        .about("Show last N log entries, parsed and annotated, with optional follow mode")
+        .arg(
+            Arg::new("input_log_file_path")
+                .long("input-log-file-path")
+                .short('i')
+                .required(true)
+                .value_name("PATH")
+                .help("Path to the input RabbitMQ log file"),
+        )
+        .arg(
+            Arg::new("lines")
+                .long("lines")
+                .short('n')
+                .default_value("10")
+                .value_name("N")
+                .help("Number of log entries to display")
+                .value_parser(value_parser!(usize)),
+        )
+        .arg(
+            Arg::new("follow")
+                .long("follow")
+                .short('f')
+                .action(ArgAction::SetTrue)
+                .help("Follow the log file for new entries (like tail -f)"),
+        )
+        .arg(
+            Arg::new("without_colors")
+                .long("without-colors")
+                .action(ArgAction::SetTrue)
+                .help("Disable colored output"),
+        )
+        .args(filter_args());
+
     vec![
         parse_cmd,
         merge_cmd,
@@ -349,5 +369,6 @@ fn logs_subcommands() -> Vec<Command> {
         query_cmd,
         overview_cmd,
         ql_cmd,
+        tail_cmd,
     ]
 }

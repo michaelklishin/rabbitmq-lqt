@@ -120,11 +120,31 @@ fn show_obfuscate_command_help() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
+fn show_overview_command_help() -> Result<(), Box<dyn Error>> {
+    run_succeeds(["logs", "overview", "--help"])
+        .stdout(output_includes("file-level metadata"))
+        .stdout(output_includes("--input-db-file-path"));
+
+    Ok(())
+}
+
+#[test]
 fn show_ql_command_help() -> Result<(), Box<dyn Error>> {
     run_succeeds(["logs", "ql", "--help"])
         .stdout(output_includes("Query log entries using RQL"))
         .stdout(output_includes("--query"))
         .stdout(output_includes("#tls"));
+
+    Ok(())
+}
+
+#[test]
+fn show_tail_command_help() -> Result<(), Box<dyn Error>> {
+    run_succeeds(["logs", "tail", "--help"])
+        .stdout(output_includes("--input-log-file-path"))
+        .stdout(output_includes("--follow"))
+        .stdout(output_includes("--lines"))
+        .stdout(output_includes("--without-colors"));
 
     Ok(())
 }

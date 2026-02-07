@@ -18,7 +18,7 @@ use axum::Json;
 use axum::extract::State;
 use rabbitmq_lqt_lib::Severity;
 use rabbitmq_lqt_lib::entry_metadata::labels::LABEL_NAMES;
-use rabbitmq_lqt_lib::rel_db::{FileMetadata, NodeLogEntry};
+use rabbitmq_lqt_lib::rel_db::{self, FileMetadata, NodeLogEntry};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::io::Error as IoError;
@@ -73,7 +73,7 @@ pub async fn get_metadata(
     let nodes = hashset_to_sorted_vec(nodes_set);
     let subsystems = hashset_to_sorted_vec(subsystems_set);
     let mut labels: Vec<String> = LABEL_NAMES.iter().map(|s| s.to_string()).collect();
-    labels.sort();
+    labels.sort_unstable();
 
     Ok(Json(MetadataResponse {
         severities,
@@ -123,8 +123,8 @@ pub struct FileMetadataResponse {
     pub enabled_plugins: Vec<String>,
 }
 
-impl From<rabbitmq_lqt_lib::rel_db::file_metadata::Model> for FileMetadataResponse {
-    fn from(model: rabbitmq_lqt_lib::rel_db::file_metadata::Model) -> Self {
+impl From<rel_db::file_metadata::Model> for FileMetadataResponse {
+    fn from(model: rel_db::file_metadata::Model) -> Self {
         Self {
             file_path: model.file_path,
             rabbitmq_versions: model.rabbitmq_versions,

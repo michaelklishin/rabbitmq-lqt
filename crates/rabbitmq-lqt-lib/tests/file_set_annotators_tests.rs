@@ -17,6 +17,7 @@ use rabbitmq_lqt_lib::Severity;
 use rabbitmq_lqt_lib::entry_metadata::labels::LogEntryLabels;
 use rabbitmq_lqt_lib::file_set_metadata::extract_file_metadata;
 use rabbitmq_lqt_lib::parser::ParsedLogEntry;
+use std::slice;
 
 fn create_test_entry(
     message: &str,
@@ -356,7 +357,7 @@ fn test_single_entry_has_same_timestamps() {
     let entry = create_test_entry("Message", None, LogEntryLabels::empty());
 
     let metadata = extract_file_metadata(
-        &[entry.clone()],
+        slice::from_ref(&entry),
         "/tmp/test.log".to_string(),
         "rabbit@node1",
         1,

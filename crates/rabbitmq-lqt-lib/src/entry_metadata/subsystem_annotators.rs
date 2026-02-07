@@ -223,7 +223,7 @@ static CONNECTION_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
         r"connection\s+(?:\d+\.\d+\.\d+\.\d+|\[[0-9a-f:.]+\]):\d+\s+->\s+(?:\d+\.\d+\.\d+\.\d+|\[[0-9a-f:.]+\]):\d+",
     )
-    .unwrap()
+    .expect("CONNECTION_PATTERN is a valid regex")
 });
 
 #[derive(Debug)]

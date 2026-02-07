@@ -26,6 +26,7 @@ mod output;
 
 use bel7_cli::ExitCode;
 use std::io::stderr;
+use tokio::runtime::Runtime;
 
 #[cfg(feature = "web-ui")]
 use std::path::PathBuf;
@@ -36,7 +37,7 @@ fn main() -> ExitCode {
         return ExitCode::Software;
     }
 
-    let rt = match tokio::runtime::Runtime::new() {
+    let rt = match Runtime::new() {
         Ok(rt) => rt,
         Err(e) => {
             eprintln!("Failed to create Tokio runtime: {}", e);
@@ -59,6 +60,7 @@ async fn dispatch_command(cli: &clap::ArgMatches) -> ExitCode {
             Some(("query", args)) => commands::handle_query_command(args),
             Some(("overview", args)) => commands::handle_overview_command(args),
             Some(("ql", args)) => commands::handle_ql_command(args),
+            Some(("tail", args)) => commands::handle_tail_command(args).await,
             _ => {
                 eprintln!(
                     "Unknown logs subcommand. Try '{} logs --help' for available commands.",

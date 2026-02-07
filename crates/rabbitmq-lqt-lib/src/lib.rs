@@ -16,6 +16,7 @@ pub mod datetime;
 pub mod entry_metadata;
 pub mod errors;
 pub mod file_set_metadata;
+pub mod filter;
 pub mod parser;
 pub mod rel_db;
 pub mod severity;
@@ -28,7 +29,8 @@ pub use entry_metadata::labels::LogEntryLabels;
 pub use entry_metadata::subsystem_annotators::annotate_subsystems;
 pub use entry_metadata::subsystems::Subsystem;
 pub use errors::Error;
-pub use parser::{ParseResult, ParsedLogEntry, parse_log_file};
+pub use filter::EntryFilter;
+pub use parser::{IncrementalParser, ParseResult, ParsedLogEntry, parse_log_file};
 pub use rel_db::{
     DatabaseConnection, NodeLogEntry, QueryContext, QueryPreset, create_database,
     create_database_for_bulk_import, finalize_bulk_import, open_database,

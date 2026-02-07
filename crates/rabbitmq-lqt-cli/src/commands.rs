@@ -22,24 +22,28 @@ use bel7_cli::{BRAILLE_TICK_CHARS, ExitCode, ExitCodeProvider, SpinnerReporter};
 use chrono::{DateTime, Utc};
 use clap::ArgMatches;
 use duckdb::Error as DuckDbError;
+use rabbitmq_lqt_lib::Error as LibError;
+use rabbitmq_lqt_lib::entry_metadata::annotate_entry;
 use rabbitmq_lqt_lib::file_set_metadata::extract_file_metadata;
-use rabbitmq_lqt_lib::parser::ParsedLogEntry;
+use rabbitmq_lqt_lib::parser::{IncrementalParser, ParsedLogEntry};
 use rabbitmq_lqt_lib::rel_db::FileMetadata;
 use rabbitmq_lqt_lib::{
-    DatabaseConnection, NodeLogEntry, QueryContext, create_database_for_bulk_import,
+    DatabaseConnection, EntryFilter, NodeLogEntry, QueryContext, create_database_for_bulk_import,
     finalize_bulk_import, open_database, parse_log_file, post_insertion_operations,
 };
 use rabbitmq_lqt_obfuscation::{LogObfuscator, ObfuscationStats};
+use rabbitmq_lqt_ql::to_query_context;
 use rayon::prelude::*;
 use std::collections::HashSet;
 use std::fs::{self, File};
-use std::io::{BufRead, BufReader, BufWriter, Error as IoError, ErrorKind, Write};
+use std::io::{BufRead, BufReader, BufWriter, Error as IoError, ErrorKind, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::result::Result as StdResult;
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 use tabled::{Table, Tabled, settings::Style};
+use tokio::time;
 
 const PIPELINE_CHUNK_SIZE: usize = 25_000;
 
@@ -123,6 +127,177 @@ pub fn handle_ql_command(args: &ArgMatches) -> ExitCode {
     }
 }
 
+pub async fn handle_tail_command(args: &ArgMatches) -> ExitCode {
+    match tail_logs(args).await {
+        Ok(_) => ExitCode::Ok,
+        Err(e) => {
+            log::error!("Failed to tail logs: {}", e);
+            e.exit_code()
+        }
+    }
+}
+
+async fn tail_logs(args: &ArgMatches) -> Result<()> {
+    let log_path: PathBuf = args
+        .get_one::<String>("input_log_file_path")
+        .expect("input_log_file_path is a required argument")
+        .into();
+
+    if !log_path.exists() {
+        return Err(CommandRunError::Library(LibError::Io(IoError::new(
+            ErrorKind::NotFound,
+            format!(
+                "Log file not found: {}\n\n{}",
+                log_path.display(),
+                ERR_MSG_FILE_NOT_FOUND_HELP
+            ),
+        ))));
+    }
+
+    let n = args.get_one::<usize>("lines").copied().unwrap_or(10);
+    let follow = args.get_flag("follow");
+    let without_colors = args.get_flag("without_colors");
+    let filter = build_entry_filter(args)?;
+
+    let node_name = extract_node_name(&log_path)?;
+
+    let reader = BufReader::new(File::open(&log_path)?);
+    let parse_result = parse_log_file(reader)?;
+    let mut entries = parse_result.entries;
+    let total_entries = entries.len();
+
+    if filter.is_empty() {
+        let start_index = total_entries.saturating_sub(n);
+        let tail_entries = &mut entries[start_index..];
+        tail_entries.iter_mut().for_each(annotate_entry);
+
+        if !tail_entries.is_empty() {
+            let models: Vec<_> = tail_entries
+                .iter()
+                .enumerate()
+                .map(|(i, e)| {
+                    output::parsed_entry_to_model(e, &node_name, (start_index + i + 1) as i64)
+                })
+                .collect();
+            output::display_log_entries(models, without_colors)?;
+        }
+    } else {
+        entries.iter_mut().for_each(annotate_entry);
+        let filtered: Vec<_> = filter.filter(&entries);
+        let filtered_len = filtered.len();
+        let start_index = filtered_len.saturating_sub(n);
+        let tail_filtered = &filtered[start_index..];
+
+        if !tail_filtered.is_empty() {
+            let models: Vec<_> = tail_filtered
+                .iter()
+                .enumerate()
+                .map(|(i, e)| {
+                    output::parsed_entry_to_model(e, &node_name, (start_index + i + 1) as i64)
+                })
+                .collect();
+            output::display_log_entries(models, without_colors)?;
+        }
+    }
+
+    if follow {
+        let file_len = log_path.metadata()?.len();
+        tail_follow(
+            &log_path,
+            &node_name,
+            total_entries,
+            file_len,
+            without_colors,
+            &filter,
+        )
+        .await?;
+    }
+
+    Ok(())
+}
+
+async fn tail_follow(
+    log_path: &Path,
+    node_name: &str,
+    start_sequence_id: usize,
+    initial_file_size: u64,
+    without_colors: bool,
+    filter: &EntryFilter,
+) -> Result<()> {
+    let mut parser = IncrementalParser::new(start_sequence_id);
+    let mut last_size = initial_file_size;
+    let mut next_display_id = start_sequence_id as i64 + 1;
+    let mut interval = time::interval(Duration::from_millis(300));
+
+    loop {
+        tokio::select! {
+            _ = tokio::signal::ctrl_c() => {
+                break;
+            }
+            _ = interval.tick() => {
+                let current_size = match log_path.metadata() {
+                    Ok(m) => m.len(),
+                    Err(_) => continue,
+                };
+
+                if current_size < last_size {
+                    parser = IncrementalParser::new(0);
+                    last_size = 0;
+                    next_display_id = 1;
+                }
+
+                if current_size > last_size {
+                    let mut file = File::open(log_path)?;
+                    file.seek(SeekFrom::Start(last_size))?;
+                    last_size = current_size;
+
+                    let reader = BufReader::new(file);
+                    let mut new_entries = Vec::new();
+
+                    for line_result in reader.lines() {
+                        let line = line_result?;
+                        if let Some(entry) = parser.feed_line(&line) {
+                            new_entries.push(entry);
+                        }
+                    }
+
+                    if !new_entries.is_empty() {
+                        new_entries
+                            .iter_mut()
+                            .for_each(annotate_entry);
+                        let matching: Vec<_> = if filter.is_empty() {
+                            new_entries.iter().collect()
+                        } else {
+                            filter.filter(&new_entries)
+                        };
+                        if !matching.is_empty() {
+                            let models: Vec<_> = matching
+                                .iter()
+                                .enumerate()
+                                .map(|(i, e)| {
+                                    output::parsed_entry_to_model(e, node_name, next_display_id + i as i64)
+                                })
+                                .collect();
+                            next_display_id += matching.len() as i64;
+                            output::display_log_entries(models, without_colors)?;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if let Some(mut entry) = parser.flush() {
+        annotate_entry(&mut entry);
+        if filter.is_empty() || filter.matches(&entry) {
+            let model = output::parsed_entry_to_model(&entry, node_name, next_display_id);
+            output::display_log_entries(vec![model], without_colors)?;
+        }
+    }
+
+    Ok(())
+}
+
 fn validate_file_paths(log_paths: &[PathBuf]) -> Result<()> {
     let missing_files: Vec<_> = log_paths.iter().filter(|p| !p.exists()).collect();
 
@@ -133,15 +308,13 @@ fn validate_file_paths(log_paths: &[PathBuf]) -> Result<()> {
             .collect::<Vec<_>>()
             .join("\n");
 
-        return Err(CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(
-            IoError::new(
-                ErrorKind::NotFound,
-                format!(
-                    "Log file(s) not found:\n{}\n\n{}",
-                    file_list, ERR_MSG_FILE_NOT_FOUND_HELP
-                ),
+        return Err(CommandRunError::Library(LibError::Io(IoError::new(
+            ErrorKind::NotFound,
+            format!(
+                "Log file(s) not found:\n{}\n\n{}",
+                file_list, ERR_MSG_FILE_NOT_FOUND_HELP
             ),
-        )));
+        ))));
     }
 
     Ok(())
@@ -153,7 +326,7 @@ fn ensure_parent_directory_exists(path: &Path) -> Result<()> {
         && !parent.exists()
     {
         fs::create_dir_all(parent).map_err(|e| {
-            CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::new(
+            CommandRunError::Library(LibError::Io(IoError::new(
                 e.kind(),
                 format!("Failed to create directory '{}': {}", parent.display(), e),
             )))
@@ -168,18 +341,16 @@ fn validate_database_path(db_path: &Path) -> Result<()> {
     if db_path.exists() {
         let metadata = db_path.metadata()?;
         if !metadata.is_file() {
-            return Err(CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(
-                IoError::new(
-                    ErrorKind::InvalidInput,
-                    format!(
-                        "Database path exists but is not a file: {}\n\
+            return Err(CommandRunError::Library(LibError::Io(IoError::new(
+                ErrorKind::InvalidInput,
+                format!(
+                    "Database path exists but is not a file: {}\n\
                     \n\
                     The path points to a directory or special file.\n\
                     Choose a different path for the database file.",
-                        db_path.display()
-                    ),
+                    db_path.display()
                 ),
-            )));
+            ))));
         }
         log::warn!(
             "Database file already exists and will be overwritten: {}",
@@ -206,40 +377,36 @@ fn collect_log_files_from_directory(dir_path: &str) -> Result<Vec<PathBuf>> {
     let dir = Path::new(dir_path);
 
     if !dir.exists() {
-        return Err(CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(
-            IoError::new(
-                ErrorKind::NotFound,
-                format!(
-                    "Directory not found: {}\n\
+        return Err(CommandRunError::Library(LibError::Io(IoError::new(
+            ErrorKind::NotFound,
+            format!(
+                "Directory not found: {}\n\
                 \n\
                 Make sure:\n\
                 • The directory path is correct\n\
                 • You have read permissions for the directory\n\
                 • Use --input-log-file-path to specify individual files",
-                    dir.display()
-                ),
+                dir.display()
             ),
-        )));
+        ))));
     }
 
     if !dir.is_dir() {
-        return Err(CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(
-            IoError::new(
-                ErrorKind::InvalidInput,
-                format!(
-                    "Path is not a directory: {}\n\
+        return Err(CommandRunError::Library(LibError::Io(IoError::new(
+            ErrorKind::InvalidInput,
+            format!(
+                "Path is not a directory: {}\n\
                 \n\
                 The path points to a file, not a directory.\n\
                 Use --input-log-file-path for individual files.",
-                    dir.display()
-                ),
+                dir.display()
             ),
-        )));
+        ))));
     }
 
     let mut log_files = Vec::new();
     let entries = fs::read_dir(dir).map_err(|e| {
-        CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::new(
+        CommandRunError::Library(LibError::Io(IoError::new(
             e.kind(),
             format!("Failed to read directory '{}': {}", dir.display(), e),
         )))
@@ -247,7 +414,7 @@ fn collect_log_files_from_directory(dir_path: &str) -> Result<Vec<PathBuf>> {
 
     for entry in entries {
         let entry = entry.map_err(|e| {
-            CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::new(
+            CommandRunError::Library(LibError::Io(IoError::new(
                 e.kind(),
                 format!("Failed to read directory entry: {}", e),
             )))
@@ -260,22 +427,20 @@ fn collect_log_files_from_directory(dir_path: &str) -> Result<Vec<PathBuf>> {
     }
 
     if log_files.is_empty() {
-        return Err(CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(
-            IoError::new(
-                ErrorKind::NotFound,
-                format!(
-                    "No log files found in directory: {}\n\
+        return Err(CommandRunError::Library(LibError::Io(IoError::new(
+            ErrorKind::NotFound,
+            format!(
+                "No log files found in directory: {}\n\
                 \n\
                 Make sure:\n\
                 • The directory contains log files (.log, .log.gz, .log.xz, .tar.gz, etc.)\n\
                 • Use --input-log-file-path to specify individual files",
-                    dir.display()
-                ),
+                dir.display()
             ),
-        )));
+        ))));
     }
 
-    log_files.sort();
+    log_files.sort_unstable();
 
     Ok(log_files)
 }
@@ -344,17 +509,15 @@ fn process_log_file(log_path: &Path, tx: &mpsc::Sender<InsertionTask>, silent: b
         .collect();
 
     for mut chunk in chunks {
-        chunk
-            .par_iter_mut()
-            .for_each(rabbitmq_lqt_lib::entry_metadata::annotate_entry);
-        chunk.sort_by_key(|e| e.sequence_id);
+        chunk.par_iter_mut().for_each(annotate_entry);
+        chunk.sort_unstable_by_key(|e| e.sequence_id);
 
         tx.send(InsertionTask::EntriesChunk {
             node_name: node_name.clone(),
             entries: chunk,
         })
         .map_err(|e| {
-            CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::other(format!(
+            CommandRunError::Library(LibError::Io(IoError::other(format!(
                 "Failed to send entries for insertion: {}",
                 e
             ))))
@@ -367,7 +530,7 @@ fn process_log_file(log_path: &Path, tx: &mpsc::Sender<InsertionTask>, silent: b
         total_lines,
     })
     .map_err(|e| {
-        CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::other(format!(
+        CommandRunError::Library(LibError::Io(IoError::other(format!(
             "Failed to send a file completion marker: {}",
             e
         ))))
@@ -386,11 +549,9 @@ fn wait_for_insertion_thread(
     insert_thread
         .join()
         .map_err(|_| {
-            CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::other(
-                "Insertion thread panicked",
-            )))
+            CommandRunError::Library(LibError::Io(IoError::other("Insertion thread panicked")))
         })?
-        .map_err(|e| CommandRunError::Library(rabbitmq_lqt_lib::Error::Database(e)))?;
+        .map_err(|e| CommandRunError::Library(LibError::Database(e)))?;
     Ok(())
 }
 
@@ -464,35 +625,31 @@ fn parse_logs(args: &ArgMatches) -> Result<()> {
 
 fn validate_existing_database_path(db_path: &Path) -> Result<()> {
     if !db_path.exists() {
-        return Err(CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(
-            IoError::new(
-                ErrorKind::NotFound,
-                format!(
-                    "Database file not found: {}\n\n\
+        return Err(CommandRunError::Library(LibError::Io(IoError::new(
+            ErrorKind::NotFound,
+            format!(
+                "Database file not found: {}\n\n\
                 Make sure:\n\
                 • The database file path is correct\n\
                 • You have read permissions for the file\n\
                 • Use 'logs parse' to create a new database",
-                    db_path.display()
-                ),
+                db_path.display()
             ),
-        )));
+        ))));
     }
 
     let metadata = db_path.metadata()?;
     if !metadata.is_file() {
-        return Err(CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(
-            IoError::new(
-                ErrorKind::InvalidInput,
-                format!(
-                    "Database path is not a file: {}\n\
+        return Err(CommandRunError::Library(LibError::Io(IoError::new(
+            ErrorKind::InvalidInput,
+            format!(
+                "Database path is not a file: {}\n\
                 \n\
                 The path points to a directory or special file.\n\
                 Provide a path to an existing database file.",
-                    db_path.display()
-                ),
+                db_path.display()
             ),
-        )));
+        ))));
     }
 
     Ok(())
@@ -631,7 +788,7 @@ fn extract_node_name(log_path: &Path) -> Result<String> {
         .file_name()
         .and_then(|n| n.to_str())
         .ok_or_else(|| {
-            CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::new(
+            CommandRunError::Library(LibError::Io(IoError::new(
                 ErrorKind::InvalidInput,
                 format!("Invalid log file name: {}", log_path.display()),
             )))
@@ -648,6 +805,7 @@ fn overview(args: &ArgMatches) -> Result<()> {
         .expect("input_db_file_path is a required argument")
         .into();
 
+    validate_existing_database_path(&db_path)?;
     let db = open_database(&db_path)?;
     let metadata_entries = FileMetadata::find_all(&db)?;
     log::info!("Found {} log files in database", metadata_entries.len());
@@ -663,6 +821,8 @@ fn query_logs(args: &ArgMatches) -> Result<()> {
         .get_one::<String>("input_db_file_path")
         .expect("input_db_file_path is a required argument")
         .into();
+
+    validate_existing_database_path(&db_path)?;
 
     let mut ctx = QueryContext::default();
 
@@ -743,17 +903,80 @@ fn parse_datetime_flexible(s: &str) -> Result<DateTime<Utc>> {
     rabbitmq_lqt_lib::datetime::parse_datetime_flexible(s).map_err(CommandRunError::DateTimeParse)
 }
 
+fn build_entry_filter(args: &ArgMatches) -> Result<EntryFilter> {
+    let mut filter = EntryFilter::default();
+
+    if let Some(sev) = args.get_one::<String>("severity") {
+        filter = filter.severity(sev);
+    }
+
+    if let Some(sub) = args.get_one::<String>("subsystem") {
+        filter = filter.subsystem(sub);
+    }
+
+    if let Some(labels) = args.get_many::<String>("label") {
+        for label in labels {
+            let normalized = if label == "election" {
+                "elections"
+            } else {
+                label.as_str()
+            };
+            filter = filter.add_label(normalized);
+        }
+    }
+
+    if args.get_flag("unlabelled") {
+        filter = filter.add_label("unlabelled");
+    }
+
+    if args.get_flag("matching_all_labels") {
+        filter = filter.matching_all_labels(true);
+    }
+
+    if let Some(pid) = args.get_one::<String>("erlang_pid") {
+        filter = filter.erlang_pid(pid);
+    }
+
+    if let Some(since) = args
+        .get_one::<String>("since_time")
+        .map(|s| parse_datetime_flexible(s))
+        .transpose()?
+    {
+        filter = filter.since(since);
+    }
+
+    if let Some(to) = args
+        .get_one::<String>("to_time")
+        .map(|s| parse_datetime_flexible(s))
+        .transpose()?
+    {
+        filter = filter.to(to);
+    }
+
+    if args.get_flag("has_resolution_or_discussion_url") {
+        filter = filter.has_resolution_or_discussion_url(true);
+    }
+
+    if args.get_flag("has_doc_url") {
+        filter = filter.has_doc_url(true);
+    }
+
+    Ok(filter)
+}
+
 fn ql_query(args: &ArgMatches) -> Result<()> {
     let db_path: PathBuf = args
         .get_one::<String>("input_db_file_path")
         .expect("input_db_file_path is a required argument")
         .into();
 
+    validate_existing_database_path(&db_path)?;
+
     let query_str = args
         .get_one::<String>("query")
         .expect("query is a required argument");
 
-    let ctx = rabbitmq_lqt_ql::to_query_context(query_str)?;
+    let ctx = to_query_context(query_str)?;
 
     let db = open_database(&db_path)?;
     let entries = NodeLogEntry::query(&db, &ctx)?;
@@ -779,16 +1002,14 @@ fn obfuscate_log(args: &ArgMatches) -> Result<()> {
         .into();
 
     if !input_path.exists() {
-        return Err(CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(
-            IoError::new(
-                ErrorKind::NotFound,
-                format!(
-                    "Input log file not found: {}\n\n{}",
-                    input_path.display(),
-                    ERR_MSG_FILE_NOT_FOUND_HELP
-                ),
+        return Err(CommandRunError::Library(LibError::Io(IoError::new(
+            ErrorKind::NotFound,
+            format!(
+                "Input log file not found: {}\n\n{}",
+                input_path.display(),
+                ERR_MSG_FILE_NOT_FOUND_HELP
             ),
-        )));
+        ))));
     }
 
     ensure_parent_directory_exists(&output_path)?;
@@ -804,7 +1025,7 @@ fn obfuscate_log(args: &ArgMatches) -> Result<()> {
     };
 
     let input_file = File::open(&input_path).map_err(|e| {
-        CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::new(
+        CommandRunError::Library(LibError::Io(IoError::new(
             e.kind(),
             format!(
                 "Failed to open input log file '{}': {}",
@@ -816,7 +1037,7 @@ fn obfuscate_log(args: &ArgMatches) -> Result<()> {
     let reader = BufReader::new(input_file);
 
     let output_file = File::create(&output_path).map_err(|e| {
-        CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::new(
+        CommandRunError::Library(LibError::Io(IoError::new(
             e.kind(),
             format!(
                 "Failed to create output file '{}': {}",
@@ -832,7 +1053,7 @@ fn obfuscate_log(args: &ArgMatches) -> Result<()> {
 
     for line_result in reader.lines() {
         let line = line_result.map_err(|e| {
-            CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::new(
+            CommandRunError::Library(LibError::Io(IoError::new(
                 e.kind(),
                 format!("Failed to read line {}: {}", line_count + 1, e),
             )))
@@ -840,7 +1061,7 @@ fn obfuscate_log(args: &ArgMatches) -> Result<()> {
 
         let obfuscated = obfuscator.obfuscate_line(&line);
         writeln!(writer, "{}", obfuscated).map_err(|e| {
-            CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::new(
+            CommandRunError::Library(LibError::Io(IoError::new(
                 e.kind(),
                 format!("Failed to write line {}: {}", line_count + 1, e),
             )))
@@ -850,7 +1071,7 @@ fn obfuscate_log(args: &ArgMatches) -> Result<()> {
     }
 
     writer.flush().map_err(|e| {
-        CommandRunError::Library(rabbitmq_lqt_lib::Error::Io(IoError::new(
+        CommandRunError::Library(LibError::Io(IoError::new(
             e.kind(),
             format!("Failed to flush output file: {}", e),
         )))

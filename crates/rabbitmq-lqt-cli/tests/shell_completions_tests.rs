@@ -14,13 +14,14 @@
 
 mod test_helpers;
 
+use assert_cmd::assert::Assert;
 use bel7_cli::CommandShellExt;
 use std::error::Error;
 use std::ffi::OsStr;
 use std::process::Command;
 use test_helpers::{output_includes, run_fails, run_succeeds};
 
-fn run_with_shell_env<I, S>(args: I, shell_path: &str) -> assert_cmd::assert::Assert
+fn run_with_shell_env<I, S>(args: I, shell_path: &str) -> Assert
 where
     I: IntoIterator<Item = S>,
     S: AsRef<OsStr>,
@@ -29,10 +30,10 @@ where
     cmd.clear_shell_detection_env();
     cmd.env("SHELL", shell_path);
     cmd.args(args);
-    assert_cmd::assert::Assert::new(cmd.output().unwrap())
+    Assert::new(cmd.output().unwrap())
 }
 
-fn run_without_shell_env<I, S>(args: I) -> assert_cmd::assert::Assert
+fn run_without_shell_env<I, S>(args: I) -> Assert
 where
     I: IntoIterator<Item = S>,
     S: AsRef<OsStr>,
@@ -40,7 +41,7 @@ where
     let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("rabbitmq-lqt"));
     cmd.clear_shell_detection_env();
     cmd.args(args);
-    assert_cmd::assert::Assert::new(cmd.output().unwrap())
+    Assert::new(cmd.output().unwrap())
 }
 
 #[test]
@@ -171,6 +172,7 @@ fn shell_completions_includes_logs_subcommands() -> Result<(), Box<dyn Error>> {
     assert!(stdout.contains("obfuscate"));
     assert!(stdout.contains("overview"));
     assert!(stdout.contains("ql"));
+    assert!(stdout.contains("tail"));
     Ok(())
 }
 

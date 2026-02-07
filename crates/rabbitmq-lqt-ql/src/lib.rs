@@ -47,6 +47,7 @@ pub mod builder;
 pub mod compiler;
 pub mod errors;
 
+use rabbitmq_lqt_lib::QueryContext;
 use std::result::Result as StdResult;
 
 // Re-export everything from rabbitmq-lqt-ql-core
@@ -75,14 +76,20 @@ pub fn parse_and_compile(input: &str) -> Result<CompiledQuery> {
 }
 
 /// Parses a query string and returns a QueryContext for use with rabbitmq-lqt-lib.
-pub fn to_query_context(input: &str) -> Result<rabbitmq_lqt_lib::QueryContext> {
+pub fn to_query_context(input: &str) -> Result<QueryContext> {
     let compiled = parse_and_compile(input)?;
-    let ctx = if compiled.sql_where_fragments.is_empty() {
+    let mut ctx = if compiled.sql_where_fragments.is_empty() {
         compiled.context
     } else {
         compiled
             .context
             .raw_where_clauses(compiled.sql_where_fragments)
     };
+    if let Some(offset) = compiled.sql_offset {
+        ctx = ctx.offset(offset);
+    }
+    if let Some(tail_n) = compiled.sql_limit_from_end {
+        ctx = ctx.tail(tail_n);
+    }
     Ok(ctx)
 }
