@@ -24,7 +24,7 @@ No changes yet.
 
 ### Internal Changes
 
- * Release infrastructure: adopt [`michaelklishin/rust-release-action`](https://github.com/michaelklishin/rust-release-action)
+ * Release infrastructure: adopt [`michaelklishin/rust-build-package-release-action`](https://github.com/michaelklishin/rust-build-package-release-action)
 
 
 ## v0.18.0 (Jan 25, 2026)
