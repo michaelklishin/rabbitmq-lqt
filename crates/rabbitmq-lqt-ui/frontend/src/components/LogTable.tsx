@@ -117,12 +117,12 @@ const createColumns = (onPidFilterClick?: (pid: string) => void): ColumnDef<LogE
     cell: (info) => {
       const message = info.getValue() as string
       return (
-        <div className="text-sm text-gray-900 whitespace-pre-wrap font-mono max-w-5xl">
+        <div className="text-sm text-gray-900 whitespace-pre font-mono max-w-3xl overflow-x-auto">
           {message}
         </div>
       )
     },
-    size: 800,
+    size: 640,
   },
   {
     id: 'labels',

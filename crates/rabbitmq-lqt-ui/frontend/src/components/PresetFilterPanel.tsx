@@ -4,9 +4,11 @@ interface PresetFilterPanelProps {
   metadata: MetadataResponse | null
   filters: PresetQueryParams
   onFilterChange: (filters: PresetQueryParams) => void
+  collapsed: boolean
+  onToggleCollapse: () => void
 }
 
-export function PresetFilterPanel({ metadata, filters, onFilterChange }: PresetFilterPanelProps) {
+export function PresetFilterPanel({ metadata, filters, onFilterChange, collapsed, onToggleCollapse }: PresetFilterPanelProps) {
   const updateFilter = (key: keyof PresetQueryParams, value: any) => {
     onFilterChange({
       ...filters,
@@ -18,10 +20,42 @@ export function PresetFilterPanel({ metadata, filters, onFilterChange }: PresetF
     onFilterChange({ limit: 1000 })
   }
 
+  if (collapsed) {
+    return (
+      <div className="bg-white shadow-sm border border-gray-200 rounded-lg py-4 flex flex-col items-center">
+        <button
+          onClick={onToggleCollapse}
+          className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+          title="Expand filters"
+          aria-label="Expand filters"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+        <span className="mt-3 text-xs font-medium text-gray-500" style={{ writingMode: 'vertical-lr' }}>
+          Filters
+        </span>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-white shadow-sm border border-gray-200 rounded-lg p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onToggleCollapse}
+            className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+            title="Collapse filters"
+            aria-label="Collapse filters"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+        </div>
         <button
           onClick={clearFilters}
           className="text-sm text-blue-600 hover:text-blue-800"

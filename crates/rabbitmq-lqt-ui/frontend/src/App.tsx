@@ -111,6 +111,7 @@ function App() {
   const [qlState, setQLState] = useState<QLState>(() => qlStateFromURL())
   const [activeTab, setActiveTab] = useState<Tab>(() => tabFromURL())
   const [qlQueryTrigger, setQLQueryTrigger] = useState(0)
+  const [filterPanelCollapsed, setFilterPanelCollapsed] = useState(false)
 
   useEffect(() => {
     const handlePopState = () => {
@@ -184,6 +185,10 @@ function App() {
 
   const handleRunQLQuery = useCallback(() => {
     setQLQueryTrigger((prev) => prev + 1)
+  }, [])
+
+  const handleToggleFilterPanel = useCallback(() => {
+    setFilterPanelCollapsed((prev) => !prev)
   }, [])
 
   return (
@@ -273,12 +278,18 @@ function App() {
         )}
 
         {activeTab === 'filters' && (
-          <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
-            <div className="lg:col-span-1">
-              <FilterPanel metadata={metadata || null} filters={filters} onFilterChange={setFilters} />
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className={filterPanelCollapsed ? 'lg:w-10 flex-shrink-0' : 'lg:w-[220px] flex-shrink-0'}>
+              <FilterPanel
+                metadata={metadata || null}
+                filters={filters}
+                onFilterChange={setFilters}
+                collapsed={filterPanelCollapsed}
+                onToggleCollapse={handleToggleFilterPanel}
+              />
             </div>
 
-            <div className="lg:col-span-5 space-y-4">
+            <div className="flex-1 min-w-0 space-y-4">
               <MetadataHeader
                 fileMetadata={fileMetadata}
                 onViewFullMetadata={() => setActiveTab('metadata')}
@@ -385,16 +396,18 @@ function App() {
         )}
 
         {activeTab === 'preset_errors_or_crashes' && (
-          <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
-            <div className="lg:col-span-1">
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className={filterPanelCollapsed ? 'lg:w-10 flex-shrink-0' : 'lg:w-[220px] flex-shrink-0'}>
               <PresetFilterPanel
                 metadata={metadata || null}
                 filters={presetFilters}
                 onFilterChange={setPresetFilters}
+                collapsed={filterPanelCollapsed}
+                onToggleCollapse={handleToggleFilterPanel}
               />
             </div>
 
-            <div className="lg:col-span-5 space-y-4">
+            <div className="flex-1 min-w-0 space-y-4">
               <div className="bg-white shadow-sm border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-700">
