@@ -1,0 +1,1 @@
+mod shell_completions_proptests;
