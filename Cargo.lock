@@ -2280,7 +2280,7 @@ dependencies = [
 
 [[package]]
 name = "rabbitmq-lqt-cli"
-version = "0.21.0"
+version = "0.22.0"
 dependencies = [
  "assert_cmd",
  "bel7-cli",
@@ -2312,7 +2312,7 @@ dependencies = [
 
 [[package]]
 name = "rabbitmq-lqt-lib"
-version = "0.21.0"
+version = "0.22.0"
 dependencies = [
  "bitflags",
  "chrono",
@@ -2335,7 +2335,7 @@ dependencies = [
 
 [[package]]
 name = "rabbitmq-lqt-obfuscation"
-version = "0.21.0"
+version = "0.22.0"
 dependencies = [
  "criterion",
  "regex",
@@ -2344,7 +2344,7 @@ dependencies = [
 
 [[package]]
 name = "rabbitmq-lqt-ql"
-version = "0.21.0"
+version = "0.22.0"
 dependencies = [
  "chrono",
  "chrono-english",
@@ -2359,7 +2359,7 @@ dependencies = [
 
 [[package]]
 name = "rabbitmq-lqt-ql-core"
-version = "0.21.0"
+version = "0.22.0"
 dependencies = [
  "chrono",
  "nom 8.0.0",
@@ -2370,7 +2370,7 @@ dependencies = [
 
 [[package]]
 name = "rabbitmq-lqt-ql-wasm"
-version = "0.21.0"
+version = "0.22.0"
 dependencies = [
  "console_error_panic_hook",
  "rabbitmq-lqt-ql-core",
@@ -2381,7 +2381,7 @@ dependencies = [
 
 [[package]]
 name = "rabbitmq-lqt-ui"
-version = "0.21.0"
+version = "0.22.0"
 dependencies = [
  "axum",
  "bel7-axum",
