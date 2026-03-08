@@ -61,7 +61,7 @@ jobs:
     needs: [validate]
     runs-on: ubuntu-24.04
     environment: release
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
@@ -84,7 +84,6 @@ jobs:
         with:
           command: publish-crate
           package: rabbitmq-lqt-lib
-          locked: 'true'
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
 
@@ -93,7 +92,6 @@ jobs:
         with:
           command: publish-crate
           package: rabbitmq-lqt-obfuscation
-          locked: 'true'
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
 
@@ -102,7 +100,6 @@ jobs:
         with:
           command: publish-crate
           package: rabbitmq-lqt-ql-core
-          locked: 'true'
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
 
@@ -111,7 +108,6 @@ jobs:
         with:
           command: publish-crate
           package: rabbitmq-lqt-ql
-          locked: 'true'
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
 
@@ -120,18 +116,18 @@ jobs:
         with:
           command: publish-crate
           package: rabbitmq-lqt-ui
-          locked: 'true'
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+          RABBITMQ_LQT_SKIP_FRONTEND_BUILD: "1"
 
       - name: Publish rabbitmq-lqt-cli
         uses: michaelklishin/rust-build-package-release-action@v2
         with:
           command: publish-crate
           package: rabbitmq-lqt-cli
-          locked: 'true'
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+          RABBITMQ_LQT_SKIP_FRONTEND_BUILD: "1"
 
   sbom:
     name: Generate SBOM
@@ -264,7 +260,7 @@ jobs:
           locked: true
           include: 'README.md,LICENSE-APACHE,LICENSE-MIT'
         env:
-          RLQT_SKIP_FRONTEND_BUILD: "1"
+          RABBITMQ_LQT_SKIP_FRONTEND_BUILD: "1"
 
       - name: Build DEB package
         if: contains(matrix.target, 'linux-gnu')
@@ -386,7 +382,7 @@ jobs:
           source $HOME/.cargo/env
           cargo build --release --locked --package rabbitmq-lqt-cli --no-default-features --features mimalloc
         env:
-          RLQT_SKIP_FRONTEND_BUILD: "1"
+          RABBITMQ_LQT_SKIP_FRONTEND_BUILD: "1"
 
       - name: Upload raw binary for packaging
         uses: actions/upload-artifact@v4

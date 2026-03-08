@@ -1,6 +1,11 @@
 # rabbitmq-lqt Change Log
 
-## v0.21.0 (in development)
+## v0.22.0 (in development)
+
+No changes yet.
+
+
+## v0.21.0 (Mar 7, 2026)
 
 ### Internal Changes
 

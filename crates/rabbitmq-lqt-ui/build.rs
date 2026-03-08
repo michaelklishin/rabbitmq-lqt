@@ -171,13 +171,10 @@ fn main() {
         }
     }
 
-    // RLQT_SKIP_FRONTEND_BUILD=1 forces skip even without pre-built assets (CI artifact download)
-    if env::var("RLQT_SKIP_FRONTEND_BUILD").is_ok() {
-        if dist_dir.exists() && dist_dir.join("index.html").exists() {
-            println!("cargo:warning=RLQT_SKIP_FRONTEND_BUILD set, using pre-built frontend");
-            return;
-        }
-        println!("cargo:warning=RLQT_SKIP_FRONTEND_BUILD set but dist/ not found, building anyway");
+    // RABBITMQ_LQT_SKIP_FRONTEND_BUILD=1 forces skip (CI artifact download, cargo publish --dry-run)
+    if env::var("RABBITMQ_LQT_SKIP_FRONTEND_BUILD").is_ok() {
+        println!("cargo:warning=RABBITMQ_LQT_SKIP_FRONTEND_BUILD is set, skipping frontend build");
+        return;
     }
 
     build_wasm(manifest_path, &frontend_dir);
