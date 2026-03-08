@@ -2,7 +2,10 @@
 
 ## v0.21.0 (in development)
 
-No changes yet.
+### Internal Changes
+
+ * Publishing to `crates.io` now uses [Trusted Publishing](https://crates.io/docs/trusted-publishing)
+ * Release infrastructure: migrate to [`rust-build-package-release-action@v2`](https://github.com/michaelklishin/rust-build-package-release-action)
 
 
 ## v0.20.0 (Feb 7, 2026)

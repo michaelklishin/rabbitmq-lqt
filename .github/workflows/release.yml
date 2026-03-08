@@ -14,6 +14,9 @@ permissions:
   contents: write
   id-token: write
 
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
   validate:
     name: Validate Release
@@ -25,22 +28,22 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Validate version
-        uses: michaelklishin/rust-build-package-release-action@v1
+        uses: michaelklishin/rust-build-package-release-action@v2
         id: version
         with:
           command: validate-version
-          validate-cargo-toml: true
+          validate-cargo-toml: 'true'
         env:
           NEXT_RELEASE_VERSION: ${{ vars.NEXT_RELEASE_VERSION }}
 
       - name: Validate changelog
-        uses: michaelklishin/rust-build-package-release-action@v1
+        uses: michaelklishin/rust-build-package-release-action@v2
         with:
           command: validate-changelog
           version: ${{ steps.version.outputs.version }}
 
       - name: Extract changelog
-        uses: michaelklishin/rust-build-package-release-action@v1
+        uses: michaelklishin/rust-build-package-release-action@v2
         id: changelog
         with:
           command: extract-changelog
@@ -52,6 +55,83 @@ jobs:
           name: release-notes
           path: ${{ steps.changelog.outputs.release_notes_file }}
           retention-days: 1
+
+  publish:
+    name: Publish to crates.io
+    needs: [validate]
+    runs-on: ubuntu-24.04
+    environment: release
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: michaelklishin/rust-build-package-release-action@v2
+        with:
+          command: validate-version
+          validate-cargo-toml: 'true'
+
+      - name: Authenticate with crates.io
+        id: auth
+        uses: rust-lang/crates-io-auth-action@v1
+
+      # Publish in dependency order.
+      # publish-crate treats "already exists" as a no-op, so
+      # re-running a partially failed release is safe.
+
+      - name: Publish rabbitmq-lqt-lib
+        uses: michaelklishin/rust-build-package-release-action@v2
+        with:
+          command: publish-crate
+          package: rabbitmq-lqt-lib
+          locked: 'true'
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+
+      - name: Publish rabbitmq-lqt-obfuscation
+        uses: michaelklishin/rust-build-package-release-action@v2
+        with:
+          command: publish-crate
+          package: rabbitmq-lqt-obfuscation
+          locked: 'true'
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+
+      - name: Publish rabbitmq-lqt-ql-core
+        uses: michaelklishin/rust-build-package-release-action@v2
+        with:
+          command: publish-crate
+          package: rabbitmq-lqt-ql-core
+          locked: 'true'
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+
+      - name: Publish rabbitmq-lqt-ql
+        uses: michaelklishin/rust-build-package-release-action@v2
+        with:
+          command: publish-crate
+          package: rabbitmq-lqt-ql
+          locked: 'true'
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+
+      - name: Publish rabbitmq-lqt-ui
+        uses: michaelklishin/rust-build-package-release-action@v2
+        with:
+          command: publish-crate
+          package: rabbitmq-lqt-ui
+          locked: 'true'
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+
+      - name: Publish rabbitmq-lqt-cli
+        uses: michaelklishin/rust-build-package-release-action@v2
+        with:
+          command: publish-crate
+          package: rabbitmq-lqt-cli
+          locked: 'true'
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
 
   sbom:
     name: Generate SBOM
@@ -65,7 +145,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Generate SBOM
-        uses: michaelklishin/rust-build-package-release-action@v1
+        uses: michaelklishin/rust-build-package-release-action@v2
         with:
           command: generate-sbom
           package: rabbitmq-lqt-cli
@@ -172,7 +252,7 @@ jobs:
           path: crates/rabbitmq-lqt-ui/frontend/dist
 
       - name: Build release archive
-        uses: michaelklishin/rust-build-package-release-action@v1
+        uses: michaelklishin/rust-build-package-release-action@v2
         id: build
         with:
           command: release
@@ -188,7 +268,7 @@ jobs:
 
       - name: Build DEB package
         if: contains(matrix.target, 'linux-gnu')
-        uses: michaelklishin/rust-build-package-release-action@v1
+        uses: michaelklishin/rust-build-package-release-action@v2
         id: deb
         with:
           command: release-linux-deb
@@ -204,7 +284,7 @@ jobs:
 
       - name: Build RPM package
         if: contains(matrix.target, 'linux-gnu')
-        uses: michaelklishin/rust-build-package-release-action@v1
+        uses: michaelklishin/rust-build-package-release-action@v2
         id: rpm
         with:
           command: release-linux-rpm
@@ -220,7 +300,7 @@ jobs:
 
       - name: Build MSI installer
         if: matrix.target == 'x86_64-pc-windows-msvc'
-        uses: michaelklishin/rust-build-package-release-action@v1
+        uses: michaelklishin/rust-build-package-release-action@v2
         id: msi
         with:
           command: release-windows-msi
@@ -331,7 +411,7 @@ jobs:
           path: target/release
 
       - name: Package musl archive
-        uses: michaelklishin/rust-build-package-release-action@v1
+        uses: michaelklishin/rust-build-package-release-action@v2
         id: package
         with:
           command: release
@@ -345,7 +425,7 @@ jobs:
           include: 'README.md,LICENSE-APACHE,LICENSE-MIT'
 
       - name: Build Alpine package
-        uses: michaelklishin/rust-build-package-release-action@v1
+        uses: michaelklishin/rust-build-package-release-action@v2
         id: apk
         with:
           command: release-linux-apk
@@ -426,7 +506,7 @@ jobs:
           done
 
       - name: Collect artifact checksums
-        uses: michaelklishin/rust-build-package-release-action@v1
+        uses: michaelklishin/rust-build-package-release-action@v2
         id: collect
         with:
           command: collect-artifacts
@@ -435,7 +515,7 @@ jobs:
           base-url: https://github.com/michaelklishin/rabbitmq-lqt/releases/download/v${{ needs.validate.outputs.version }}
 
       - name: Generate Homebrew formula
-        uses: michaelklishin/rust-build-package-release-action@v1
+        uses: michaelklishin/rust-build-package-release-action@v2
         id: homebrew
         with:
           command: generate-homebrew
@@ -452,7 +532,7 @@ jobs:
           brew-linux-x64-sha256: ${{ steps.collect.outputs.linux_x64_sha256 }}
 
       - name: Generate AUR PKGBUILD
-        uses: michaelklishin/rust-build-package-release-action@v1
+        uses: michaelklishin/rust-build-package-release-action@v2
         id: aur
         with:
           command: generate-aur
@@ -467,7 +547,7 @@ jobs:
           aur-source-sha256: 'SKIP'
 
       - name: Generate Winget manifest
-        uses: michaelklishin/rust-build-package-release-action@v1
+        uses: michaelklishin/rust-build-package-release-action@v2
         id: winget
         with:
           command: generate-winget
@@ -484,7 +564,7 @@ jobs:
           pkg-license: 'Apache-2.0 OR MIT'
 
       - name: Format release body
-        uses: michaelklishin/rust-build-package-release-action@v1
+        uses: michaelklishin/rust-build-package-release-action@v2
         id: format
         with:
           command: format-release
