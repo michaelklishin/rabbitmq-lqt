@@ -131,9 +131,30 @@ and some individual parts such as log entry annotations.
 
 ## Release Workflow
 
-The release workflow uses [`michaelklishin/rust-build-package-release-action`](https://github.com/michaelklishin/rust-build-package-release-action) (its `@v1` tag).
+The release workflow uses [`michaelklishin/rust-build-package-release-action`](https://github.com/michaelklishin/rust-build-package-release-action) (its `@v2` tag).
 
 For verifying YAML file syntax, use `yq`, Ruby or Python YAML modules (whichever is available).
+
+## Releases
+
+To roll a new release:
+
+ 1. Update `CHANGELOG.md`: replace `(in development)` with today's date in the format `(Mon D, YYYY)`
+ 2. Commit with a message that is just the version number, e.g. `0.21.0`
+ 3. Tag the commit: `git tag v0.21.0`
+ 4. Bump the workspace version in `Cargo.toml` to the next minor version (e.g. `0.22.0`)
+ 5. Update `crates/rabbitmq-lqt-ui/frontend/package.json` to the same new version
+ 6. Run `cargo generate-lockfile`
+ 7. Add a new development section to `CHANGELOG.md`:
+    ```
+    ## v0.22.0 (in development)
+
+    No changes yet.
+    ```
+ 8. Commit with message: `Bump dev version`
+ 9. Push: `git push && git push --tags`
+ 10. GitHub Actions (`.github/workflows/release.yml`) builds release artifacts, publishes crates to crates.io via Trusted Publishing, and creates a GitHub Release
+ 11. The `NEXT_RELEASE_VERSION` repository variable must match the version being released
 
 ## After Completing a Task
 
