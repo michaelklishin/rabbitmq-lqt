@@ -221,6 +221,8 @@ jobs:
         include:
           - target: aarch64-apple-darwin
             os: macos-latest
+          - target: x86_64-apple-darwin
+            os: macos-15-intel
           - target: x86_64-pc-windows-msvc
             os: windows-latest
           - target: x86_64-unknown-linux-gnu
@@ -522,6 +524,8 @@ jobs:
           pkg-license: 'Apache-2.0 OR MIT'
           brew-macos-arm64-url: https://github.com/michaelklishin/rabbitmq-lqt/releases/download/v${{ needs.validate.outputs.version }}/rabbitmq-lqt-${{ needs.validate.outputs.version }}-aarch64-apple-darwin.tar.gz
           brew-macos-arm64-sha256: ${{ steps.collect.outputs.macos_arm64_sha256 }}
+          brew-macos-x64-url: https://github.com/michaelklishin/rabbitmq-lqt/releases/download/v${{ needs.validate.outputs.version }}/rabbitmq-lqt-${{ needs.validate.outputs.version }}-x86_64-apple-darwin.tar.gz
+          brew-macos-x64-sha256: ${{ steps.collect.outputs.macos_x64_sha256 }}
           brew-linux-arm64-url: https://github.com/michaelklishin/rabbitmq-lqt/releases/download/v${{ needs.validate.outputs.version }}/rabbitmq-lqt-${{ needs.validate.outputs.version }}-aarch64-unknown-linux-gnu.tar.gz
           brew-linux-arm64-sha256: ${{ steps.collect.outputs.linux_arm64_sha256 }}
           brew-linux-x64-url: https://github.com/michaelklishin/rabbitmq-lqt/releases/download/v${{ needs.validate.outputs.version }}/rabbitmq-lqt-${{ needs.validate.outputs.version }}-x86_64-unknown-linux-gnu.tar.gz
