@@ -2,7 +2,9 @@
 
 ## v0.22.0 (in development)
 
-No changes yet.
+### Enhancements
+
+ * Release artifacts now include an Intel (x86-64) Mac binary
 
 
 ## v0.21.0 (Mar 7, 2026)
