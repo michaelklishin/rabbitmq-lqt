@@ -258,7 +258,7 @@ jobs:
           package: rabbitmq-lqt-cli
           binary-name: rabbitmq-lqt
           archive: true
-          checksum: sha256
+          checksum: 'sha256,sha512'
           locked: true
           include: 'README.md,LICENSE-APACHE,LICENSE-MIT'
         env:
@@ -318,6 +318,8 @@ jobs:
           path: |
             ${{ steps.build.outputs.artifact_path }}
             ${{ steps.build.outputs.artifact_path }}.sha256
+            ${{ steps.build.outputs.artifact_path }}.sha512
+            ${{ steps.build.outputs.bare_artifact_path }}
           retention-days: 2
 
       - name: Upload DEB package
@@ -419,7 +421,7 @@ jobs:
           skip-build: true
           binary-path: target/release/rabbitmq-lqt
           archive: true
-          checksum: sha256
+          checksum: 'sha256,sha512'
           include: 'README.md,LICENSE-APACHE,LICENSE-MIT'
 
       - name: Build Alpine package
@@ -444,6 +446,8 @@ jobs:
           path: |
             ${{ steps.package.outputs.artifact_path }}
             ${{ steps.package.outputs.artifact_path }}.sha256
+            ${{ steps.package.outputs.artifact_path }}.sha512
+            ${{ steps.package.outputs.bare_artifact_path }}
           retention-days: 2
 
       - name: Upload Alpine package
@@ -485,7 +489,7 @@ jobs:
       - name: Collect release files
         run: |
           mkdir -p release
-          find artifacts -type f \( -name "rabbitmq-lqt-*" -o -name "*.sha256" -o -name "*.deb" -o -name "*.rpm" -o -name "*.apk" -o -name "*.msi" -o -name "*.spdx.json" -o -name "*.cdx.json" \) -exec cp {} release/ \;
+          find artifacts -type f \( -name "rabbitmq-lqt-*" -o -name "*.sha256" -o -name "*.sha512" -o -name "*.deb" -o -name "*.rpm" -o -name "*.apk" -o -name "*.msi" -o -name "*.spdx.json" -o -name "*.cdx.json" \) -exec cp {} release/ \;
 
       - name: Install cosign
         uses: sigstore/cosign-installer@v3
