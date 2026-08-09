@@ -45,7 +45,7 @@ where
 #[test]
 fn shell_completions_bash() -> Result<(), Box<dyn Error>> {
     run_succeeds(["shell", "completions", "--shell", "bash"])
-        .stdout(output_includes("_rabbitmq-lqt"));
+        .stdout(output_includes("-o bashdefault -o default rabbitmq-lqt"));
     Ok(())
 }
 
@@ -89,7 +89,7 @@ fn shell_completions_nu_alias() -> Result<(), Box<dyn Error>> {
 fn shell_completions_detects_bash() -> Result<(), Box<dyn Error>> {
     run_with_shell_env(["shell", "completions"], "/bin/bash")
         .success()
-        .stdout(output_includes("_rabbitmq-lqt"));
+        .stdout(output_includes("-o bashdefault -o default rabbitmq-lqt"));
     Ok(())
 }
 
@@ -139,7 +139,7 @@ fn shell_completions_detects_nushell_long_name() -> Result<(), Box<dyn Error>> {
 fn shell_completions_defaults_to_bash_for_unknown_shell() -> Result<(), Box<dyn Error>> {
     run_with_shell_env(["shell", "completions"], "/unknown/shell")
         .success()
-        .stdout(output_includes("_rabbitmq-lqt"));
+        .stdout(output_includes("-o bashdefault -o default rabbitmq-lqt"));
     Ok(())
 }
 
@@ -147,7 +147,7 @@ fn shell_completions_defaults_to_bash_for_unknown_shell() -> Result<(), Box<dyn 
 fn shell_completions_defaults_to_bash_when_shell_env_unset() -> Result<(), Box<dyn Error>> {
     run_without_shell_env(["shell", "completions"])
         .success()
-        .stdout(output_includes("_rabbitmq-lqt"));
+        .stdout(output_includes("-o bashdefault -o default rabbitmq-lqt"));
     Ok(())
 }
 

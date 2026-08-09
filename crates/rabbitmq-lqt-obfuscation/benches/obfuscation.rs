@@ -29,10 +29,10 @@ fn get_log_files() -> Vec<(String, PathBuf)> {
     if let Ok(entries) = read_dir(&log_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().is_some_and(|ext| ext == "log") {
-                if let Some(name) = path.file_name() {
-                    files.push((name.to_string_lossy().to_string(), path));
-                }
+            if path.extension().is_some_and(|ext| ext == "log")
+                && let Some(name) = path.file_name()
+            {
+                files.push((name.to_string_lossy().to_string(), path));
             }
         }
     }
